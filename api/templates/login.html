@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/login.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+<header>
+    <div class="logo">
+        ARNA
+    </div>
+    <div class="profile">
+        <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar">
+    </div>
+</header>
+<div class="content">
+    <div class="container">
+        <h1>Login</h1>
+<!--         <div class="login-button siga">
+            <span class="icon">
+                <img src="{{ url_for('static', path='/logo-ufpe.png') }}" alt="UFPE Logo">
+            </span>
+            Logue com SIGA
+        </div>
+        <div class="separator">OU</div> -->
+
+
+        <form action="/login" method="POST">
+            {% if erro %}
+            <div class="errormessage">{{ erro }}</div>
+            {% endif %}
+
+            <div class="input-box">
+                <input type="text" name="email" placeholder="Email">
+            </div>
+            <div class="input-box">
+                <input type="password" name="senha" placeholder="Senha">
+            </div>
+            <button class="login-button" type="submit">Logar</button>
+        </form>
+        <div class="register-link">
+            Não possui uma conta? <a href="#">Cadastre-se</a>
+        </div>
+        
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/home.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/home">
+                ARNA
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="/home">
+                        ▼ Analisar
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="/home">CPM</a>
+                        <a class="active" href="/PERT">PERT</a>
+                        <a href="/monteCarlo">Simulação de Monte Carlo</a>
+                    </div>
+                </li>
+                <li><a href="#">Resultado</a></li>
+                <li><a href="/help">Ajuda</a></li>
+                <li><a href="/contact">Contato</a></li>
+            </ul>
+        </nav>
+        <div class="profile dropdown">
+            <div class="profile-dropdown dropdown">
+                <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar" onclick="toggleDropdown()">
+                <div class="dropdown-content dropdown">
+                    <a href="{{ url_for('logout') }}">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1>Análise de Rede: PERT</h1>
+        <form action="/analyzePERT" method="POST" enctype="multipart/form-data">
+            <div class="input-box">
+                <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades"></textarea>
+            </div>
+            <div class="input-box csv-input-box">
+                <label class="csv-title" for="csv_file">Importar CSV:</label>
+                <input type="file" name="csv_file" accept=".csv" id="csv_file">
+                <button class="remove-button" onclick="removeFile('csv_file')">X</button>
+            </div>
+            <div class="input-box json-input-box">
+                <label class="json-title" for="json_file">Importar JSON:</label>
+                <input type="file" name="json_file" accept=".json" id="json_file">
+                <button class="remove-button" onclick="removeFile('json_file')">X</button>
+            </div>
+            <button class="analyze-button" type="submit">Analisar</button>
+        </form>
+        
+        {% if erro %}
+        <p class="error-message">{{ erro }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function removeFile(inputId) {
+            var input = document.getElementById(inputId);
+            input.value = '';
+            var otherInput;
+            var textarea = document.getElementById('atividades');
+            
+            if (inputId === 'csv_file') {
+                otherInput = document.getElementById('json_file');
+            } else if (inputId === 'json_file') {
+                otherInput = document.getElementById('csv_file');
+            }
+            
+            otherInput.disabled = false;
+            textarea.disabled = false;
+        }
+    </script>
+
+<footer style="margin-top: 450px;">
+    <div class="footer-content">
+        <div class="footer-logo">
+            <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Random Logo">
+        </div>
+        <div class="footer-links">
+            <a href="#">Termos</a>
+            <a href="#">Privacidade</a>
+            <a href="#">Cookies</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

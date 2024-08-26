@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Landing Page</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/landing.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            ARNA
+        </div>
+        <div class="profile">
+            <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar">
+        </div>
+    </header>
+    <div class="content">
+        <div class="container">
+            <h1>ARNA</h1>
+            <p>A logomarca ARNA-UFPE representa uma solução de ponta para a análise aprofundada de relatórios de redes de atividades, desenvolvida especialmente para atender às demandas profissionais da Universidade Federal de Pernambuco (UFPE).</p>
+            <button onclick="window.location.href='/login'">Descubra mais</button>
+        </div>
+        <div class="image">
+            <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Universidade Federal de Pernambuco">
+        </div>
+    </div>
+</body>
+</html>

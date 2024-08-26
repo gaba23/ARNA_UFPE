@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Resultado</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/home.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                ARNA
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="{{ url_for('home') }}">
+                        ▼ Analisar
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="/home">CPM</a>
+                        <a href="/homePERT">PERT</a>
+                        <a href="/monteCarlo">Simulação de Monte Carlo</a>
+                    </div>
+                </li>
+                <li><a class="active" href="#">Resultado</a></li>
+                <li><a href="{{ url_for('help') }}">Ajuda</a></li>
+                <li><a href="{{ url_for('contact') }}">Contato</a></li>
+            </ul>
+        </nav>
+        <div class="profile dropdown">
+            <div class="profile-dropdown dropdown">
+                <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar" onclick="toggleDropdown()">
+                <div class="dropdown-content dropdown">
+                    <a href="{{ url_for('logout') }}">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+<div class="container" style="margin-bottom: 200px;">
+    <h1>Resultado da Análise</h1>
+    
+    <div class="image-box">
+        <div class="image-container">
+            <div class="image-border">
+                <img src="{{ url_for('static', path='/rede_atividades.png') }}" alt="Rede de Atividades">
+            </div>
+        </div>
+    </div>    
+
+    <div class="download-buttons">
+        <a href="{{ url_for('download_png') }}" class="download-button">
+            <i class="fas fa-file-image"></i> Baixar PNG
+        </a>
+        <a href="{{ url_for('download_xls_CPM') }}" class="download-button">
+            <i class="fas fa-file-excel"></i> Baixar XLS
+        </a>
+        
+    </div>
+    
+    
+</div>
+
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-logo">
+            <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Random Logo">
+        </div>
+        <div class="footer-links">
+            <a href="#">Termos</a>
+            <a href="#">Privacidade</a>
+            <a href="#">Cookies</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

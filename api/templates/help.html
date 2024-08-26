@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Ajuda</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/help.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                ARNA
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="{{ url_for('home') }}">
+                        ▼ Analisar
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('home') }}">CPM</a>
+                        <a href="{{ url_for('PERT') }}">PERT</a>
+                    </div>
+                </li>
+                <li><a href="#">Resultado</a></li>
+                <li><a class="active" href="#">Ajuda</a></li>
+                <li><a href="{{ url_for('contact') }}">Contato</a></li>
+            </ul>
+        </nav>
+        <div class="profile dropdown">
+            <div class="profile-dropdown dropdown">
+                <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar" onclick="toggleDropdown()">
+                <div class="dropdown-content dropdown">
+                    <a href="{{ url_for('logout') }}">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+<div class="content">
+    <h1>Bem-vindo à Ajuda do ARNA!</h1>
+    <p>O ARNA é uma poderosa ferramenta de análise de redes de atividades. Nesta página, forneceremos uma descrição detalhada sobre como usar o site e todas as suas funcionalidades.</p>
+    <h2>O que são redes de atividades?</h2>
+    <p>Redes de atividades são representações gráficas de atividades interconectadas em um determinado contexto. Essas redes fornecem insights valiosos sobre o fluxo de trabalho, a interdependência das atividades e o desempenho geral do sistema.</p>
+    <img src="{{ url_for('static', path='/network.jpg') }}" alt="Exemplo de rede de atividades" class="network-image">
+
+    <h2>Analisando redes de atividades</h2>
+    <p>Para analisar uma rede de atividades no ARNA, siga estas etapas:</p>
+    <ol>
+        <li>Acesse a página "Analisar" no menu de navegação.</li>
+        <li>Na caixa de texto, insira as atividades no formato abaixo:</li>
+    </ol>
+
+    <h2>CPM</h2>
+    <pre class="code">
+        {
+            "A": {"precedentes": [], "duracao": 2},
+            "B": {"precedentes": ["A"], "duracao": 3},
+            "C": {"precedentes": ["A"], "duracao": 1},
+            "D": {"precedentes": ["B"], "duracao": 4},
+            "E": {"precedentes": ["B"], "duracao": 2},
+            "F": {"precedentes": ["C"], "duracao": 3},
+            "G": {"precedentes": ["D", "E"], "duracao": 1},
+            "H": {"precedentes": ["F"], "duracao": 2}
+        }
+        </pre>
+
+
+        <h2>PERT</h2>
+        <pre class="code">
+        {
+            "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5 },
+            "B": {"precedentes": ["A"], "t_otimista": 3, "t_pessimista": 10, "t_provavel": 6 },
+            "C": {"precedentes": ["A"], "t_otimista": 1, "t_pessimista": 4, "t_provavel": 5},
+            "D": {"precedentes": ["B"], "t_otimista": 4, "t_pessimista": 6, "t_provavel": 8},
+            "E": {"precedentes": ["B"], "t_otimista": 8, "t_pessimista": 12, "t_provavel": 10},
+            "F": {"precedentes": ["C"], "t_otimista": 3, "t_pessimista": 6, "t_provavel": 5},
+            "G": {"precedentes": ["D", "E"], "t_otimista": 7, "t_pessimista": 11, "t_provavel": 8},
+            "H": {"precedentes": ["F"], "t_otimista": 3, "t_pessimista": 6, "t_provavel": 5}
+        }
+        </pre>
+        
+
+
+
+        <p>Isso representa um exemplo de rede de atividades com atividades nomeadas de 'A' a 'H' e suas precedências e durações. Sinta-se à vontade para substituir essas atividades pelos dados relevantes da sua rede.</p>
+
+        <ol start="3">
+            <li>Clique no botão "Analisar" para iniciar a análise da rede de atividades.</li>
+        </ol>
+        <img src="{{ url_for('static', path='/analyze.png') }}" alt="Exemplo de análise de rede de atividades" class="analyze-image">
+        
+        <h2>Página de Resultado</h2>
+        <p>Após a análise ser concluída, você será redirecionado para a página de Resultado. Nessa página, você encontrará informações valiosas sobre a sua rede de atividades, como:</p>
+        <ul>
+            <li>Atividades críticas</li>
+            <li>Gargalos</li>
+            <li>Fluxos de trabalho</li>
+            <li>Padrões e tendências</li>
+        </ul>
+        <p>Além disso, você terá a opção de baixar relatórios detalhados nos formatos PDF, XLS e PNG para compartilhamento e referência futura.</p>
+        <img src="{{ url_for('static', path='/result.png') }}" alt="Exemplo de página de resultado" class="result-image">
+        
+        <h2>Flexibilidade para análise</h2>
+        <p>O ARNA foi projetado para oferecer flexibilidade na análise de redes de atividades. Você pode importar diferentes redes e realizar análises múltiplas para obter insights comparativos. Basta repetir o processo de inserção de atividades e análise para cada rede de interesse.</p>
+        
+        <h2>Contato</h2>
+        <p>Se você tiver alguma dúvida, sugestão ou precisar de assistência adicional, não hesite em entrar em contato conosco. Estamos sempre prontos para ajudar!</p>
+        <p>Esperamos que você aproveite ao máximo o ARNA e suas capacidades avançadas de análise de redes de atividades.</p>
+
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Random Logo">
+            </div>
+            <div class="footer-links">
+                <a href="#">Termos</a>
+                <a href="#">Privacidade</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
