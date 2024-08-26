@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Resultado</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/home.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                ARNA
+            </a>
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="{{ url_for('home') }}">
+                        ▼ Analisar
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="/home">CPM</a>
+                        <a href="/homePERT">PERT</a>
+                        <a href="/monteCarlo">Simulação de Montecarlo</a>
+                    </div>
+                </li>
+                <li><a class="active" href="#">Resultado</a></li>
+                <li><a href="{{ url_for('help') }}">Ajuda</a></li>
+                <li><a href="{{ url_for('contact') }}">Contato</a></li>
+            </ul>
+        </nav>
+        <div class="profile dropdown">
+            <div class="profile-dropdown dropdown">
+                <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar" onclick="toggleDropdown()">
+                <div class="dropdown-content dropdown">
+                    <a href="{{ url_for('logout') }}">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+<div class="container" style="margin-bottom: 200px;">
+    <h1>Resultado da Análise</h1>
+    
+    <div class="image-box">
+        <div class="image-container">
+            <div class="image-border">
+                <img src="{{ url_for('static', path='/rede_atividades.png') }}" alt="Rede de Atividades">
+            </div>
+        </div>
+    </div>    
+
+    <div class="download-buttons">
+        <a href="#" class="download-button" onclick="openReportModal()">
+            <i class="fas fa-chart-bar"></i> Relatório
+        </a>
+        <a href="{{ url_for('download_png') }}" class="download-button">
+            <i class="fas fa-file-image"></i> Baixar PNG
+        </a>
+        <a href="{{ url_for('download_xls') }}" class="download-button">
+            <i class="fas fa-file-excel"></i> Baixar XLS
+        </a>
+        <a href="#" class="download-button" onclick="openReportModalProbabilidade()">
+          <i class="fas fa-chart-bar"></i> Probabilidade Gaussiana
+        </a>
+        <a href="#" class="download-button" onclick="openReportModalCalculadora()">
+          <i class="fas fa-chart-bar"></i> Calculadora Tempo Atividade
+        </a>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="reportModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeReportModal()">&times;</span>
+        <p>Caminho Crítico: {{ caminho_critico }}</p>
+        <p>Tempo Total: {{ tempo_total }}</p>
+        <h2>Tabela de Arestas</h2>
+        <!-- Adicione o DataFrame abaixo da tabela de arestas usando um iframe -->
+        <iframe src="{{ url_for('static', path='/dataframe.html') }}" width="100%" height="300px"></iframe>
+
+        <div class="download-buttons">
+            <a onclick="exportToPDF()" href="#" class="download-button">
+                <i class="fas fa-file-pdf"></i> Baixar PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Função para abrir o modal de Relatório
+    function openReportModal() {
+        var modal = document.getElementById("reportModal");
+        modal.style.display = "block";
+    }
+
+    // Função para fechar o modal de Relatório
+    function closeReportModal() {
+        var modal = document.getElementById("reportModal");
+        modal.style.display = "none";
+    }
+
+    // Função para abrir o modal da Calculadora de Tempo
+    function openReportModalCalculadora() {
+        var modal = document.getElementById("CalculadoraModal");
+        modal.style.display = "block";
+    }
+
+    // Função para fechar o modal da Calculadora de Tempo
+    function closeReportCalculadora() {
+        var modal = document.getElementById("CalculadoraModal");
+        modal.style.display = "none";
+    }
+
+    // Função para abrir o modal de Probabilidade Gaussiana
+    function openReportModalProbabilidade() {
+        var modal = document.getElementById("ProbabilidadeModal");
+        modal.style.display = "block";
+    }
+
+    // Função para fechar o modal de Probabilidade Gaussiana
+    function closeReportProbabilidade() {
+        var modal = document.getElementById("ProbabilidadeModal");
+        modal.style.display = "none";
+    }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+<div class="modal" id="CalculadoraModal">
+    <div class="modal-content">
+        <form action="{{ url_for('calculo_tempo') }}" method="POST">
+            <span class="close" onclick="closeReportCalculadora()">&times;</span>
+            <h2>Calculadora de Tempo</h2>
+
+            <p>Insira o nó de saída como o nó que irá ser o início e sair para um destino. O nó de chegada,
+                consequentemente, irá ser o ponto em que irá ser o fim do caminho, o destino. Caso forem conexos,
+                haverá uma linha vermelha traçando eles. Caso desconexos, não irá ter linha vermelha traçando eles 
+            </p>
+            <label for="saida">Nó de Saída:</label>
+            <input type="text" name="saida" id="saida" placeholder="Nó de Saída">
+    
+            <label for="chegada">Nó de Chegada:</label>
+            <input type="text" name="chegada" id="chegada" placeholder="Nó de Chegada">
+    
+            <button type="submit">Calcular</button>
+            <p id="resultado"></p>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="ProbabilidadeModal">
+    <div class="modal-content">
+        <form action="{{ url_for('gauss') }}" method="POST">
+            <span class="close" onclick="closeReportProbabilidade()">&times;</span>
+            <h2>Calculadora de Probabilidade Gaussiana</h2>
+            <img src="https://3.bp.blogspot.com/-hU4_ZrfyzJI/WrRg6OBZ-KI/AAAAAAAAOgE/2duewIwNxus4jea6xzNvSsTjxPe2YaXdQCLcBGAs/s640/IMAGEM%2B1906%2B-%2BCURVA%2BNORMAL%2BOU%2BGAUSSIANA%2B-%2BO%2BBLOG%2BDO%2BMESTRE.jpg" alt="">
+            <p>
+                Essa calculadora tem foco em calcular a probabilidade de um projeto terminar em um tempo programado que o usuário deseja inserir, de acordo
+                com um padrão de curva de gauss (Distribuição Tabela Z), sabendo que o PERT gira em torno de trabalhar com média ponderada, não tempo exato.
+            </p>
+    
+            <label for="saida">Insira o tempo programado:</label>
+            <input type="text" name="t_programado" id="t_programado" placeholder="Tempo programado">
+            <button class="probabilidade-button" type="submit">Calcular</button>
+            <p id="resultado"></p>
+        </form>
+    </div>
+</div>
+<footer>
+    <div class="footer-content">
+        <div class="footer-logo">
+            <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Random Logo">
+        </div>
+        <div class="footer-links">
+            <a href="#">Termos</a>
+            <a href="#">Privacidade</a>
+            <a href="#">Cookies</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

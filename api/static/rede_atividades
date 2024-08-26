@@ -1,0 +1,27 @@
+digraph {
+	rankdir=LR
+	graph [ranksep=1.5]
+	graph [nodesep=0.75]
+	A [label=A ports=we shape=circle]
+	B [label=B ports=we shape=circle]
+	C [label=C ports=we shape=circle]
+	D [label=D ports=we shape=circle]
+	E [label=E ports=we shape=circle]
+	F [label=F ports=we shape=circle]
+	G [label=G ports=we shape=circle]
+	H [label=H ports=we shape=circle]
+	Start [label=Start ports=we shape=circle]
+	End [label=End ports=we shape=circle]
+	A:e -> B:w [color=red]
+	A:e -> C:w
+	B:e -> D:w
+	B:e -> E:w [color=red]
+	C:e -> F:w
+	D:e -> G:w
+	E:e -> G:w [color=red]
+	F:e -> H:w
+	G -> End [color=red]
+	H:e -> End:w
+	Start:e -> A:w [color=red]
+	label="PERT Network" labelloc=bottom
+}
