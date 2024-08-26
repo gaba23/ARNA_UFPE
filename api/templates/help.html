@@ -8,31 +8,32 @@
 <body>
     <header>
         <div class="logo">
-            <a href="{{ url_for('home') }}">
+            <a href="/home">
                 ARNA
             </a>
         </div>
         <nav>
             <ul>
                 <li class="dropdown">
-                    <a href="{{ url_for('home') }}">
+                    <a href="/home">
                         ▼ Analisar
                     </a>
                     <div class="dropdown-content">
-                        <a href="{{ url_for('home') }}">CPM</a>
-                        <a href="{{ url_for('PERT') }}">PERT</a>
+                        <a href="/home">CPM</a>
+                        <a href="/homePERT">PERT</a>
+                        <a href="/monteCarlo">Simulação de Monte Carlo</a>
                     </div>
                 </li>
                 <li><a href="#">Resultado</a></li>
                 <li><a class="active" href="#">Ajuda</a></li>
-                <li><a href="{{ url_for('contact') }}">Contato</a></li>
+                <li><a href="/contact">Contato</a></li>
             </ul>
         </nav>
         <div class="profile dropdown">
             <div class="profile-dropdown dropdown">
                 <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar" onclick="toggleDropdown()">
                 <div class="dropdown-content dropdown">
-                    <a href="{{ url_for('logout') }}">Sair</a>
+                    <a href="/logout">Sair</a>
                 </div>
             </div>
         </div>
@@ -78,6 +79,26 @@
             "G": {"precedentes": ["D", "E"], "t_otimista": 7, "t_pessimista": 11, "t_provavel": 8},
             "H": {"precedentes": ["F"], "t_otimista": 3, "t_pessimista": 6, "t_provavel": 5}
         }
+        </pre>
+
+        <h2>Simulação de Monte Carlo</h2>
+        <pre class="code">
+            atividades_pert = {
+                "A": {"precedentes": [], "tipo": "beta_pert", "t_otimista": 2, "t_provavel": 5, "t_pessimista": 8, "custo": 0},
+                "B": {"precedentes": ["A"], "tipo": "triangular", "t_minimo": 3, "t_moda": 6, "t_maximo": 10, "custo": 0},
+                "C": {"precedentes": ["A"], "tipo": "uniforme", "t_minimo": 1, "t_maximo": 4, "custo": 0},
+                "D": {"precedentes": ["B"], "tipo": "normal", "t_otimista": 4, "t_media": 6, "t_pessimista": 8, "custo": 0},
+                "E": {"precedentes": ["B"], "tipo": "beta_pert", "t_otimista": 8, "t_provavel": 10, "t_pessimista": 12, "custo": 0},
+                "F": {"precedentes": ["C"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0},
+                "G": {"precedentes": ["D", "E"], "tipo": "beta_pert", "t_otimista": 7, "t_provavel": 8, "t_pessimista": 11, "custo": 0},
+                "H": {"precedentes": ["F"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0},
+                "fim": {"precedentes": ["G", "H"], "tipo": "beta_pert", "duracao": 0, "custo": 0}
+            }
+            
+            riscos = {
+                "A": {"probabilidade": 0.5, "tipo": "triangular", "atividades_afetadas": ["A"], "atraso_minimo": 3, "atraso_medio": 4, "atraso_maximo": 5},
+                "B": {"probabilidade": 0.3, "tipo": "uniforme", "atividades_afetadas": ["B", "C"], "atraso_minimo": 3, "atraso_maximo": 5}
+            }
         </pre>
         
 
