@@ -65,6 +65,7 @@ for atividade in atividades_convertidas:
 dot = graphviz.Digraph(comment='Diagrama de Atividades', format='png')
 dot.attr(rankdir='LR')  # Definir o layout como horizontal
 dot.attr('node', shape='rectangle')  # Definir o formato dos nós como retângulos
+dot.render('diagrama_atividades', format='png', cleanup=True)
 
 # Adicionar nós e arestas ao diagrama
 for atividade, no in mapa_atividades.items():
@@ -327,24 +328,6 @@ def calcular_tempos_atividades(medias, precedentes_atividades):
     
     return tempos_inicio, tempos_termino
 
-# Função para plotar o gráfico de Gantt
-def plotar_grafico_gantt(tempos_inicio, tempos_termino):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    atividades = list(tempos_inicio.keys())
-    atividades.reverse()
-    
-    for i, atividade in enumerate(atividades):
-        inicio = tempos_inicio[atividade]
-        termino = tempos_termino[atividade]
-        ax.broken_barh([(inicio, termino - inicio)], (i - 0.4, 0.8), facecolors='tab:blue')
-    
-    ax.set_yticks(range(len(atividades)))
-    ax.set_yticklabels(atividades)
-    ax.set_xlabel('Tempo')
-    ax.set_ylabel('Atividades')
-    ax.set_title('Gráfico de Gantt')
-    plt.show()
-
 # Calcular as médias dos tempos das atividades
 medias = calcular_medias_atividades(resultados_atividades)
 
@@ -358,9 +341,15 @@ def plotar_grafico_gantt(tempos_inicio, tempos_termino):
     # Definir cores para as barras
     cores = plt.cm.tab10(np.linspace(0, 1, len(tempos_inicio)))
 
+    # Inverter a ordem das atividades
+    atividades = list(tempos_inicio.keys())
+    atividades.reverse()
+
     # Criar barras para cada atividade
-    for i, (atividade, inicio) in enumerate(tempos_inicio.items()):
-        ax.barh(atividade, tempos_termino[atividade] - inicio, left=inicio, color=cores[0])
+    for i, atividade in enumerate(atividades):
+        inicio = tempos_inicio[atividade]
+        termino = tempos_termino[atividade]
+        ax.barh(atividade, termino - inicio, left=inicio, color=cores[i % len(cores)])
 
     # Remover linhas horizontais
     ax.yaxis.grid(False)
@@ -375,7 +364,7 @@ def plotar_grafico_gantt(tempos_inicio, tempos_termino):
     ax.set_xlabel('Tempo')
     ax.set_ylabel('Atividades')
     ax.set_title('Gráfico de Gantt - Projeto')
-    plt.show()
+    return fig
 
 # Cálculo das médias
 medias = calcular_medias_atividades(resultados_atividades)
@@ -383,8 +372,9 @@ medias = calcular_medias_atividades(resultados_atividades)
 # Cálculo dos tempos de início e término
 tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
-# Plotar o gráfico de Gantt
-plotar_grafico_gantt(tempos_inicio, tempos_termino)
+fig = plotar_grafico_gantt(tempos_inicio, tempos_termino)
+fig.savefig('grafico_gantt.png', format='png')
+plt.close(fig)
 
 impactos_atividades = {}
 for i, atividade in enumerate(atividades_pert.keys()):
@@ -402,4 +392,5 @@ plt.xlabel('Impacto na Duração do Projeto')
 plt.ylabel('Atividade')
 plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
 plt.grid(True)
+plt.savefig('grafico_tornado.png', format='png')
 plt.show()
