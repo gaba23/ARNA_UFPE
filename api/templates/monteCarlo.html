@@ -1,25 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Home</title>
+    <title>Simulação de Monte Carlo</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='home.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', path='favicon.png') }}">
     <img src="{{ url_for('static', path='avatar.png') }}" alt="Avatar">
-
 </head>
 <body>
     <header>
         <div class="logo">
-            <a href="/home">
-                ARNA
-            </a>
+            <a href="/home">ARNA</a>
         </div>
         <nav>
             <ul>
                 <li class="dropdown">
-                    <a href="/home">
-                        ▼ Analisar
-                    </a>
+                    <a href="/home">▼ Analisar</a>
                     <div class="dropdown-content">
                         <a href="/home">CPM</a>
                         <a href="/homePERT">PERT</a>
@@ -39,24 +34,24 @@
                 </div>
             </div>
         </div>
-    </header>    
-    
+    </header>
+
     <div class="container">
         <h1>Análise de Rede com Simulação de Monte Carlo</h1>
-        <form action="/analyze" method="POST" enctype="multipart/form-data">
+        <form action="/analyzeMonteCarlo" method="POST" enctype="multipart/form-data">
             <div class="input-box">
-                <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades" onchange="toggleInput(this)"></textarea>
-                <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite os riscos" onchange="toggleInput(this)"></textarea>
+                <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades"></textarea>
+                <textarea name="riscos" id="riscos" rows="4" cols="50" placeholder="Digite os riscos"></textarea>
             </div>
             <div class="input-box csv-input-box">
                 <label class="csv-title" for="csv_file">Importar CSV:</label>
                 <input type="file" name="csv_file" accept=".csv" id="csv_file" onchange="toggleInput(this)">
-                <button class="remove-button" onclick="removeFile('csv_file')">X</button>
+                <button class="remove-button" type="button" onclick="removeFile('csv_file')">X</button>
             </div>
             <div class="input-box json-input-box">
                 <label class="json-title" for="json_file">Importar JSON:</label>
                 <input type="file" name="json_file" accept=".json" id="json_file" onchange="toggleInput(this)">
-                <button class="remove-button" onclick="removeFile('json_file')">X</button>
+                <button class="remove-button" type="button" onclick="removeFile('json_file')">X</button>
             </div>
             <button class="analyze-button" type="submit">Analisar</button>
         </form>
@@ -69,7 +64,8 @@
     <script>
         function toggleInput(input) {
             var otherInput;
-            var textarea = document.getElementById('atividades');
+            var atividadesTextarea = document.getElementById('atividades');
+            var riscosTextarea = document.getElementById('riscos');
             
             if (input.id === 'csv_file') {
                 otherInput = document.getElementById('json_file');
@@ -79,10 +75,12 @@
             
             if (input.value) {
                 otherInput.disabled = true;
-                textarea.disabled = true;
+                atividadesTextarea.disabled = true;
+                riscosTextarea.disabled = true;
             } else {
                 otherInput.disabled = false;
-                textarea.disabled = false;
+                atividadesTextarea.disabled = false;
+                riscosTextarea.disabled = false;
             }
         }
         
@@ -91,7 +89,8 @@
             var input = document.getElementById(inputId);
             input.value = '';
             var otherInput;
-            var textarea = document.getElementById('atividades');
+            var atividadesTextarea = document.getElementById('atividades');
+            var riscosTextarea = document.getElementById('riscos');
     
             if (inputId === 'csv_file') {
                 otherInput = document.getElementById('json_file');
@@ -100,7 +99,8 @@
             }
     
             otherInput.disabled = false;
-            textarea.disabled = false;
+            atividadesTextarea.disabled = false;
+            riscosTextarea.disabled = false;
         }
     </script>
 

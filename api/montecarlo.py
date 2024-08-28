@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import glob
 
+
 def simular_montecarlo(atividades_pert, riscos):
 
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
@@ -247,7 +248,8 @@ def simular_montecarlo(atividades_pert, riscos):
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
 
     # Criando a planilha
-    with pd.ExcelWriter('Modelo_Riscos.xlsx') as writer:
+    planilha_path = 'Modelo_Riscos.xlsx'
+    with pd.ExcelWriter(planilha_path) as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
         df_atividades.to_excel(writer, sheet_name='Tempos e Caminhos', startrow=0, startcol=0, index_label="Iteração")
         df_caminhos.to_excel(writer, sheet_name='Tempos e Caminhos', startrow=0, startcol=len(df_atividades.columns) + 2, index_label="Iteração")
@@ -390,4 +392,4 @@ def simular_montecarlo(atividades_pert, riscos):
     imagem_tornado = ["grafico_tornado.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + planilha_path
