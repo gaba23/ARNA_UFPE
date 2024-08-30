@@ -66,36 +66,21 @@
         </div>    
 
         <div class="download-buttons">
-            <a href="#" class="download-button" onclick="openReportModal()">
-                <i class="fas fa-chart-bar"></i> Relatório
-            </a>
-            <a href="#" class="download-button" onclick="openImageModal()">
-                <i class="fas fa-file-image"></i> Baixar PNG
-            </a>
-            <a href="{{ url_for('download_xls') }}" class="download-button">
+            <a href="{{ xls_url }}" class="download-button">
                 <i class="fas fa-file-excel"></i> Baixar XLS
             </a>
-            <a href="#" class="download-button" onclick="openReportModalProbabilidade()">
-                <i class="fas fa-chart-bar"></i> Probabilidade Gaussiana
-            </a>
-            <a href="#" class="download-button" onclick="openReportModalCalculadora()">
-                <i class="fas fa-chart-bar"></i> Calculadora Tempo Atividade
+            <a href="#" class="download-button" onclick="openImageModal()">
+                <i class="fas fa-file-image"></i> Baixar Imagens
             </a>
         </div>
-
-        <!-- The Modal -->
+        
         <div id="imageModal" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="closeImageModal()">&times;</span>
                 <h2>Imagens Disponíveis para Download</h2>
                 {% for imagem in imagens %}
-                <a href="{{ url_for('download_image', imagem=imagem) }}" class="download-button">
+                <a href="{{ url_for('static', path=imagem) }}" class="download-button">
                     <i class="fas fa-file-image"></i> {{ imagem }}
-                </a>
-                {% endfor %}
-                {% for planilha in planilhas %}
-                <a href="{{ url_for('download_xls') }}" class="download-button">
-                    <i class="fas fa-file-excel"></i> {{ planilha }}
                 </a>
                 {% endfor %}
             </div>
@@ -103,7 +88,16 @@
     </div>
 
     <footer>
-        <!-- Your footer content here -->
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', path='/ufpe.png') }}" alt="Random Logo">
+            </div>
+            <div class="footer-links">
+                <a href="#">Termos</a>
+                <a href="#">Privacidade</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
     </footer>
 
     <script>

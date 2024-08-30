@@ -10,10 +10,10 @@ import numpy as np
 import graphviz
 from collections import defaultdict
 import pandas as pd
-#import matplotlib.pyplot as plt
-#import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import glob
-#from montecarlo import simular_montecarlo
+from montecarlo import simular_montecarlo
 
 templates = Jinja2Templates(directory="templates")
 
@@ -69,21 +69,21 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
     riscos_dict = {}
     
     # Processando arquivos CSV
-    if csv_file and csv_file.filename:  # Apenas processa se um arquivo CSV foi enviado
+    if csv_file and csv_file.filename:
         content = await csv_file.read()
         if not content:
             raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
         
         try:
             df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-            # Aqui você pode processar o DataFrame `df` conforme necessário
+            atividades_dict, riscos_dict = parse_csv(df)
         except pd.errors.EmptyDataError:
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
     
     # Processando arquivos JSON
-    elif json_file and json_file.filename:  # Apenas processa se um arquivo JSON foi enviado
+    elif json_file and json_file.filename:
         content = await json_file.read()
         if not content:
             raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
@@ -109,8 +109,24 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Erro ao decodificar riscos")
 
-    # Continue com o processamento da simulação
-    #return {"atividades": atividades_dict, "riscos": riscos_dict}
+    # Aqui, faça a simulação de Monte Carlo e salve as imagens e planilha
+    
+    # Exemplo de salvamento de imagens (ajuste conforme necessário)
+    imagem_diagrama = "static/diagrama_atividades.png"
+    plt.figure()  # Exemplo de geração de figura
+    plt.savefig(imagem_diagrama)
+    
+    # Salve outras imagens conforme necessário...
+
+    # Exemplo de salvamento de planilha
+    xls_path = "static/Modelo_Riscos.xlsx"
+    df_atividades = pd.DataFrame.from_dict(atividades_dict, orient='index')
+    df_riscos = pd.DataFrame.from_dict(riscos_dict, orient='index')
+    with pd.ExcelWriter(xls_path) as writer:
+        df_atividades.to_excel(writer, sheet_name='Atividades')
+        df_riscos.to_excel(writer, sheet_name='Riscos')
+
+    # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultMontecarlo', status_code=303)
 
 
@@ -168,29 +184,24 @@ def parse_text_riscos(text):
 @app.get("/resultMontecarlo")
 async def result_montecarlo(request: Request):
     # Coletar nomes das imagens geradas
-    imagem_diagrama = ["diagrama_atividades.png"]
-    imagens_atividades = glob.glob("distribuicao_atividade_*.png")
-    imagens_caminhos = glob.glob("distribuicao_caminho_*.png")
-    imagem_projeto = ["distribuicao_duracao_projeto.png"]
-    imagem_gantt = ["grafico_gantt.png"]
-    imagem_tornado = ["grafico_tornado.png"]
+    imagem_diagrama = ["static/diagrama_atividades.png"]
+    imagens_atividades = glob.glob("static/distribuicao_atividade_*.png")
+    imagens_caminhos = glob.glob("static/distribuicao_caminho_*.png")
+    imagem_projeto = ["static/distribuicao_duracao_projeto.png"]
+    imagem_gantt = ["static/grafico_gantt.png"]
+    imagem_tornado = ["static/grafico_tornado.png"]
     
     imagens = imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado
-
-    # Gerar a planilha XLS
-    df_atividades = pd.DataFrame.from_dict(atividades_dict, orient='index')
-    df_riscos = pd.DataFrame.from_dict(riscos_dict, orient='index')
-    
-    # Salvar o arquivo XLS
-    xls_path = "static/Modelo_Riscos.xlsx"
-    with pd.ExcelWriter(xls_path) as writer:
-        df_atividades.to_excel(writer, sheet_name='Atividades')
-        df_riscos.to_excel(writer, sheet_name='Riscos')
 
     # URL para o arquivo XLS
     xls_url = "/baixar-xls"
 
     return templates.TemplateResponse("resultMontecarlo.html", {"request": request, "imagens": imagens, "xls_url": xls_url})
+
+@app.get("/baixar-xls")
+async def baixar_xls():
+    file_path = "static/Modelo_Riscos.xlsx"
+    return FileResponse(file_path, filename="Modelo_Riscos.xlsx")
 
 @app.get("/download_image/{imagem}")
 async def download_image(imagem: str):

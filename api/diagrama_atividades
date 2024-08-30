@@ -1,0 +1,26 @@
+// Diagrama de Atividades
+digraph {
+	rankdir=LR
+	node [shape=rectangle]
+	2 [label=A]
+	3 [label=B]
+	4 [label=C]
+	5 [label=D]
+	6 [label=E]
+	7 [label=F]
+	8 [label=G]
+	9 [label=H]
+	10 [label=fim]
+	1 [label=inicio]
+	1 -> 2
+	2 -> 3
+	2 -> 4
+	3 -> 5
+	3 -> 6
+	4 -> 7
+	5 -> 8
+	6 -> 8
+	7 -> 9
+	8 -> 10
+	9 -> 10
+}
