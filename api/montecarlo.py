@@ -51,8 +51,6 @@ def simular_montecarlo(atividades_pert, riscos):
     dot = graphviz.Digraph(comment='Diagrama de Atividades', format='png')
     dot.attr(rankdir='LR')  # Definir o layout como horizontal
     dot.attr('node', shape='rectangle')  # Definir o formato dos nós como retângulos
-    dot.render('diagrama_atividades', format='png', cleanup=True)
-
 
     # Adicionar nós e arestas ao diagrama
     for atividade, no in mapa_atividades.items():
@@ -61,9 +59,8 @@ def simular_montecarlo(atividades_pert, riscos):
     for no_inicial, nos_finais in grafo.items():
         for no_final in nos_finais:
             dot.edge(str(no_inicial), str(no_final))
+    
 
-    # Renderizar o diagrama
-    dot.render('diagrama_atividades', view=True)
 
     # Função para encontrar todos os caminhos usando DFS (Busca em Profundidade)
     def encontrar_caminhos(grafo, inicio, fim, caminho=[]):
@@ -205,21 +202,20 @@ def simular_montecarlo(atividades_pert, riscos):
     # print("Atividades críticas e frequências:", frequencia_atividades_criticas)
     # print("Crucialidade das atividades:", crucialidade_atividades)
 
-    # Função para plotar a distribuição de cada atividade e salvar como imagem
     def plotar_distribuicao_atividades(resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-                plt.figure(figsize=(10, 6))
-                plt.hist(duracoes_atividade, bins=20, color='blue', alpha=0.7, edgecolor='black')
-                plt.title(f'Distribuição de Duração da Atividade {atividade}')
+                plt.figure()
+                plt.hist(duracoes_atividade, bins=30, alpha=0.75)
+                plt.title(f'Distribuição de Duração - {atividade}')
                 plt.xlabel('Duração')
                 plt.ylabel('Frequência')
-                plt.grid(axis='y', alpha=0.75)
-                plt.savefig(f'distribuicao_atividade_{atividade}.png')
+                plt.grid(True)
+                # Salvando a imagem para cada atividade
+                plt.savefig(f'static/distribuicao_atividade_{atividade}.png')
                 plt.close()
 
-    # Chamar a função para plotar e salvar a distribuição das atividades
     plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
 
     crucialidade_caminhos = {}
@@ -278,7 +274,7 @@ def simular_montecarlo(atividades_pert, riscos):
         plt.ylabel('Frequência')
         plt.title(f'Distribuição das Durações do Caminho {i} : {caminho} - Simulação de Monte Carlo')
         plt.grid(True)
-        plt.savefig(f'distribuicao_caminho_{i}.png')
+        plt.savefig(f'static/distribuicao_caminho_{i}.png')
         plt.close()
 
     # Plotar a distribuição das durações do projeto
@@ -288,7 +284,7 @@ def simular_montecarlo(atividades_pert, riscos):
     plt.ylabel('Frequência')
     plt.title('Distribuição dos Caminhos Críticos - Simulação de Monte Carlo')
     plt.grid(True)
-    plt.savefig('distribuicao_duracao_projeto.png')
+    plt.savefig('static/distribuicao_duracao_projeto.png')
     plt.close()
 
     print(precedentes_atividades)
@@ -352,6 +348,9 @@ def simular_montecarlo(atividades_pert, riscos):
         ax.set_xlabel('Tempo')
         ax.set_ylabel('Atividades')
         ax.set_title('Gráfico de Gantt - Projeto')
+        plt.grid(True)
+        plt.savefig('static/grafico_gantt.png')
+        plt.close()
         return fig
 
     # Cálculo das médias
@@ -361,8 +360,6 @@ def simular_montecarlo(atividades_pert, riscos):
     tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
     fig = plotar_grafico_gantt(tempos_inicio, tempos_termino)
-    fig.savefig('grafico_gantt.png', format='png')
-    plt.close(fig)
 
     impactos_atividades = {}
     for i, atividade in enumerate(atividades_pert.keys()):
@@ -380,16 +377,18 @@ def simular_montecarlo(atividades_pert, riscos):
     plt.ylabel('Atividade')
     plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
     plt.grid(True)
-    plt.savefig('grafico_tornado.png', format='png')
-    plt.show()
+    plt.savefig('static/grafico_tornado.png')
+
+    dot.render('static/diagrama_atividades', format='png', cleanup=True)
 
     # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
     imagem_diagrama = ["diagrama_atividades.png"]
-    imagens_atividades = glob.glob("distribuicao_atividade_*.png")
-    imagens_caminhos = glob.glob("distribuicao_caminho_*.png")
+    imagens_atividades = glob.glob("static/distribuicao_atividade_*.png")
+    imagens_caminhos = glob.glob("static/distribuicao_caminho_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + planilha_path
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + [planilha_path]
+
