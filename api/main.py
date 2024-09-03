@@ -22,6 +22,8 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.mount("/resultadosMontecarlo", StaticFiles(directory="resultadosMontecarlo"), name="resultadosMontecarlo")
+
 @app.get("/")
 def landing(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
@@ -64,7 +66,8 @@ async def logout(request: Request):
 
 @app.post("/analyzeMonteCarlo")
 async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), riscos: str = Form(None), 
-                            csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+                            csv_file: UploadFile = File(None), json_file: UploadFile = File(None),
+                            num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
     atividades_dict = {}
     riscos_dict = {}
     
@@ -110,10 +113,9 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
                 raise HTTPException(status_code=400, detail="Erro ao decodificar riscos")
 
     # Realizar a simulação de Monte Carlo
-    resultados = simular_montecarlo(atividades_dict, riscos_dict)
+    resultados = simular_montecarlo(atividades_dict, riscos_dict, num_interacoes)  # Passa o num_interacoes para a função
     lista_imagens = resultados[:-1]  # Todas as imagens
     xls_path = resultados[-1]  # O caminho do arquivo Excel
-
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultMontecarlo', status_code=303)
@@ -121,7 +123,7 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
 @app.get("/resultMontecarlo")
 async def result_montecarlo(request: Request):
     # Coletar nomes das imagens geradas
-    imagens = glob.glob("static/*.png")
+    imagens = glob.glob("resultadosMontecarlo/*.png")
 
     # URL para o arquivo XLS
     xls_url = "/baixar-xls"
@@ -135,8 +137,8 @@ async def baixar_xls():
 
 @app.get("/listar-imagens")
 async def listar_imagens():
-    # Lista todas as imagens na pasta static
-    imagens = glob.glob("static/*.png")  # Altere o padrão se necessário para outros tipos de imagem
+    # Lista todas as imagens na pasta resultadosMontecarlo
+    imagens = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
     imagens = [os.path.basename(imagem) for imagem in imagens]
     return JSONResponse(content={"imagens": imagens})
 

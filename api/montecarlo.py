@@ -8,7 +8,7 @@ import matplotlib.patches as patches
 import glob
 
 
-def simular_montecarlo(atividades_pert, riscos):
+def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
 
@@ -142,7 +142,7 @@ def simular_montecarlo(atividades_pert, riscos):
 
     # Solicitar o número de interações para a simulação de Monte Carlo
     #num_interacoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
-    num_interacoes = 1000
+    # num_interacoes = 1000
     # Encontrar e reunir em uma lista os caminhos
     caminhos = encontrar_caminhos(grafo, mapa_atividades["inicio"], mapa_atividades['fim'])
 
@@ -213,7 +213,7 @@ def simular_montecarlo(atividades_pert, riscos):
                 plt.ylabel('Frequência')
                 plt.grid(True)
                 # Salvando a imagem para cada atividade
-                plt.savefig(f'static/distribuicao_atividade_{atividade}.png')
+                plt.savefig(f'resultadosMontecarlo/distribuicao_atividade_{atividade}.png')
                 plt.close()
 
     plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
@@ -274,7 +274,7 @@ def simular_montecarlo(atividades_pert, riscos):
         plt.ylabel('Frequência')
         plt.title(f'Distribuição das Durações do Caminho {i} : {caminho} - Simulação de Monte Carlo')
         plt.grid(True)
-        plt.savefig(f'static/distribuicao_caminho_{i}.png')
+        plt.savefig(f'resultadosMontecarlo/distribuicao_caminho_{i}.png')
         plt.close()
 
     # Plotar a distribuição das durações do projeto
@@ -284,10 +284,10 @@ def simular_montecarlo(atividades_pert, riscos):
     plt.ylabel('Frequência')
     plt.title('Distribuição dos Caminhos Críticos - Simulação de Monte Carlo')
     plt.grid(True)
-    plt.savefig('static/distribuicao_duracao_projeto.png')
+    plt.savefig('resultadosMontecarlo/distribuicao_duracao_projeto.png')
     plt.close()
 
-    print(precedentes_atividades)
+    # print(precedentes_atividades)
     # Coletar a média dos tempos pela planilha
 
     # Função para calcular as médias dos tempos das atividades
@@ -349,7 +349,7 @@ def simular_montecarlo(atividades_pert, riscos):
         ax.set_ylabel('Atividades')
         ax.set_title('Gráfico de Gantt - Projeto')
         plt.grid(True)
-        plt.savefig('static/grafico_gantt.png')
+        plt.savefig('resultadosMontecarlo/grafico_gantt.png')
         plt.close()
         return fig
 
@@ -377,14 +377,14 @@ def simular_montecarlo(atividades_pert, riscos):
     plt.ylabel('Atividade')
     plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
     plt.grid(True)
-    plt.savefig('static/grafico_tornado.png')
+    plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
-    dot.render('static/diagrama_atividades', format='png', cleanup=True)
+    dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
 
     # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
     imagem_diagrama = ["diagrama_atividades.png"]
-    imagens_atividades = glob.glob("static/distribuicao_atividade_*.png")
-    imagens_caminhos = glob.glob("static/distribuicao_caminho_*.png")
+    imagens_atividades = glob.glob("resultadosMontecarlo/distribuicao_atividade_*.png")
+    imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
