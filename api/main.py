@@ -15,6 +15,8 @@ import matplotlib.patches as patches
 import glob
 from montecarlo import simular_montecarlo
 import os
+from pert import calcular_pert
+import networkx as nx
 
 templates = Jinja2Templates(directory="templates")
 
@@ -23,6 +25,8 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.mount("/resultadosMontecarlo", StaticFiles(directory="resultadosMontecarlo"), name="resultadosMontecarlo")
+
+app.mount("/resultadosPert", StaticFiles(directory="resultadosPert"), name="resultadosPert")
 
 @app.get("/")
 def landing(request: Request):
@@ -165,3 +169,87 @@ def parse_csv(df):
                 "atraso_maximo": row['atraso_maximo']
             }
     return atividades, riscos
+
+@app.post("/analyzePERT")
+async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+    atividades_dict = {}
+
+    # Processando arquivos CSV
+    if csv_file and csv_file.filename:
+        content = await csv_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
+
+        try:
+            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            atividades_dict = parse_pert_csv(df)
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+
+    # Processando arquivos JSON
+    elif json_file and json_file.filename:
+        content = await json_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
+
+        try:
+            atividades_dict = json.loads(content.decode('utf-8'))
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
+
+    # Processando entradas de texto
+    else:
+        if atividades:
+            try:
+                atividades_dict = json.loads(atividades)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
+    # Chama a função de cálculo PERT
+    imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+
+    # Redirecionar para a página de resultados
+    return RedirectResponse(url='/resultPERT', status_code=303)
+
+@app.get("/resultPERT")
+async def result_pert(request: Request):
+    # Coleta a imagem gerada
+    imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
+
+    return templates.TemplateResponse("resultPert.html", {"request": request, "imagem": imagem_pert})
+
+# Função para parse de CSV
+def parse_pert_csv(df):
+    atividades = {}
+    for index, row in df.iterrows():
+        atividades[row['atividade']] = {
+            "precedentes": row['precedentes'].split(',') if row['precedentes'] else [],
+            "t_otimista": row.get('t_otimista', None),
+            "t_provavel": row.get('t_provavel', None),
+            "t_pessimista": row.get('t_pessimista', None),
+        }
+    return atividades
+
+@app.get("/download_png")
+async def download_png():
+    file_path = "resultadosPert/atividades_pert.png" 
+    return FileResponse(file_path, filename="pert_image.png")
+
+@app.get("/download_xls")
+async def download_xls():
+    # Substitua o caminho pelo caminho real do arquivo XLS gerado
+    file_path = "caminho/para/o/seu/arquivo.xlsx"
+    return FileResponse(file_path, filename="resultado_pert.xlsx")
+
+@app.post("/calculo_tempo")
+async def calculo_tempo(data: dict):
+    # Lógica para processar os dados do formulário
+    return {"message": "Cálculo realizado com sucesso!"}
+
+@app.post("/gauss")
+async def gauss(data: dict):
+    # Lógica para processar o formulário
+    return {"message": "Cálculo Gaussiano realizado com sucesso!"}
+
