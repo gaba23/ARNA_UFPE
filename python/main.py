@@ -7,23 +7,23 @@ import matplotlib.pyplot as plt
 
 def simulacao_montecarlo():
     atividades_pert = {
-        "A": {"precedentes": [], "tipo": "beta_pert", "t_otimista": 2, "t_provavel": 5, "t_pessimista": 8, "custo": 0},
-        "B": {"precedentes": ["A"], "tipo": "triangular", "t_minimo": 3, "t_moda": 6, "t_maximo": 10, "custo": 0},
-        "C": {"precedentes": ["A"], "tipo": "uniforme", "t_minimo": 1, "t_maximo": 4, "custo": 0},
-        "D": {"precedentes": ["B"], "tipo": "normal", "t_otimista": 4, "t_media": 6, "t_pessimista": 8, "custo": 0},
-        "E": {"precedentes": ["B"], "tipo": "beta_pert", "t_otimista": 8, "t_provavel": 10, "t_pessimista": 12, "custo": 0},
-        "F": {"precedentes": ["C"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0},
-        "G": {"precedentes": ["D", "E"], "tipo": "beta_pert", "t_otimista": 7, "t_provavel": 8, "t_pessimista": 11, "custo": 0},
-        "H": {"precedentes": ["F"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0},
-        "fim": {"precedentes": ["G", "H"], "tipo": "beta_pert", "duracao": 0, "custo": 0}
+        "1": {"precedentes": [], "tipo": "beta_pert", "t_otimista": 2, "t_provavel": 5, "t_pessimista": 8, "custo": 0, "descricao": "descrição da atividade"},
+        "2": {"precedentes": ["1"], "tipo": "triangular", "t_minimo": 3, "t_moda": 6, "t_maximo": 10, "custo": 0, "descricao": "descrição da atividade"},
+        "3": {"precedentes": ["1"], "tipo": "uniforme", "t_minimo": 1, "t_maximo": 4, "custo": 0, "descricao": "descrição da atividade"},
+        "4": {"precedentes": ["2"], "tipo": "normal", "t_otimista": 4, "t_media": 6, "t_pessimista": 8, "custo": 0, "descricao": "descrição da atividade"},
+        "5": {"precedentes": ["2"], "tipo": "beta_pert", "t_otimista": 8, "t_provavel": 10, "t_pessimista": 12, "custo": 0, "descricao": "descrição da atividade"},
+        "6": {"precedentes": ["3"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0, "descricao": "descrição da atividade"},
+        "7": {"precedentes": ["4", "5"], "tipo": "beta_pert", "t_otimista": 7, "t_provavel": 8, "t_pessimista": 11, "custo": 0, "descricao": "descrição da atividade"},
+        "8": {"precedentes": ["6"], "tipo": "beta_pert", "t_otimista": 3, "t_provavel": 5, "t_pessimista": 6, "custo": 0, "descricao": "descrição da atividade"},
+        "fim": {"precedentes": ["7", "8"], "tipo": "beta_pert", "duracao": 0, "custo": 0, "descricao": "descrição da atividade"}
+    }
+
+    riscos = {
+        "A": {"probabilidade": 0.5, "tipo": "triangular", "atividades_afetadas": ["1"], "atraso_minimo": 3, "atraso_medio": 4, "atraso_maximo": 5},
+        "B": {"probabilidade": 0.3, "tipo": "uniforme", "atividades_afetadas": ["2", "3"], "atraso_minimo": 3, "atraso_maximo": 5}
     }
 
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
-
-    riscos = {
-        "A": {"probabilidade": 0.5, "tipo": "triangular", "atividades_afetadas": ["A"], "atraso_minimo": 3, "atraso_medio": 4, "atraso_maximo": 5},
-        "B": {"probabilidade": 0.3, "tipo": "uniforme", "atividades_afetadas": ["B", "C"], "atraso_minimo": 3, "atraso_maximo": 5}
-    }
 
     riscos_ocorridos = {risco: [] for risco in riscos}
     tempos_riscos = {risco: [] for risco in riscos}
