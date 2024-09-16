@@ -355,6 +355,19 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for atividade, termino in tempos_termino.items():
             ax.text(termino, atividade, f'{termino:.2f}', va='center', ha='left')
 
+         # Adicionar setas baseadas nas precedências
+        for atividade, predecessoras in precedentes_atividades.items():
+            for predecessora in predecessoras:
+                # Coordenadas para a seta
+                x_start = tempos_termino[predecessora]  # Termino da predecessora
+                y_start = atividades.index(predecessora)  # Índice da predecessora no eixo y
+                x_end = tempos_inicio[atividade]  # Início da atividade atual
+                y_end = atividades.index(atividade)  # Índice da atividade atual no eixo y
+
+                # Desenhar a seta
+                ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
+                            arrowprops=dict(facecolor='black', arrowstyle='->', lw=1))
+
         ax.set_xlabel('Tempo')
         ax.set_ylabel('Atividades')
         ax.set_title('Gráfico de Gantt - Projeto')
