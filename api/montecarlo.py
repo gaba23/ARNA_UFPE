@@ -247,9 +247,9 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     planilha_path = 'Modelo_Riscos.xlsx'
     with pd.ExcelWriter(planilha_path) as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
-        df_atividades.to_excel(writer, sheet_name='Tempos e Caminhos', startrow=0, startcol=0, index_label="Iteração")
-        df_caminhos.to_excel(writer, sheet_name='Tempos e Caminhos', startrow=0, startcol=len(df_atividades.columns) + 2, index_label="Iteração")
-        df_criticos.to_excel(writer, sheet_name='Tempos e Caminhos', startrow=0, startcol=len(df_atividades.columns) + len(df_caminhos.columns) + 4, index_label="Iteração")
+        df_atividades.to_excel(writer, sheet_name='Atividades', startrow=0, startcol=0, index_label="Iteração")
+        df_caminhos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + 2, index_label="Iteração")
+        df_criticos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + len(df_caminhos.columns) + 4, index_label="Iteração")
         df_riscos_ocorridos.to_excel(writer, sheet_name='Riscos', index=False)
 
         # Unir "Contagem Caminhos Críticos", "Frequência Caminhos Críticos", "Contagem Atividades Críticas", "Frequência Atividades Críticas", "Crucialidade das Atividades" e "Crucialidade dos Caminhos" em outra página
@@ -334,6 +334,16 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             inicio = tempos_inicio[atividade]
             termino = tempos_termino[atividade]
             ax.barh(atividade, termino - inicio, left=inicio, color=cores[i % len(cores)])
+
+        # Adicionar atividade "início" no início (sem duração, apenas um marcador visual)
+        ax.barh("Início", 0, left=0, color="green")  # Barra com duração 0 e cor verde
+
+        # Adicionar losango no início (atividade "início")
+        ax.scatter(0, len(atividades), marker='D', color='green', s=100, label="Início")  # Posição no eixo y: len(atividades) (acima da primeira atividade)
+
+        # Adicionar losango no fim (última atividade)
+        tempo_final = max(tempos_termino.values())  # Tempo final da última atividade
+        ax.scatter(tempo_final, -0.5, marker='D', color='red', s=100, label="Fim")  # Posição no eixo y: -0.5 (abaixo da última atividade)
 
         # Remover linhas horizontais
         ax.yaxis.grid(False)
