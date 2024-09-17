@@ -274,7 +274,7 @@ def parse_csv(df):
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None)
             }
-    print(atividades)
+    # print(atividades)
     return atividades, riscos
 
 @app.post("/analyzePERT")

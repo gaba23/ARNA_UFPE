@@ -6,6 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import glob
+import networkx as nx
+import os
+
 
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
@@ -237,6 +240,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     df_contagem_caminhos_criticos = pd.DataFrame(list(contagem_caminhos_criticos.items()), columns=["Caminho", "Contagem Crítica"])
     df_frequencia_caminhos_criticos = pd.DataFrame(list(frequencia_caminhos_criticos.items()), columns=["Caminho", "Frequência Crítica"])
+    df_caminhos_criticos = pd.merge(df_contagem_caminhos_criticos, df_frequencia_caminhos_criticos, on="Caminho")
     df_contagem_atividades_criticas = pd.DataFrame(list(contagem_atividades_criticas.items()), columns=["Atividade", "Contagem Crítica"])
     df_frequencia_atividades_criticas = pd.DataFrame(list(frequencia_atividades_criticas.items()), columns=["Atividade", "Frequência Crítica"])
     df_crucialidade_atividades = pd.DataFrame(list(crucialidade_atividades.items()), columns=["Atividade", "Crucialidade"])
@@ -248,22 +252,58 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     with pd.ExcelWriter(planilha_path) as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
         df_atividades.to_excel(writer, sheet_name='Atividades', startrow=0, startcol=0, index_label="Iteração")
-        df_caminhos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + 2, index_label="Iteração")
+        df_caminhos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=0, index_label="Iteração")
         df_criticos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + len(df_caminhos.columns) + 4, index_label="Iteração")
         df_riscos_ocorridos.to_excel(writer, sheet_name='Riscos', index=False)
 
         # Unir "Contagem Caminhos Críticos", "Frequência Caminhos Críticos", "Contagem Atividades Críticas", "Frequência Atividades Críticas", "Crucialidade das Atividades" e "Crucialidade dos Caminhos" em outra página
-        df_contagem_caminhos_criticos.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=0, index_label="Caminho")
-        df_frequencia_caminhos_criticos.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=len(df_contagem_caminhos_criticos) + 2, index_label="Caminho")
-        df_contagem_atividades_criticas.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=len(df_contagem_caminhos_criticos) + len(df_frequencia_caminhos_criticos) + 4, index=False)
-        df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=len(df_contagem_caminhos_criticos) + len(df_frequencia_caminhos_criticos) + len(df_contagem_atividades_criticas) + 6, index=False)
-        df_crucialidade_atividades.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=len(df_contagem_caminhos_criticos) + len(df_frequencia_caminhos_criticos) + len(df_contagem_atividades_criticas) + len(df_frequencia_atividades_criticas) + 8, index=False)
-        df_crucialidade_caminhos.to_excel(writer, sheet_name='Caminhos e Atividades Críticas', startrow=len(df_contagem_caminhos_criticos) + len(df_frequencia_caminhos_criticos) + len(df_contagem_atividades_criticas) + len(df_frequencia_atividades_criticas) + len(df_crucialidade_atividades) + 10, index=False)
+        df_caminhos_criticos.to_excel(writer, sheet_name='Caminhos Críticos', startrow=0, index_label="Número do Caminho")
+
+        # Salva o primeiro DataFrame na aba 'Atividades Críticas'
+        df_contagem_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, index=False)
+        # Calcula o deslocamento correto para o segundo DataFrame (número de colunas, não de linhas)
+        start_col_offset = df_contagem_atividades_criticas.shape[1] + 5  # Número de colunas + espaço entre os DataFrames
+        # Salva o segundo DataFrame na mesma aba, a partir de uma coluna deslocada
+        df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, startcol=start_col_offset, index=False)
+
+
+        df_crucialidade_atividades.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, index=False)
+        df_crucialidade_caminhos.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=len(df_crucialidade_atividades) + 10, index=False)
 
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
 
+    def criar_diagrama_atualizado(planilha_path):
+        # Ler os dados da planilha
+        df_frequencia_caminhos_criticos = pd.read_excel(planilha_path, sheet_name='Caminhos Críticos')
+        
+        # Criar um novo diagrama
+        dot = graphviz.Digraph(comment='Diagrama de Atividades Atualizado', format='png')
+        dot.attr(rankdir='LR')  # Layout horizontal
+        dot.attr('node', shape='rectangle')  # Formato dos nós
 
+        # Adicionar nós e arestas ao diagrama
+        for atividade, no in mapa_atividades.items():
+            dot.node(str(no), atividade)
+
+        # Adicionar arestas e destacar caminhos críticos
+        for i, row in df_frequencia_caminhos_criticos.iterrows():
+            caminho = row['Caminho']
+            frequencia = row['Frequência Crítica']
+            
+            # Certificar-se de que 'caminho' é uma sequência de elementos
+            if isinstance(caminho, str):
+                caminho = tuple(map(int, caminho.strip("()").split(", ")))
+
+            cor = 'red' if frequencia > 0.1 else 'black'  # Destacar se a frequência for maior que um limiar
+            for j in range(len(caminho) - 1):
+                dot.edge(str(caminho[j]), str(caminho[j + 1]), color=cor, penwidth='2.0')  # Destacar as arestas críticas
+
+        # Salvar o diagrama atualizado
+        dot.render('resultadosMontecarlo/diagrama_atividades_atualizado')
+
+    # Chamar a função após a criação da planilha
+    criar_diagrama_atualizado('Modelo_Riscos.xlsx')
 
     # Gerar gráficos de caminhos
     for i, caminho in enumerate(caminhos):
@@ -403,6 +443,64 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
     dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
+
+    # Carrega a planilha que contém os dados
+    file_path = 'Modelo_Riscos.xlsx'
+
+    # Lê apenas as duas primeiras colunas: 'Atividade' e 'Contagem Crítica'
+    df = pd.read_excel(file_path, sheet_name='Atividades Críticas', usecols=[0, 1])
+
+    # Renomeia as colunas para garantir consistência, se necessário
+    df.columns = ['Atividade', 'Contagem Crítica']
+
+    # Remove linhas com valores vazios, se houver
+    df.dropna(subset=['Atividade', 'Contagem Crítica'], inplace=True)
+
+    # Certifica-se de que a 'Contagem Crítica' está no formato correto (numérico)
+    df['Contagem Crítica'] = pd.to_numeric(df['Contagem Crítica'], errors='coerce')
+
+    # Remove linhas onde a contagem crítica não é válida
+    df.dropna(subset=['Contagem Crítica'], inplace=True)
+
+    # A partir daqui, pode-se continuar com a lógica de cálculo de crucialidade e criticidade
+    # Por exemplo, calcular a crucialidade:
+    df['Crucialidade'] = df['Contagem Crítica'] / df['Contagem Crítica'].max()
+
+    # Exibe as atividades ordenadas pela contagem crítica
+    df_sorted = df.sort_values(by='Contagem Crítica', ascending=False)
+
+    df = pd.DataFrame(df_sorted)
+
+    # Configura o gráfico
+    plt.figure(figsize=(10, 6))
+    plt.bar(df['Atividade'], df['Crucialidade'], color='skyblue')
+    plt.xlabel('Atividade')
+    plt.ylabel('Crucialidade')
+    plt.title('Gráfico de Crucialidade das Atividades')
+    plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
+
+    # Exibe o gráfico
+    plt.savefig('resultadosMontecarlo/grafico_crucialidade.png')
+
+    def plotar_grafico_criticidade(df_frequencia_atividades_criticas):
+        plt.figure(figsize=(10, 6))
+
+        # Ordenar os dados pela frequência
+        df_frequencia_atividades_criticas = df_frequencia_atividades_criticas.sort_values(by="Frequência Crítica", ascending=False)
+
+        # Plotar o gráfico de barras
+        plt.bar(df_frequencia_atividades_criticas["Atividade"], df_frequencia_atividades_criticas["Frequência Crítica"], color='skyblue')
+
+        # Adicionar títulos e labels
+        plt.xlabel('Atividade')
+        plt.ylabel('Frequência Crítica')
+        plt.title('Frequência de Atividades Críticas - Simulação de Monte Carlo')
+        plt.xticks(rotation=0)  # Rotacionar os rótulos do eixo X para melhor legibilidade
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+        # Salvar o gráfico
+        plt.savefig('resultadosMontecarlo/grafico_criticidade_atividades.png')
+        plt.close()
 
     # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
     imagem_diagrama = ["diagrama_atividades.png"]
