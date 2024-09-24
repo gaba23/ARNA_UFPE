@@ -265,9 +265,14 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         # Salva o segundo DataFrame na mesma aba, a partir de uma coluna deslocada
         df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, startcol=start_col_offset, index=False)
 
-
         df_crucialidade_atividades.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, index=False)
-        df_crucialidade_caminhos.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=len(df_crucialidade_atividades) + 10, index=False)
+
+        # Calcula a coluna de início para df_crucialidade_caminhos
+        start_col_offset = df_crucialidade_atividades.shape[1] + 2  # Número de colunas + espaço entre os DataFrames
+
+        # Salva df_crucialidade_caminhos ao lado do primeiro DataFrame
+        df_crucialidade_caminhos.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, startcol=start_col_offset, index=False)
+
 
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
@@ -551,7 +556,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Salvar a imagem
     plt.savefig('resultadosMontecarlo/estatisticas_duracao_projeto.png')
-    plt.show()
 
     # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
     imagem_diagrama = ["diagrama_atividades.png"]
