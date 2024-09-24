@@ -110,3 +110,5 @@ def calcular_pert(atividades_pert):
 
     imagem = ["atividades_pert.png"]
     return imagem
+
+calcular_pert(atividades_pert)

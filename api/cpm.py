@@ -1,109 +1,97 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+from graphviz import Digraph
 
-# Definindo as atividades e seus precedentes
+# Definindo as atividades do projeto com durações fixas
 atividades_cpm = {
-    "A": {"precedentes": [], "duracao": 2},
-    "B": {"precedentes": ["A"], "duracao": 6},
-    "C": {"precedentes": ["A"], "duracao": 4},
-    "D": {"precedentes": ["B"], "duracao": 5},
-    "E": {"precedentes": ["B"], "duracao": 10},
-    "F": {"precedentes": ["C"], "duracao": 9},
-    "G": {"precedentes": ["D", "E"], "duracao": 8},
-    "H": {"precedentes": ["F"], "duracao": 3},
-    "fim": {"precedentes": ["G", "H"], "duracao": 0}
+    "A": {"precedentes": [], "duracao": 5},  # Duração fixa
+    "B": {"precedentes": ["A"], "duracao": 6},  # Duração fixa
+    "C": {"precedentes": ["A"], "duracao": 5},  # Duração fixa
+    "D": {"precedentes": ["B"], "duracao": 8},  # Duração fixa
+    "E": {"precedentes": ["B"], "duracao": 10},  # Duração fixa
+    "F": {"precedentes": ["C"], "duracao": 5},  # Duração fixa
+    "G": {"precedentes": ["D", "E"], "duracao": 8},  # Duração fixa
+    "H": {"precedentes": ["F"], "duracao": 5},  # Duração fixa
+    "fim": {"precedentes": ["G", "H"], "duracao": 0}  # Duração zero para o nó final
 }
 
-# Criando o grafo para a análise CPM
-G = nx.DiGraph()
+def calcular_cpm(atividades_cpm):
+    def is_edge_in_critical_path(u, v):
+        return (u, v) in zip(critical_path[:-1], critical_path[1:])
 
-# Adicionando nós e arestas
-for atividade, dados in atividades_cpm.items():
-    for precedente in dados["precedentes"]:
-        G.add_edge(precedente, atividade, weight=dados["duracao"])
+    def calcular_es_ef(G):
+        es = {}
+        ef = {}
 
-# Calculando o caminho crítico
-caminho_critico = nx.dag_longest_path(G, weight='weight')
-caminho_critico_duracao = nx.dag_longest_path_length(G, weight='weight')
+        # Calcular Early Start (ES) e Early Finish (EF)
+        for node in nx.topological_sort(G):
+            if not G.in_edges(node):  # Se não houver predecessores
+                es[node] = 0
+            else:
+                # Calcular ES
+                es[node] = max(ef[pred] for pred in G.predecessors(node))
+            # Atualizar ef
+            ef[node] = es[node] + G.nodes[node]['duracao']
 
-# Visualização do grafo
-pos = nx.planar_layout(G)
-plt.figure(figsize=(10, 8))
+        return es, ef
 
-# Desenho do grafo
-nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=3000, font_size=12, font_weight='bold', arrows=True)
-nx.draw_networkx_edges(G, pos, width=2, alpha=0.5, edge_color='gray')
+    atividades = {}
+    for atividade, dados in atividades_cpm.items():
+        atividades[atividade] = {
+            "precedentes": dados["precedentes"],
+            "duracao": dados["duracao"]
+        }
 
-# Destacando o caminho crítico
-nx.draw_networkx_edges(G, pos, edgelist=list(zip(caminho_critico, caminho_critico[1:])), width=4, edge_color='red')
+    # Criar o grafo direcionado
+    G = nx.DiGraph()
 
-plt.title(f'Caminho Crítico: {" -> ".join(caminho_critico)} (Duração: {caminho_critico_duracao} dias)')
-plt.show()
+    # Adicionar os nós e as arestas ao grafo
+    for atividade, info in atividades.items():
+        G.add_node(atividade, duracao=info['duracao'])
+        for precedente in info['precedentes']:
+            G.add_edge(precedente, atividade, weight=info['duracao'])
 
-##############################################################################################################################
+    # Calcular o caminho crítico
+    critical_path = nx.dag_longest_path(G)
+    critical_path.append('fim')
 
-import networkx as nx
-import matplotlib.pyplot as plt
+    es, ef = calcular_es_ef(G)
 
-# Atividades e suas propriedades
-atividades_cpm = {
-    "A": {"precedentes": [], "duracao": 2},
-    "B": {"precedentes": ["A"], "duracao": 6},
-    "C": {"precedentes": ["A"], "duracao": 4},
-    "D": {"precedentes": ["B"], "duracao": 5},
-    "E": {"precedentes": ["B"], "duracao": 10},
-    "F": {"precedentes": ["C"], "duracao": 9},
-    "G": {"precedentes": ["D", "E"], "duracao": 8},
-    "H": {"precedentes": ["F"], "duracao": 3},
-    "fim": {"precedentes": ["G", "H"], "duracao": 0}
-}
-
-# Função para calcular datas mais cedo
-def calcular_datas_mais_cedo(atividades):
-    datas_inicio = {}
-    datas_termino = {}
-    for atividade, detalhes in atividades.items():
-        if detalhes["precedentes"]:
-            datas_inicio[atividade] = max(datas_termino[p] for p in detalhes["precedentes"])
+    ls = {}
+    for node in reversed(list(nx.topological_sort(G))):
+        if node == 'fim':
+            ls[node] = es[node]  # O LS da atividade 'fim' é igual ao seu ES
+        elif not G.out_edges(node):
+            ls[node] = ls['fim'] - G.nodes[node]['duracao']
         else:
-            datas_inicio[atividade] = 0
-        datas_termino[atividade] = datas_inicio[atividade] + detalhes["duracao"]
-    return datas_inicio, datas_termino
+            ls[node] = min(ls[succ] for succ in G.successors(node)) - G.nodes[node]['duracao']
 
-# Função para calcular datas mais tarde
-def calcular_datas_mais_tarde(atividades, datas_termino_mais_cedo):
-    datas_inicio_tarde = {}
-    datas_termino_tarde = {}
-    for atividade in reversed(list(atividades.keys())):
-        if atividades[atividade]["precedentes"]:
-            datas_termino_tarde[atividade] = min(datas_inicio_tarde[s] for s in atividades if atividade in atividades[s]["precedentes"])
+    lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
+
+    # Desenhar o grafo com Graphviz
+    dot = Digraph()
+    dot.attr(rankdir='LR')  # Definindo o layout horizontal da esquerda para a direita
+    for node in G.nodes():
+        duracao = round(G.nodes[node]['duracao'], 4)
+        es_node = round(es[node], 4)
+        ef_node = round(ef[node], 4)
+        ls_node = round(ls[node], 4)
+        lf_node = round(lf[node], 4)
+
+        # Ajustar valores negativos próximos de zero
+        if ls_node == -0.0 or ls_node < 0.0:
+            ls_node = 0.0
+
+        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}")
+
+    for edge in G.edges():
+        if is_edge_in_critical_path(edge[0], edge[1]):
+            dot.edge(edge[0], edge[1], color='red')
         else:
-            datas_termino_tarde[atividade] = datas_termino_mais_cedo["fim"]
-        datas_inicio_tarde[atividade] = datas_termino_tarde[atividade] - atividades[atividade]["duracao"]
-    return datas_inicio_tarde, datas_termino_tarde
+            dot.edge(edge[0], edge[1])
 
-# Cálculo das datas
-datas_inicio_mais_cedo, datas_termino_mais_cedo = calcular_datas_mais_cedo(atividades_cpm)
-datas_inicio_mais_tarde, datas_termino_mais_tarde = calcular_datas_mais_tarde(atividades_cpm, datas_termino_mais_cedo)
+    dot.render('resultadosCpm/atividades_cpm', format='png', cleanup=True)
 
-# Determinação das folgas e do caminho crítico
-caminho_critico = []
-for atividade in atividades_cpm:
-    folga = datas_inicio_mais_tarde[atividade] - datas_inicio_mais_cedo[atividade]
-    if folga == 0:
-        caminho_critico.append(atividade)
+    imagem = ["atividades_cpm.png"]
+    return imagem
 
-# Visualização do diagrama de rede
-G = nx.DiGraph()
-
-for atividade, detalhes in atividades_cpm.items():
-    for pre in detalhes["precedentes"]:
-        G.add_edge(pre, atividade)
-
-pos = nx.spring_layout(G)
-nx.draw_networkx(G, pos, with_labels=True, node_size=3000, node_color='lightblue')
-nx.draw_networkx_edges(G, pos, edgelist=[(caminho_critico[i], caminho_critico[i+1]) for i in range(len(caminho_critico)-1)], edge_color='r', width=3)
-
-plt.title("Diagrama de Rede CPM com Caminho Crítico")
-plt.show()
-
+calcular_cpm(atividades_cpm)

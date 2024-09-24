@@ -8,8 +8,7 @@ import matplotlib.patches as patches
 import glob
 import networkx as nx
 import os
-
-
+from scipy import stats
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
@@ -501,6 +500,58 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         # Salvar o gráfico
         plt.savefig('resultadosMontecarlo/grafico_criticidade_atividades.png')
         plt.close()
+
+    def plotar_grafico_normalizacao_acumulada_colunas(duracoes_projeto):
+        # Arredondar as durações para inteiros e ordenar
+        duracoes_ordenadas = np.sort(np.round(duracoes_projeto).astype(int))
+
+        # Contagem acumulada para cada valor de duração
+        valores_unicos, contagem_acumulada = np.unique(duracoes_ordenadas, return_counts=True)
+        contagem_acumulada = np.cumsum(contagem_acumulada)
+
+        # Criar o gráfico de colunas
+        plt.figure(figsize=(10, 6))
+        plt.bar(valores_unicos, contagem_acumulada, width=0.8, align='center', alpha=0.75)
+        plt.title('Gráfico de Normalização Acumulada - Duração do Projeto')
+        plt.xlabel('Tempo (Duração do Projeto)')
+        plt.ylabel('Número de Interações (Acumulado)')
+        plt.grid(True)
+        plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada.png')
+
+    # Supondo que df_duracoes_projeto tenha a coluna "Duração do Projeto"
+    plotar_grafico_normalizacao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"])
+
+    # Supondo que os dados estão na coluna "Duração do Projeto"
+    duracoes_projeto = df_duracoes_projeto["Duração do Projeto"]
+
+    # Calcular as estatísticas
+    tempo_min = np.min(duracoes_projeto)
+    tempo_max = np.max(duracoes_projeto)
+    media = np.mean(duracoes_projeto)
+    moda_result = stats.mode(duracoes_projeto, keepdims=True)  # Usar keepdims para manter a saída como array
+    moda = moda_result.mode[0] if moda_result.mode.size > 0 else None  # Garantir que existe uma moda
+    variancia = np.var(duracoes_projeto)
+    desvio_padrao = np.std(duracoes_projeto)
+
+    # Criar uma string com os valores
+    valores_texto = (
+        f"Tempo Mínimo: {tempo_min:.2f}\n"
+        f"Tempo Máximo: {tempo_max:.2f}\n"
+        f"Média: {media:.2f}\n"
+        f"Moda: {moda:.2f}\n"
+        f"Variância: {variancia:.2f}\n"
+        f"Desvio Padrão: {desvio_padrao:.2f}"
+    )
+
+    # Criar a imagem com os valores
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.text(0.5, 0.5, valores_texto, fontsize=12, va='center', ha='center', bbox=dict(facecolor='white', alpha=0.8))
+    ax.axis('off')  # Remover os eixos
+    plt.title('Estatísticas da Duração do Projeto')
+
+    # Salvar a imagem
+    plt.savefig('resultadosMontecarlo/estatisticas_duracao_projeto.png')
+    plt.show()
 
     # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
     imagem_diagrama = ["diagrama_atividades.png"]

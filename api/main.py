@@ -32,6 +32,8 @@ app.mount("/resultadosMontecarlo", StaticFiles(directory="resultadosMontecarlo")
 
 app.mount("/resultadosPert", StaticFiles(directory="resultadosPert"), name="resultadosPert")
 
+app.mount("/resultadosCpm", StaticFiles(directory="resultadosCpm"), name="resultadosCpm")
+
 @app.get("/")
 def landing(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
@@ -335,12 +337,20 @@ async def result_pert(request: Request):
 def parse_pert_csv(df):
     atividades = {}
     for index, row in df.iterrows():
-        atividades[row['atividade']] = {
-            "precedentes": row['precedentes'].split(',') if row['precedentes'] else [],
-            "t_otimista": row.get('t_otimista', None),
-            "t_provavel": row.get('t_provavel', None),
-            "t_pessimista": row.get('t_pessimista', None),
-        }
+        # Verifica se a atividade é 'fim'
+        if row['Atividade'] == "fim":
+            atividades[row['Atividade']] = {
+                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "duracao": 0  # Define a duração como 0 para a atividade 'fim'
+            }
+        else:
+            atividades[row['Atividade']] = {
+                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "t_otimista": int(row['t_otimista']) if pd.notna(row['t_otimista']) else None,
+                "t_provavel": int(row['t_provavel']) if pd.notna(row['t_provavel']) else None,
+                "t_pessimista": int(row['t_pessimista']) if pd.notna(row['t_pessimista']) else None,
+            }
+
     return atividades
 
 @app.get("/download_png")
@@ -363,4 +373,124 @@ async def calculo_tempo(data: dict):
 async def gauss(data: dict):
     # Lógica para processar o formulário
     return {"message": "Cálculo Gaussiano realizado com sucesso!"}
+
+@app.post("/analyze")
+async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+    atividades_dict = {}
+
+    # Processando arquivos CSV
+    if csv_file and csv_file.filename:
+        content = await csv_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
+
+        try:
+            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            atividades_dict = parse_cpm_csv(df)
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+
+    # Processando arquivos JSON
+    elif json_file and json_file.filename:
+        content = await json_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
+
+        try:
+            atividades_dict = json.loads(content.decode('utf-8'))
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
+
+    # Processando entradas de texto
+    else:
+        if atividades:
+            try:
+                atividades_dict = json.loads(atividades)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
+    # Chama a função de cálculo CPM
+    imagem = calcular_cpm(atividades_dict)  # Imagem do gráfico CPM gerada pela função
+
+    # Redirecionar para a página de resultados
+    return RedirectResponse(url='/result', status_code=303)
+
+@app.post("/analyze")
+async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+    atividades_dict = {}
+
+    # Processando arquivos CSV
+    if csv_file and csv_file.filename:
+        content = await csv_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
+
+        try:
+            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            atividades_dict = parse_cpm_csv(df)
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+
+    # Processando arquivos JSON
+    elif json_file and json_file.filename:
+        content = await json_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
+
+        try:
+            atividades_dict = json.loads(content.decode('utf-8'))
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
+
+    # Processando entradas de texto
+    else:
+        if atividades:
+            try:
+                atividades_dict = json.loads(atividades)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
+    # Chama a função de cálculo CPM
+    imagem = calcular_cpm(atividades_dict)  # Imagem do gráfico CPM gerada pela função
+
+    # Redirecionar para a página de resultados
+    return RedirectResponse(url='/result', status_code=303)
+
+@app.get("/result")
+async def result_cpm(request: Request):
+    # Coleta a imagem gerada
+    imagem_cpm = "resultadosCpm/atividades_cpm.png"  # Caminho da imagem gerada
+
+    return templates.TemplateResponse("result.html", {"request": request, "imagem": imagem_cpm})
+
+# Função para parse de CSV
+def parse_cpm_csv(df):
+    atividades = {}
+    for index, row in df.iterrows():
+        atividades[row['Atividade']] = {
+            "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+            "duracao": int(row['Duracao']) if pd.notna(row['Duracao']) else None,
+        }
+    return atividades
+
+@app.get("/download_png")
+async def download_cpm_png():
+    file_path = "resultadosCPM/atividades_cpm.png"
+    return FileResponse(file_path, filename="cpm_image.png")
+
+@app.get("/download_xls_cpm", name="download_xls_cpm")
+async def download_xls_cpm():
+    file_path = "caminho/para/o/seu/arquivo_cpm.xlsx"  # Atualize com o caminho correto para o arquivo
+    return FileResponse(file_path, filename="resultado_cpm.xlsx")
+
+# Implementação da função de cálculo CPM
+def calcular_cpm(atividades_dict):
+    # Lógica do cálculo CPM, semelhante ao seu código anterior
+    # Certifique-se de adaptar a lógica aqui com base na estrutura de atividades_dict
+    imagem = "resultadosCPM/atividades_cpm.png"  # Aqui você deve gerar e salvar a imagem do gráfico CPM
+    return imagem
 

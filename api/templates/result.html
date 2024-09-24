@@ -45,7 +45,7 @@
     <div class="image-box">
         <div class="image-container">
             <div class="image-border">
-                <img src="{{ url_for('static', path='/rede_atividades.png') }}" alt="Rede de Atividades">
+                <img src="{{ url_for('resultadosCpm', path='/atividades_cpm.png') }}" alt="Rede de Atividades">
             </div>
         </div>
     </div>    
@@ -54,9 +54,9 @@
         <a href="{{ url_for('download_png') }}" class="download-button">
             <i class="fas fa-file-image"></i> Baixar PNG
         </a>
-        <a href="{{ url_for('download_xls_CPM') }}" class="download-button">
+        <a href="{{ url_for('download_xls_cpm') }}" class="download-button">
             <i class="fas fa-file-excel"></i> Baixar XLS
-        </a>
+        </a>        
         
     </div>
     
