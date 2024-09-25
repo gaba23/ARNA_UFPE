@@ -1,29 +1,31 @@
-import webbrowser
-import subprocess
-import time
 import os
-import sys
+import tkinter as tk
+from tkinter import messagebox
+import webbrowser
+import threading
 
-def iniciar_fastapi():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    
-    # Corrigir o path para o módulo FastAPI
-    api_dir = os.path.join(dir_path, "api")  # Direciona para a pasta api
-    sys.path.append(api_dir)  # Adiciona a pasta api ao sys.path
+# Função que executa o FastAPI usando uvicorn
+def rodar_servidor():
+    os.system("cd api && uvicorn main:app --reload")
 
-    main_module = "main:app"  # Módulo correto dentro da pasta `api`
-    subprocess.Popen(["uvicorn", main_module, "--reload", "--app-dir", api_dir])  
-    time.sleep(3)
+# Função para abrir o navegador padrão
+def abrir_navegador():
+    webbrowser.open("http://127.0.0.1:8000")
 
-def abrir_chrome():
-    url = "http://127.0.0.1:8000"  # URL do seu FastAPI
-    # Caminho do Chrome no sistema, você pode ajustar conforme o local de instalação
-    chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe %s"
-    webbrowser.get(chrome_path).open(url)
+# Função chamada quando o botão é clicado
+def iniciar():
+    # Cria uma thread para rodar o servidor em segundo plano
+    threading.Thread(target=rodar_servidor).start()
+    # Abre o navegador depois de iniciar o servidor
+    abrir_navegador()
 
-if __name__ == "__main__":
-    # Mudar o diretório para a pasta onde está o FastAPI
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# Cria a janela principal do Tkinter
+root = tk.Tk()
+root.title("FastAPI Server")
 
-    iniciar_fastapi()  # Inicia o servidor FastAPI
-    abrir_chrome()  # Abre o navegador Chrome na URL do FastAPI
+# Adiciona um botão para iniciar o servidor
+btn_iniciar = tk.Button(root, text="Iniciar Servidor", command=iniciar, width=25, height=2)
+btn_iniciar.pack(pady=20)
+
+# Executa a janela principal
+root.mainloop()

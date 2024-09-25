@@ -1,17 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 a = Analysis(
     ['executa.py'],
     pathex=[],
     binaries=[],
-    datas=[
-    ('api/static', 'api/static'),
-    ('api/templates', 'api/templates'),
-    ('api/resultadosCpm', 'api/resultadosCpm'),
-    ('api/resultadosMontecarlo', 'api/resultadosMontecarlo'),
-    ('api/resultadosPert', 'api/resultadosPert')
-],
-    hiddenimports=['uvicorn', 'fastapi'],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -34,7 +29,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
