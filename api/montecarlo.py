@@ -192,11 +192,16 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
     frequencia_atividades_criticas = {atividade: contagem / num_interacoes for atividade, contagem in contagem_atividades_criticas.items()}
 
-    # Calcular a crucialidade das atividades e dos caminhos
+    # Calcular a crucialidade das atividades usando correlação
     crucialidade_atividades = {}
     for i, atividade in enumerate(atividades_pert.keys()):
         duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-        crucialidade_atividades[atividade] = np.mean(duracoes_atividade)
+        
+        if np.std(duracoes_atividade) == 0 or np.std(duracoes_projeto) == 0:
+            crucialidade_atividades[atividade] = 0
+        else:
+            correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
+            crucialidade_atividades[atividade] = correlacao
 
     # Exibir os resultados das simulações
     # print("Durações dos projetos:", duracoes_projeto)

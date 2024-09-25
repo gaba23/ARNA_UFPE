@@ -18,21 +18,28 @@ import os
 from pert import calcular_pert
 import networkx as nx
 
-templates = Jinja2Templates(directory="templates")
+# Obtém o caminho absoluto da pasta onde o executável ou script está rodando
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Caminho absoluto para a pasta 'templates'
+templates_dir = os.path.join(base_dir, 'templates')
+templates = Jinja2Templates(directory=templates_dir)
+
+# Criação da aplicação FastAPI
 app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("landing.html", {"request": request})
+# Montando diretórios estáticos com caminhos absolutos
+static_dir = os.path.join(base_dir, 'static')
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+resultados_montecarlo_dir = os.path.join(base_dir, 'resultadosMontecarlo')
+app.mount("/resultadosMontecarlo", StaticFiles(directory=resultados_montecarlo_dir), name="resultadosMontecarlo")
 
-app.mount("/resultadosMontecarlo", StaticFiles(directory="resultadosMontecarlo"), name="resultadosMontecarlo")
+resultados_pert_dir = os.path.join(base_dir, 'resultadosPert')
+app.mount("/resultadosPert", StaticFiles(directory=resultados_pert_dir), name="resultadosPert")
 
-app.mount("/resultadosPert", StaticFiles(directory="resultadosPert"), name="resultadosPert")
-
-app.mount("/resultadosCpm", StaticFiles(directory="resultadosCpm"), name="resultadosCpm")
+resultados_cpm_dir = os.path.join(base_dir, 'resultadosCpm')
+app.mount("/resultadosCpm", StaticFiles(directory=resultados_cpm_dir), name="resultadosCpm")
 
 @app.get("/")
 def landing(request: Request):
@@ -493,4 +500,8 @@ def calcular_cpm(atividades_dict):
     # Certifique-se de adaptar a lógica aqui com base na estrutura de atividades_dict
     imagem = "resultadosCPM/atividades_cpm.png"  # Aqui você deve gerar e salvar a imagem do gráfico CPM
     return imagem
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
 
