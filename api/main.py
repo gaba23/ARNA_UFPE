@@ -419,7 +419,7 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
                 raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
 
     # Chama a função de cálculo CPM
-    imagem = calcular_cpm(atividades_dict)  # Imagem do gráfico CPM gerada pela função
+    imagem = calcular_cpm(atividades_dict)
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/result', status_code=303)
@@ -462,16 +462,12 @@ async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None
                 raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
 
     # Chama a função de cálculo CPM
-    imagem = calcular_cpm(atividades_dict)  # Imagem do gráfico CPM gerada pela função
-
-    # Redirecionar para a página de resultados
+    imagem = calcular_cpm(atividades_dict)
     return RedirectResponse(url='/result', status_code=303)
 
 @app.get("/result")
 async def result_cpm(request: Request):
-    # Coleta a imagem gerada
-    imagem_cpm = "resultadosCpm/atividades_cpm.png"  # Caminho da imagem gerada
-
+    imagem_cpm = "resultadosCpm/atividades_cpm.png"
     return templates.TemplateResponse("result.html", {"request": request, "imagem": imagem_cpm})
 
 # Função para parse de CSV
@@ -491,17 +487,12 @@ async def download_cpm_png():
 
 @app.get("/download_xls_cpm", name="download_xls_cpm")
 async def download_xls_cpm():
-    file_path = "caminho/para/o/seu/arquivo_cpm.xlsx"  # Atualize com o caminho correto para o arquivo
+    file_path = "caminho/para/o/seu/arquivo_cpm.xlsx" 
     return FileResponse(file_path, filename="resultado_cpm.xlsx")
 
 # Implementação da função de cálculo CPM
 def calcular_cpm(atividades_dict):
-    # Lógica do cálculo CPM, semelhante ao seu código anterior
-    # Certifique-se de adaptar a lógica aqui com base na estrutura de atividades_dict
-    imagem = "resultadosCPM/atividades_cpm.png"  # Aqui você deve gerar e salvar a imagem do gráfico CPM
+    # Lógica do cálculo CPM
+    imagem = "resultadosCPM/atividades_cpm.png"
     return imagem
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
 
