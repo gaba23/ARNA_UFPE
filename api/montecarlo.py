@@ -62,8 +62,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for no_final in nos_finais:
             dot.edge(str(no_inicial), str(no_final))
     
-
-
     # Função para encontrar todos os caminhos usando DFS (Busca em Profundidade)
     def encontrar_caminhos(grafo, inicio, fim, caminho=[]):
         caminho = caminho + [inicio]
@@ -137,7 +135,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             tempos_riscos[risco].append(atraso_total)
                         else:
                             tempos_riscos[risco].append(0)
-
                 
                     break
         return duracao
@@ -186,7 +183,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             if no != 1:  # Ignorar o nó inicial
                 atividade = list(mapa_atividades.keys())[list(mapa_atividades.values()).index(no)]
                 contagem_atividades_criticas[atividade] += 1
-
 
     # Calcular frequências
     frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
@@ -531,6 +527,25 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # Supondo que df_duracoes_projeto tenha a coluna "Duração do Projeto"
     plotar_grafico_normalizacao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"])
 
+    def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
+        for i, atividade in enumerate(atividades_pert.keys()):
+            if atividade != "fim":  # Ignorar a atividade de fim
+                duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+                plt.figure(figsize=(10, 6))
+                plt.scatter(duracoes_projeto, duracoes_atividade,  alpha=0.75)
+                plt.title(f'Crucialidade - {atividade}')
+                plt.xlabel('Duração Crítica do Projeto')
+                plt.ylabel('Duração da Atividade')
+                plt.grid(True)
+                # Salvando a imagem para cada atividade
+                try:
+                    plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}.png')
+                except Exception as e:
+                    print(f"Erro ao salvar a imagem para a atividade {atividade}: {e}")                
+                plt.close()
+
+    plotar_crucialidade_atividades(df_duracoes_projeto["Duração do Projeto"], resultados_atividades, atividades_pert)
+
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto = df_duracoes_projeto["Duração do Projeto"]
 
@@ -569,7 +584,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
+    imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + [planilha_path]
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + [planilha_path]
 
