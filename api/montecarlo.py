@@ -365,7 +365,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Plotar o gráfico de Gantt
     def plotar_grafico_gantt(tempos_inicio, tempos_termino):
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(13, 6))
 
         # Definir cores para as barras
         cores = plt.cm.tab10(np.linspace(0, 1, len(tempos_inicio)))
@@ -375,11 +375,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         atividades.reverse()
 
         # Criar barras para cada atividade
+        entre_barras = 0.1
         for i, atividade in enumerate(atividades):
             inicio = tempos_inicio[atividade]
             termino = tempos_termino[atividade]
-            ax.barh(atividade, termino - inicio, left=inicio, color=cores[i % len(cores)])
-
+            duracao = termino - inicio
+            espaco_x = duracao * entre_barras  # Calcular o espaço no eixo x
+            ax.barh(atividade, duracao - espaco_x, left=inicio + espaco_x, color=cores[i % len(cores)])
         # Adicionar atividade "início" no início (sem duração, apenas um marcador visual)
         ax.barh("Início", 0, left=0, color="green")  # Barra com duração 0 e cor verde
 
@@ -406,12 +408,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 # Coordenadas para a seta
                 x_start = tempos_termino[predecessora]  # Termino da predecessora
                 y_start = atividades.index(predecessora)  # Índice da predecessora no eixo y
-                x_end = tempos_inicio[atividade]  # Início da atividade atual
+                x_end = tempos_inicio[atividade] + ((tempos_termino[atividade] - tempos_inicio[atividade]) * entre_barras)  # Início da atividade atual
                 y_end = atividades.index(atividade)  # Índice da atividade atual no eixo y
 
                 # Desenhar a seta
+                cor_seta = cores[atividades.index(atividade) % len(cores)]  # Cor da barra da atividade destino
                 ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
-                            arrowprops=dict(facecolor='black', arrowstyle='->', lw=1))
+                            arrowprops=dict(facecolor=cor_seta, edgecolor=cor_seta, arrowstyle='->', lw=1.25, connectionstyle="arc3,rad=0.1"))
 
         ax.set_xlabel('Tempo')
         ax.set_ylabel('Atividades')
