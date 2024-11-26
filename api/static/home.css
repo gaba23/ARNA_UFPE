@@ -26,12 +26,12 @@ header {
   display: flex;
   align-items: center;
   letter-spacing: 0.2px;
-  color: #90112F;
+  color: #B34603;
 }
 
 .logo a {
   text-decoration: none; /* Remover sublinhado */
-  color: #90112F; /* Definir a cor */
+  color: #B34603; /* Definir a cor */
 }
 
 nav {
@@ -57,7 +57,7 @@ nav ul li a {
 
 nav ul li a.active,
 nav ul li a:hover {
-  color: #90112F;
+  color: #B34603;
   text-decoration: underline;
 }
 

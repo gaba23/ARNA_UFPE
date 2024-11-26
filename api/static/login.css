@@ -32,7 +32,7 @@ header {
     display: flex;
     align-items: center;
     letter-spacing: 0.2px;
-    color: #90112F;
+    color: #B34603;
 }
 
 .profile img {
@@ -155,5 +155,5 @@ h1 {
 }
 
 .errormessage {
-  color: #90112F;
+  color: #B34603;
 }

@@ -63,7 +63,7 @@ async def home(request: Request):
 
 @app.get("/homePERT")
 async def home_pert(request: Request):
-    return templates.TemplateResponse("homePert.html", {"request": request})
+    return templates.TemplateResponse("homePERT.html", {"request": request})
 
 @app.get("/monteCarlo")
 async def home_montecarlo(request: Request):
@@ -145,7 +145,7 @@ async def result_montecarlo(request: Request):
     # URL para o arquivo XLS
     xls_url = "/baixar-xls"
 
-    return templates.TemplateResponse("resultMontecarlo.html", {"request": request, "imagens": imagens, "xls_url": xls_url})
+    return templates.TemplateResponse("resultMonteCarlo.html", {"request": request, "imagens": imagens, "xls_url": xls_url})
 
 @app.get("/baixar-xls")
 async def baixar_xls():
