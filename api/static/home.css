@@ -34,6 +34,16 @@ header {
   color: #B34603; /* Definir a cor */
 }
 
+
+.pmd {
+  width: 200px;  
+}
+
+.pmd img {
+  width: 115px;
+  height: auto;
+}
+
 nav {
   display: flex;
 }
@@ -119,8 +129,8 @@ footer {
 }
 
 .footer-logo img {
-  width: 50px;
-  height: 50px;
+  width: 75px;
+  height: auto;
 }
 
 .footer-links a {

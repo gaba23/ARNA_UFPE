@@ -5,8 +5,6 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='home.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', path='favicon.png') }}">
     <img src="{{ url_for('static', path='avatar.png') }}" alt="Avatar">
-    <img src="{{ url_for('static', path='logoPMD.png') }}" alt="Random Logo">
-
 </head>
 <body>
     <header>
@@ -43,6 +41,9 @@
     </header>    
     
     <div class="container">
+        <div class="pmd">
+            <img src="{{ url_for('static', path='logoPMD.png') }}" alt="Random Logo">
+        </div>
         <h1>Análise de Rede: CPM</h1>
         <form action="/analyze" method="POST" enctype="multipart/form-data">
             <div class="input-box">
