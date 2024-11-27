@@ -1,0 +1,12 @@
+Tipo,ID,Precedentes,Tipo de Distribuicao,Tempo Otimista,Tempo Provavel,Tempo Pessimista,Tempo Minimo,Tempo Moda,Tempo Maximo,Tempo Medio,Custo,Probabilidade,Atividades Afetadas,Atraso Minimo,Atraso Medio,Atraso Maximo,Descricao
+Atividade,1,,beta_pert,2,5,8,,,,,0,,,,,,descricao da atividade
+Atividade,2,1,triangular,,,,3,6,10,,0,,,,,,descricao da atividade
+Atividade,3,1,uniforme,,,,1,,4,,0,,,,,,descricao da atividade
+Atividade,4,2,normal,4,,8,,,,6,0,,,,,,descricao da atividade
+Atividade,5,2,beta_pert,8,10,12,,,,,0,,,,,,descricao da atividade
+Atividade,6,3,beta_pert,3,5,6,,,,,0,,,,,,descricao da atividade
+Atividade,7,"4, 5",beta_pert,7,8,11,,,,,0,,,,,,descricao da atividade
+Atividade,8,6,beta_pert,3,5,6,,,,,0,,,,,,descricao da atividade
+Atividade,fim,"7, 8",beta_pert,,,,,,,,0,,,,,,descricao da atividade
+Risco,A,,triangular,,,,3,,5,,,0.5,1,3,4,5,
+Risco,B,,uniforme,,,,3,,5,,,0.3,"2, 3",3,,5,

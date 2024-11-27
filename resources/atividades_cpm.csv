@@ -1,0 +1,10 @@
+Atividade,Precedentes,Duracao
+A,,2
+B,A,6
+C,A,4
+D,B,5
+E,B,10
+F,C,9
+G,"D,E",8
+H,F,3
+fim,"G,H",0

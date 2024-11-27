@@ -1,0 +1,10 @@
+Atividade,Precedentes,t_otimista,t_pessimista,t_provavel
+A,,2,8,5
+B,A,3,10,6
+C,A,1,4,5
+D,B,4,6,8
+E,B,8,12,10
+F,C,3,6,5
+G,"D,E",7,11,8
+H,F,3,6,5
+fim,"G,H",,,

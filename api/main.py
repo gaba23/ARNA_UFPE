@@ -120,14 +120,31 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
-            csv_buffer = io.StringIO()
-            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
-            csv_buffer.seek(0)
-            df = pd.read_csv(csv_buffer)
+
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl')  # extrair as páginas
+            s_atividades = sheets.get("Atividades")
+            s_riscos = sheets.get("Riscos")
+
+            # Converter em CSV evita formatações ocultas
+            csv_buffer1 = io.StringIO()
+            s_atividades.to_csv(csv_buffer1, index=False)
+            csv_buffer1.seek(0)
+
+            csv_buffer2 = io.StringIO()
+            s_riscos.to_csv(csv_buffer2, index=False)
+            csv_buffer2.seek(0)
+
+            # Combinar ambas as páginas, como exigido pelo processamento do parse_csv
+            combined_csv = io.StringIO()
+            combined_csv.write(csv_buffer1.getvalue())
+            combined_csv.write(csv_buffer1.getvalue())
+            combined_csv.seek(0)
+
+            df = pd.read_csv(combined_csv) # reconverter em dataframe
 
             if df.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            
             atividades_dict, riscos_dict = parse_csv(df)  
             
         except Exception as e:
