@@ -309,7 +309,7 @@ def parse_csv(df):
     return atividades, riscos
 
 @app.post("/analyzePERT")
-async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -337,6 +337,24 @@ async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
 
+    # Processando arquivos XLSX
+    if xlsx_file and xlsx_file.filename:
+        try:
+            content = await xlsx_file.read()
+            excel_file = io.BytesIO(content)
+            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            csv_buffer = io.StringIO()
+            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer)
+
+            if df.empty:
+                raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            atividades_dict = parse_pert_csv(df)  
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+        
     # Processando entradas de texto
     else:
         if atividades:
@@ -400,7 +418,7 @@ async def gauss(data: dict):
     return {"message": "Cálculo Gaussiano realizado com sucesso!"}
 
 @app.post("/analyze")
-async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -428,6 +446,24 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
 
+    # Processando arquivos XLSX
+    if xlsx_file and xlsx_file.filename:
+        try:
+            content = await xlsx_file.read()
+            excel_file = io.BytesIO(content)
+            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            csv_buffer = io.StringIO()
+            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer)
+
+            if df.empty:
+                raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            atividades_dict = parse_cpm_csv(df)  
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+    
     # Processando entradas de texto
     else:
         if atividades:
