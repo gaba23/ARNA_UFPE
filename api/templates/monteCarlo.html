@@ -53,6 +53,11 @@
                 <input type="file" name="json_file" accept=".json" id="json_file" onchange="toggleInput(this)">
                 <button class="remove-button" type="button" onclick="removeFile('json_file')">X</button>
             </div>
+            <div class="input-box xlsx-input-box">
+                <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
+                <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
+                <button class="remove-button" type="button" onclick="removeFile('xlsx_file')">X</button>
+            </div>
             <label for="num_interacoes">Número de Interações:</label>
             <input type="number" id="num_interacoes" name="num_interacoes" required>
             <button class="analyze-button" type="submit">Analisar</button>
@@ -65,44 +70,66 @@
 
     <script>
         function toggleInput(input) {
-            var otherInput;
-            var atividadesTextarea = document.getElementById('atividades');
-            var riscosTextarea = document.getElementById('riscos');
-            
-            if (input.id === 'csv_file') {
-                otherInput = document.getElementById('json_file');
-            } else if (input.id === 'json_file') {
-                otherInput = document.getElementById('csv_file');
-            }
-            
+            var fileInputs = [
+                document.getElementById('csv_file'),
+                document.getElementById('json_file'),
+                document.getElementById('xlsx_file')
+            ];
+            var textareas = [
+                document.getElementById('atividades'),
+                document.getElementById('riscos')
+            ];
+
             if (input.value) {
-                otherInput.disabled = true;
-                atividadesTextarea.disabled = true;
-                riscosTextarea.disabled = true;
+                fileInputs.forEach(function(fileInput) {
+                    if (fileInput !== input) {
+                        fileInput.disabled = true;
+                    }
+                });
+                textareas.forEach(function(textarea) {
+                    textarea.disabled = true;
+                });
             } else {
-                otherInput.disabled = false;
-                atividadesTextarea.disabled = false;
-                riscosTextarea.disabled = false;
+                var anyInputHasValue = fileInputs.some(function(fileInput) {
+                    return fileInput.value;
+                });
+
+                if (!anyInputHasValue) {
+                    fileInputs.forEach(function(fileInput) {
+                        fileInput.disabled = false;
+                    });
+                    textareas.forEach(function(textarea) {
+                        textarea.disabled = false;
+                    });
+                }
             }
         }
         
         function removeFile(inputId) {
-            event.preventDefault();
+            event.preventDefault(); 
+            var fileInputs = [
+                document.getElementById('csv_file'),
+                document.getElementById('json_file'),
+                document.getElementById('xlsx_file')
+            ];
+            var textareas = [
+                document.getElementById('atividades'),
+                document.getElementById('riscos')
+            ];
             var input = document.getElementById(inputId);
             input.value = '';
-            var otherInput;
-            var atividadesTextarea = document.getElementById('atividades');
-            var riscosTextarea = document.getElementById('riscos');
-    
-            if (inputId === 'csv_file') {
-                otherInput = document.getElementById('json_file');
-            } else if (inputId === 'json_file') {
-                otherInput = document.getElementById('csv_file');
+            var anyInputHasValue = fileInputs.some(function(fileInput) {
+                return fileInput.value;
+            });
+
+            if (!anyInputHasValue) {
+                fileInputs.forEach(function(fileInput) {
+                    fileInput.disabled = false;
+                });
+                textareas.forEach(function(textarea) {
+                    textarea.disabled = false;
+                });
             }
-    
-            otherInput.disabled = false;
-            atividadesTextarea.disabled = false;
-            riscosTextarea.disabled = false;
         }
     </script>
 

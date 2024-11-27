@@ -229,7 +229,7 @@ footer {
   background-color: #ddd;
 }
 /* Estilo para o título do campo de importação CSV */
-.csv-title {
+.csv-title, .json-title, .xlsx-title {
   font-size: 18px;
   margin-bottom: 10px;
   display: block;
@@ -297,13 +297,13 @@ textarea, input[type="file"] {
   border-radius: 5px;
 }
 
-.csv-input-box, .json-input-box {
+.csv-input-box, .json-input-box, .xlsx-input-box {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.csv-title, .json-title {
+.csv-title, .json-title, .xlsx-title {
   margin-right: 10px;
 }
 

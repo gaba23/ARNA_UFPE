@@ -83,7 +83,7 @@ async def logout(request: Request):
 
 @app.post("/analyzeMonteCarlo")
 async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), riscos: str = Form(None), 
-                            csv_file: UploadFile = File(None), json_file: UploadFile = File(None),
+                            csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
                             num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
     atividades_dict = {}
     riscos_dict = {}
@@ -114,7 +114,25 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             riscos_dict = data.get('riscos', {})
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
+        
+    # Processando arquivos XLSX
+    if xlsx_file and xlsx_file.filename:
+        try:
+            content = await xlsx_file.read()
+            excel_file = io.BytesIO(content)
+            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            csv_buffer = io.StringIO()
+            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer)
 
+            if df.empty:
+                raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            atividades_dict, riscos_dict = parse_csv(df)  
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+        
     # Processando entradas de texto
     else:
         if atividades:
@@ -198,7 +216,7 @@ def parse_csv(df):
                 "atraso_medio": row.get('Atraso Medio', None),
                 "atraso_maximo": row.get('Atraso Maximo', None)
             }
-    print(atividades)
+            
     return atividades, riscos
 
 def parse_csv(df):
@@ -287,7 +305,7 @@ def parse_csv(df):
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None)
             }
-    # print(atividades)
+
     return atividades, riscos
 
 @app.post("/analyzePERT")

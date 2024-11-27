@@ -59,6 +59,11 @@
                 <input type="file" name="json_file" accept=".json" id="json_file" onchange="toggleInput(this)">
                 <button class="remove-button" onclick="removeFile('json_file')">X</button>
             </div>
+            <div class="input-box xlsx-input-box">
+                <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
+                <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
+                <button class="remove-button" onclick="removeFile('xlsx_file')">X</button>
+            </div>
             <button class="analyze-button" type="submit">Analisar</button>
         </form>
         
@@ -69,38 +74,56 @@
 
     <script>
         function toggleInput(input) {
-            var otherInput;
+            var fileInputs = [
+                document.getElementById('csv_file'),
+                document.getElementById('json_file'),
+                document.getElementById('xlsx_file')
+            ];
             var textarea = document.getElementById('atividades');
-            
-            if (input.id === 'csv_file') {
-                otherInput = document.getElementById('json_file');
-            } else if (input.id === 'json_file') {
-                otherInput = document.getElementById('csv_file');
-            }
-            
+
             if (input.value) {
-                otherInput.disabled = true;
+                fileInputs.forEach(function(fileInput) {
+                    if (fileInput !== input) {
+                        fileInput.disabled = true;
+                    }
+                });
                 textarea.disabled = true;
             } else {
-                otherInput.disabled = false;
-                textarea.disabled = false;
+                var anyInputHasValue = fileInputs.some(function(fileInput) {
+                    return fileInput.value;
+                });
+
+                if (!anyInputHasValue) {
+                    fileInputs.forEach(function(fileInput) {
+                        fileInput.disabled = false;
+                    });
+                    textarea.disabled = false;
+                }
             }
         }
+
+
         
         function removeFile(inputId) {
             event.preventDefault();
             var input = document.getElementById(inputId);
             input.value = '';
-            var otherInput;
+            var otherInputs = [];
             var textarea = document.getElementById('atividades');
     
             if (inputId === 'csv_file') {
-                otherInput = document.getElementById('json_file');
+                otherInputs.pudh(document.getElementById('json_file'));
             } else if (inputId === 'json_file') {
-                otherInput = document.getElementById('csv_file');
+                otherInputs.push(document.getElementById('csv_file'));
+            } else if (inputId === 'xlsx_file') {
+                otherInputs.push(document.getElementById('xlsx_file'));
             }
     
-            otherInput.disabled = false;
+            otherInputs.forEach(function(otherInput) {
+                otherInput.disabled = false;
+            }
+
+            )
             textarea.disabled = false;
         }
     </script>

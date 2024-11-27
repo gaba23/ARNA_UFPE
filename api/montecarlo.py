@@ -35,6 +35,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 "no_final": no_final,
                 **detalhes
             })
+            
         if not precedentes:
             atividades_convertidas.append({
                 "no_inicial": 1,

@@ -55,6 +55,11 @@
                 <input type="file" name="json_file" accept=".json" id="json_file">
                 <button class="remove-button" onclick="removeFile('json_file')">X</button>
             </div>
+            <div class="input-box xlsx-input-box">
+                <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
+                <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file">
+                <button class="remove-button" onclick="removeFile('xlsx_file')">X</button>
+            </div>
             <button class="analyze-button" type="submit">Analisar</button>
         </form>
         
@@ -65,19 +70,30 @@
 
     <script>
         function removeFile(inputId) {
+            event.preventDefault(); 
+            var fileInputs = [
+                document.getElementById('csv_file'),
+                document.getElementById('json_file'),
+                document.getElementById('xlsx_file')
+            ];
+            var textareas = [
+                document.getElementById('atividades'),
+                document.getElementById('riscos')
+            ];
             var input = document.getElementById(inputId);
             input.value = '';
-            var otherInput;
-            var textarea = document.getElementById('atividades');
-            
-            if (inputId === 'csv_file') {
-                otherInput = document.getElementById('json_file');
-            } else if (inputId === 'json_file') {
-                otherInput = document.getElementById('csv_file');
+            var anyInputHasValue = fileInputs.some(function(fileInput) {
+                return fileInput.value;
+            });
+
+            if (!anyInputHasValue) {
+                fileInputs.forEach(function(fileInput) {
+                    fileInput.disabled = false;
+                });
+                textareas.forEach(function(textarea) {
+                    textarea.disabled = false;
+                });
             }
-            
-            otherInput.disabled = false;
-            textarea.disabled = false;
         }
     </script>
 
