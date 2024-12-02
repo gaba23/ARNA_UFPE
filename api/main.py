@@ -95,8 +95,12 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
         
         try:
-            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-            atividades_dict, riscos_dict = parse_csv(df)
+            content_file = io.StringIO(content.decode('utf-8'))
+            df_atv = pd.read_csv(content_file, usecols=range(14))
+            content_file.seek(0)  # Resetar ponteiro
+            df_riscos = pd.read_csv(content_file, usecols=range(14, 26))
+
+            atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)
         except pd.errors.EmptyDataError:
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
@@ -126,26 +130,22 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             s_riscos = sheets.get("Riscos")
 
             # Converter em CSV evita formatações ocultas
-            csv_buffer1 = io.StringIO()
-            s_atividades.to_csv(csv_buffer1, index=False)
-            csv_buffer1.seek(0)
+            csv_buffer_atv = io.StringIO()
+            s_atividades.to_csv(csv_buffer_atv, index=False)
+            csv_buffer_atv.seek(0)
 
-            csv_buffer2 = io.StringIO()
-            s_riscos.to_csv(csv_buffer2, index=False)
-            csv_buffer2.seek(0)
+            csv_buffer_riscos = io.StringIO()
+            s_riscos.to_csv(csv_buffer_riscos, index=False)
+            csv_buffer_riscos.seek(0)
 
-            # Combinar ambas as páginas, como exigido pelo processamento do parse_csv
-            combined_csv = io.StringIO()
-            combined_csv.write(csv_buffer1.getvalue())
-            combined_csv.write(csv_buffer1.getvalue())
-            combined_csv.seek(0)
+            # Reconverter em dataframe
+            df_atv = pd.read_csv(csv_buffer_atv)
+            df_riscos = pd.read_csv(csv_buffer_riscos)
 
-            df = pd.read_csv(combined_csv) # reconverter em dataframe
-
-            if df.empty:
+            if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
-            atividades_dict, riscos_dict = parse_csv(df)  
+            atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
             
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
@@ -195,133 +195,158 @@ async def listar_imagens():
     return JSONResponse(content={"imagens": imagens})
 
 # Função para parse de CSV
-def parse_csv(df):
-    atividades = {}
-    riscos = {}
-    for index, row in df.iterrows():
-        # Verifica se é uma atividade
-        if row['Tipo'] == "Atividade":
-            # Garante que 'Precedentes' seja tratado corretamente
-            precedentes = row['Precedentes']
-            if isinstance(precedentes, str):  # Verifica se 'Precedentes' é uma string
-                # Usa strip() para remover espaços em branco ao redor dos precedentes
-                precedentes_list = [p.strip() for p in precedentes.split(',')] if precedentes else []
-            else:
-                precedentes_list = []  # Caso contrário, define como lista vazia
+# def parse_csv(df):
+#     print('parse un')
+#     atividades = {}
+#     riscos = {}
+#     for index, row in df.iterrows():
+#         # Verifica se é uma atividade
+#         if row['Tipo'] == "Atividade":
+#             # Garante que 'Precedentes' seja tratado corretamente
+#             precedentes = row['Precedentes']
+#             if isinstance(precedentes, str):  # Verifica se 'Precedentes' é uma string
+#                 # Usa strip() para remover espaços em branco ao redor dos precedentes
+#                 precedentes_list = [p.strip() for p in precedentes.split(',')] if precedentes else []
+#             else:
+#                 precedentes_list = []  # Caso contrário, define como lista vazia
 
-            atividades[row['ID']] = {
-                "precedentes": precedentes_list,
-                "tipo": row['Tipo de Distribuicao'],
-                "t_otimista": row.get('Tempo Otimista', None),
-                "t_provavel": row.get('Tempo Provavel', None),
-                "t_pessimista": row.get('Tempo Pessimista', None),
-                "t_minimo": row.get('Tempo Minimo', None),
-                "t_moda": row.get('Tempo Moda', None),
-                "t_maximo": row.get('Tempo Maximo', None),
-                "t_media": row.get('Tempo Medio', None),
-                "custo": row.get('Custo', 0),
-                "descricao": row.get('Descricao', "")
-            }
+#             atividades[row['ID']] = {
+#                 "precedentes": precedentes_list,
+#                 "tipo": row['Tipo de Distribuicao'],
+#                 "t_otimista": row.get('Tempo Otimista', None),
+#                 "t_provavel": row.get('Tempo Provavel', None),
+#                 "t_pessimista": row.get('Tempo Pessimista', None),
+#                 "t_minimo": row.get('Tempo Minimo', None),
+#                 "t_moda": row.get('Tempo Moda', None),
+#                 "t_maximo": row.get('Tempo Maximo', None),
+#                 "t_media": row.get('Tempo Medio', None),
+#                 "custo": row.get('Custo', 0),
+#                 "descricao": row.get('Descricao', "")
+#             }
         
-        # Verifica se é um risco
-        elif row['Tipo'] == "Risco":
-            riscos[row['ID']] = {
-                "probabilidade": row['Probabilidade'],
-                "tipo": row['Tipo de Distribuicao'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-                "atraso_minimo": row.get('Atraso Minimo', None),
-                "atraso_medio": row.get('Atraso Medio', None),
-                "atraso_maximo": row.get('Atraso Maximo', None)
-            }
+#         # Verifica se é um risco
+#         elif row['Tipo'] == "Risco":
+#             riscos[row['ID']] = {
+#                 "probabilidade": row['Probabilidade'],
+#                 "tipo": row['Tipo de Distribuicao'],
+#                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+#                 "atraso_minimo": row.get('Atraso Minimo', None),
+#                 "atraso_medio": row.get('Atraso Medio', None),
+#                 "atraso_maximo": row.get('Atraso Maximo', None)
+#             }
             
-    return atividades, riscos
+#     return atividades, riscos
 
-def parse_csv(df):
+def parse_mc_csv(df_atv, df_riscos):
     atividades = {}
     riscos = {}
-    for index, row in df.iterrows():
-        # Verifica se é uma atividade
-        if row['Tipo'] == "Atividade":
-            # Garante que 'Precedentes' seja tratado corretamente
-            precedentes = row['Precedentes']
-            if isinstance(precedentes, str):  # Verifica se 'Precedentes' é uma string
-                # Usa strip() para remover espaços em branco ao redor dos precedentes
-                precedentes_list = [p.strip() for p in precedentes.split(',')] if precedentes else []
+
+    # Atividades
+    for index, row in df_atv.iterrows():
+        # Garante que 'Precedentes' seja tratado corretamente
+        precedentes = row['Precedentes']
+        if isinstance(precedentes, str):  # Verifica se 'Precedentes' é uma string
+            # Usa strip() para remover espaços em branco ao redor dos precedentes
+            precedentes_list = [p.strip() for p in precedentes.split(',')] if precedentes else []
+        else:
+            precedentes_list = []  # Caso contrário, define como lista vazia
+
+        if row['Tipo de Distribuicao'] == "beta_pert":
+            if row['ID'] == "fim":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "duracao": 0,
+                    "custo": row.get('Custo', 0),
+                    "custo": row.get('Custo', 0),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                    "descricao": row.get('Descricao', "")
+                    }
             else:
-                precedentes_list = []  # Caso contrário, define como lista vazia
-
-            if row['Tipo de Distribuicao'] == "beta_pert":
-                if row['ID'] == "fim":
-                    atividades[row['ID']] = {
-                        "precedentes": precedentes_list,
-                        "tipo": row['Tipo de Distribuicao'],
-                        "duracao": 0,
-                        "custo": row.get('Custo', 0),
-                        "descricao": row.get('Descricao', "")
-                        }
-                else:
-                    atividades[row['ID']] = {
-                        "precedentes": precedentes_list,
-                        "tipo": row['Tipo de Distribuicao'],
-                        "t_otimista": row.get('Tempo Otimista', None),
-                        "t_provavel": row.get('Tempo Provavel', None),
-                        "t_pessimista": row.get('Tempo Pessimista', None),
-                        "custo": row.get('Custo', 0),
-                        "descricao": row.get('Descricao', "")
-                        }
-
-            elif row['Tipo de Distribuicao'] == "triangular":
-                atividades[row['ID']] = {
-                    "precedentes": precedentes_list,
-                    "tipo": row['Tipo de Distribuicao'],
-                    "t_minimo": row.get('Tempo Minimo', None),
-                    "t_moda": row.get('Tempo Moda', None),
-                    "t_maximo": row.get('Tempo Maximo', None),
-                    "custo": row.get('Custo', 0),
-                    "descricao": row.get('Descricao', "")
-                }
-
-            elif row['Tipo de Distribuicao'] == "uniforme":
-                atividades[row['ID']] = {
-                    "precedentes": precedentes_list,
-                    "tipo": row['Tipo de Distribuicao'],
-                    "t_minimo": row.get('Tempo Minimo', None),
-                    "t_maximo": row.get('Tempo Maximo', None),
-                    "custo": row.get('Custo', 0),
-                    "descricao": row.get('Descricao', "")
-                }
-
-            elif row['Tipo de Distribuicao'] == "normal":
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
                     "t_otimista": row.get('Tempo Otimista', None),
+                    "t_provavel": row.get('Tempo Provavel', None),
                     "t_pessimista": row.get('Tempo Pessimista', None),
-                    "t_media": row.get('Tempo Medio', None),
                     "custo": row.get('Custo', 0),
+                    "custo": row.get('Custo', 0),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
                     "descricao": row.get('Descricao', "")
-                }
-        
-        # Verifica se é um risco
-        elif row['Tipo'] == "Risco":
-            if row['Tipo de Distribuicao'] == "triangular":
-                riscos[row['ID']] = {
-                "probabilidade": row['Probabilidade'],
+                    }
+
+        elif row['Tipo de Distribuicao'] == "triangular":
+            atividades[row['ID']] = {
+                "precedentes": precedentes_list,
                 "tipo": row['Tipo de Distribuicao'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-                "atraso_minimo": row.get('Atraso Minimo', None),
-                "atraso_medio": row.get('Atraso Medio', None),
-                "atraso_maximo": row.get('Atraso Maximo', None)
+                "t_minimo": row.get('Tempo Minimo', None),
+                "t_moda": row.get('Tempo Moda', None),
+                "t_maximo": row.get('Tempo Maximo', None),
+                "custo": row.get('Custo', 0),
+                "custo": row.get('Custo', 0),
+                "custo_fix": row.get('Custo Fixo', 0),
+                "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                "descricao": row.get('Descricao', "")
             }
 
-            elif row['Tipo de Distribuicao'] == "uniforme":
-                riscos[row['ID']] = {
-                "probabilidade": row['Probabilidade'],
+        elif row['Tipo de Distribuicao'] == "uniforme":
+            atividades[row['ID']] = {
+                "precedentes": precedentes_list,
                 "tipo": row['Tipo de Distribuicao'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-                "atraso_minimo": row.get('Atraso Minimo', None),
-                "atraso_maximo": row.get('Atraso Maximo', None)
+                "t_minimo": row.get('Tempo Minimo', None),
+                "t_maximo": row.get('Tempo Maximo', None),
+                "custo": row.get('Custo', 0),
+                "custo": row.get('Custo', 0),
+                "custo_fix": row.get('Custo Fixo', 0),
+                "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                "descricao": row.get('Descricao', "")
             }
+
+        elif row['Tipo de Distribuicao'] == "normal":
+            atividades[row['ID']] = {
+                "precedentes": precedentes_list,
+                "tipo": row['Tipo de Distribuicao'],
+                "t_otimista": row.get('Tempo Otimista', None),
+                "t_pessimista": row.get('Tempo Pessimista', None),
+                "t_media": row.get('Tempo Medio', None),
+                "custo": row.get('Custo', 0),
+                "custo_fix": row.get('Custo Fixo', 0),
+                "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                "descricao": row.get('Descricao', "")
+            }
+        
+
+    # Risco
+    for index, row in df_riscos.iterrows():
+        if row['Tipo de Distribuicao'] == "triangular":
+            riscos[row['ID']] = {
+            "probabilidade": row['Probabilidade'],
+            "tipo_dist": row['Tipo de Distribuicao'],
+            "tipo": row['Tipo'],
+            "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+            "atraso_minimo": row.get('Atraso Minimo', None),
+            "atraso_medio": row.get('Atraso Medio', None),
+            "atraso_maximo": row.get('Atraso Maximo', None),
+            "custo_fix": row.get('Custo Fixo Adicional', 0),
+            "custo": row.get('Custo', 0),
+            "descricao": row.get('Descricao', None)
+        }
+
+        elif row['Tipo de Distribuicao'] == "uniforme":
+            riscos[row['ID']] = {
+            "probabilidade": row['Probabilidade'],
+            "tipo_dist": row['Tipo de Distribuicao'],
+            "tipo": row['Tipo'],
+            "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+            "atraso_minimo": row.get('Atraso Minimo', None),
+            "atraso_maximo": row.get('Atraso Maximo', None),
+            "custo_fix": row.get('Custo Fixo Adicional', 0),
+            "custo": row.get('Custo', 0),
+            "descricao": row.get('Descricao', None)
+
+        }
 
     return atividades, riscos
 

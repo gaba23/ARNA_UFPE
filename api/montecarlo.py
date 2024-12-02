@@ -129,11 +129,16 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             atraso_total = 0
                             for atividade in detalhes["atividades_afetadas"]:
                                 index_atividade = mapa_atividades[atividade] - 2
-                                if detalhes["tipo"] == "triangular":
+                                if detalhes["tipo_dist"] == "triangular":
                                     atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
-                                elif detalhes["tipo"] == "uniforme":
+                                elif detalhes["tipo_dist"] == "uniforme":
                                     atraso = random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
-                                duracoes_atividades[index_atividade] += atraso
+
+                                if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
+                                    duracoes_atividades[index_atividade] += atraso
+                                else:  # Tipo do risco é percentual
+                                    duracoes_atividades[index_atividade] *= (1 + atraso)
+
                                 atraso_total += atraso
                             tempos_riscos[risco].append(atraso_total)
                         else:
