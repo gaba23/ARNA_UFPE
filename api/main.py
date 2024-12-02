@@ -100,7 +100,14 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             content_file.seek(0)  # Resetar ponteiro
             df_riscos = pd.read_csv(content_file, usecols=range(14, 26))
 
+            # Erros de conversão do segundo dataframe
+            df_riscos.dropna(how='all', inplace=True)
+            df_riscos.rename(columns={'Tipo de Distribuicao.1': 'Tipo de Distribuicao'}, inplace=True)
+            df_riscos.rename(columns={'Descricao.1': 'Descricao'}, inplace=True)
+            df_riscos.rename(columns={'ID.1': 'ID'}, inplace=True)
+            
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)
+
         except pd.errors.EmptyDataError:
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
