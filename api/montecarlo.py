@@ -63,8 +63,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for no_final in nos_finais:
             dot.edge(str(no_inicial), str(no_final))
     
-
-
     # Função para encontrar todos os caminhos usando DFS (Busca em Profundidade)
     def encontrar_caminhos(grafo, inicio, fim, caminho=[]):
         caminho = caminho + [inicio]
@@ -143,7 +141,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             tempos_riscos[risco].append(atraso_total)
                         else:
                             tempos_riscos[risco].append(0)
-
                 
                     break
         return duracao
@@ -192,7 +189,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             if no != 1:  # Ignorar o nó inicial
                 atividade = list(mapa_atividades.keys())[list(mapa_atividades.values()).index(no)]
                 contagem_atividades_criticas[atividade] += 1
-
 
     # Calcular frequências
     frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
@@ -375,7 +371,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Plotar o gráfico de Gantt
     def plotar_grafico_gantt(tempos_inicio, tempos_termino):
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(13, 6))
 
         # Definir cores para as barras
         cores = plt.cm.tab10(np.linspace(0, 1, len(tempos_inicio)))
@@ -385,11 +381,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         atividades.reverse()
 
         # Criar barras para cada atividade
+        entre_barras = 0.1
         for i, atividade in enumerate(atividades):
             inicio = tempos_inicio[atividade]
             termino = tempos_termino[atividade]
-            ax.barh(atividade, termino - inicio, left=inicio, color=cores[i % len(cores)])
-
+            duracao = termino - inicio
+            espaco_x = duracao * entre_barras  # Calcular o espaço no eixo x
+            ax.barh(atividade, duracao - espaco_x, left=inicio + espaco_x, color=cores[i % len(cores)])
         # Adicionar atividade "início" no início (sem duração, apenas um marcador visual)
         ax.barh("Início", 0, left=0, color="green")  # Barra com duração 0 e cor verde
 
@@ -416,12 +414,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 # Coordenadas para a seta
                 x_start = tempos_termino[predecessora]  # Termino da predecessora
                 y_start = atividades.index(predecessora)  # Índice da predecessora no eixo y
-                x_end = tempos_inicio[atividade]  # Início da atividade atual
+                x_end = tempos_inicio[atividade] + ((tempos_termino[atividade] - tempos_inicio[atividade]) * entre_barras)  # Início da atividade atual
                 y_end = atividades.index(atividade)  # Índice da atividade atual no eixo y
 
                 # Desenhar a seta
+                cor_seta = cores[atividades.index(atividade) % len(cores)]  # Cor da barra da atividade destino
                 ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
-                            arrowprops=dict(facecolor='black', arrowstyle='->', lw=1))
+                            arrowprops=dict(facecolor=cor_seta, edgecolor=cor_seta, arrowstyle='->', lw=1.25, connectionstyle="arc3,rad=0.1"))
 
         ax.set_xlabel('Tempo')
         ax.set_ylabel('Atividades')
@@ -439,25 +438,51 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     fig = plotar_grafico_gantt(tempos_inicio, tempos_termino)
 
-    impactos_atividades = {}
-    for i, atividade in enumerate(atividades_pert.keys()):
-        duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-        correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
-        impactos_atividades[atividade] = correlacao * np.std(duracoes_atividade)
+    def plotar_grafico_tornado():
+        # Calcular impacto percentual
+        impactos_atividades = {}
+        for i, atividade in enumerate(atividades_pert.keys()):
+            duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+            correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
+            impactos_atividades[atividade] = correlacao * np.std(duracoes_atividade)
 
-    impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
-    atividades = list(impactos_ordenados.keys())
-    impactos = list(impactos_ordenados.values())
+        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
+        atividades = list(impactos_ordenados.keys())
+        impactos = list(impactos_ordenados.values())
 
-    plt.figure(figsize=(10, 8))
-    plt.barh(atividades, impactos, color='blue', alpha=0.7)
-    plt.xlabel('Impacto na Duração do Projeto')
-    plt.ylabel('Atividade')
-    plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
-    plt.grid(True)
-    plt.savefig('resultadosMontecarlo/grafico_tornado.png')
+        # Gerar gfráfico
+        plt.figure(figsize=(12, 8))
+        atv_bars = plt.barh(atividades, impactos, color='blue', alpha=0.7)
+        # Inserindo os percentuais
+        for b, i in zip(atv_bars, impactos):
+            if i > 0:
+                plt.text(
+                    b.get_width() + 0.005,
+                    b.get_y() + b.get_height() / 2,
+                    f'{i:.3f}%',
+                    va='center',
+                    fontsize=9.5,
+                    color='black'
+                )
+            else:
+                    plt.text(
+                    b.get_width() - 0.1,
+                    b.get_y() + b.get_height() / 2,
+                    f'{i:.3f}%',
+                    va='center',
+                    fontsize=9.5,
+                    color='black'
+                )
+        plt.xlabel('Impacto na Duração do Projeto')
+        plt.ylabel('Atividade')
+        plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
+        plt.grid(True)
+        plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
     dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
+
+    # Exibir o gráfico
+    plotar_grafico_tornado()
 
     # Carrega a planilha que contém os dados
     file_path = 'Modelo_Riscos.xlsx'
@@ -537,6 +562,25 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # Supondo que df_duracoes_projeto tenha a coluna "Duração do Projeto"
     plotar_grafico_normalizacao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"])
 
+    def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
+        for i, atividade in enumerate(atividades_pert.keys()):
+            if atividade != "fim":  # Ignorar a atividade de fim
+                duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+                plt.figure(figsize=(10, 6))
+                plt.scatter(duracoes_projeto, duracoes_atividade,  alpha=0.75)
+                plt.title(f'Crucialidade - {atividade}')
+                plt.xlabel('Duração Crítica do Projeto')
+                plt.ylabel('Duração da Atividade')
+                plt.grid(True)
+                # Salvando a imagem para cada atividade
+                try:
+                    plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}.png')
+                except Exception as e:
+                    print(f"Erro ao salvar a imagem para a atividade {atividade}: {e}")                
+                plt.close()
+
+    plotar_crucialidade_atividades(df_duracoes_projeto["Duração do Projeto"], resultados_atividades, atividades_pert)
+
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto = df_duracoes_projeto["Duração do Projeto"]
 
@@ -575,7 +619,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
+    imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + [planilha_path]
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + [planilha_path]
 
