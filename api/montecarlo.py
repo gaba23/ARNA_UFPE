@@ -285,10 +285,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
 
     def criar_diagrama_atualizado(planilha_path):
-        # Ler os dados da planilha
         df_frequencia_caminhos_criticos = pd.read_excel(planilha_path, sheet_name='Caminhos Críticos')
         
-        # Criar um novo diagrama
         dot = graphviz.Digraph(comment='Diagrama de Atividades Atualizado', format='png')
         dot.attr(rankdir='LR')  # Layout horizontal
         dot.attr('node', shape='rectangle')  # Formato dos nós
@@ -297,38 +295,29 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for atividade, no in mapa_atividades.items():
             dot.node(str(no), atividade)
 
-        # Dicionário para rastrear arestas com suas cores
-        arestas = {}
+        arestas = {}   # Dicionário para rastrear arestas com suas cores
 
-        # Processar os caminhos e destacar caminhos críticos
         for _, row in df_frequencia_caminhos_criticos.iterrows():
             caminho = row['Caminho']
             frequencia = row['Frequência Crítica']
             
-            # Certificar-se de que 'caminho' é uma sequência de elementos
-            if isinstance(caminho, str):
+            if isinstance(caminho, str):   # Certificar-se de que 'caminho' é uma sequência de elementos
                 caminho = tuple(map(int, caminho.strip("()").split(", ")))
 
-            cor = 'red' if frequencia > 0.1 else 'black'  # Destacar se a frequência for maior que um limiar
+            cor = 'red' if frequencia > 0.1 else 'black' 
             
-            # Adicionar ou sobrescrever arestas
             for j in range(len(caminho) - 1):
                 aresta = (str(caminho[j]), str(caminho[j + 1]))
-                # Se a aresta for crítica (vermelha), sempre sobrescreve as existentes
-                if aresta in arestas:
+                if aresta in arestas:  # Se a aresta for crítica (vermelha), sobrescrever as outras
                     if cor == 'red':
                         arestas[aresta] = cor
                 else:
                     arestas[aresta] = cor
 
-        # Adicionar arestas ao diagrama
         for (inicio, fim), cor in arestas.items():
             dot.edge(inicio, fim, color=cor, penwidth='2.0')
 
-        # Salvar o diagrama atualizado
         dot.render('resultadosMontecarlo/diagrama_atividades_atualizado')
-
-
 
     # Chamar a função após a criação da planilha
     criar_diagrama_atualizado('Modelo_Riscos.xlsx')
@@ -410,22 +399,18 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         primeira_atividade = atividades[-1]  # Primeira atividade no eixo y
         ultima_atividade = atividades[0]    # Última atividade no eixo y
 
-        # Adicionar losango no início (atividade "início")
+        # Adicionar losango no início
         ax.scatter(0, atividades.index(primeira_atividade), marker='D', color='green', s=100, label="Início")
 
-        # Adicionar losango no fim (última atividade)
-        tempo_final = max(tempos_termino.values())  # Tempo final da última atividade
+        # Adicionar losango no fim (atividade fim)
+        tempo_final = max(tempos_termino.values())  
         ax.scatter(tempo_final + 1, atividades.index(ultima_atividade), marker='D', color='red', s=100, label="Fim")
 
         # Ajustar os limites do eixo x
         x_min = 0  # Alinhar 0 ao início do eixo x
         x_max = tempo_final + 1  # Adicionar espaço no final para o marcador "Fim"
         ax.set_xlim(x_min, x_max)
-
-        # Remover linhas horizontais
         ax.yaxis.grid(False)
-
-        # Alterar linhas verticais tracejadas para sólidas
         ax.xaxis.grid(True, linestyle='--', color='gray')
 
         # Adicionar tempos finais ao eixo x
@@ -435,7 +420,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         # Adicionar setas baseadas nas precedências
         for atividade, predecessoras in precedentes_atividades.items():
             for predecessora in predecessoras:
-                # Coordenadas para a seta
                 x_start = tempos_termino[predecessora]  # Termino da predecessora
                 y_start = atividades.index(predecessora)  # Índice da predecessora no eixo y
                 x_end = tempos_inicio[atividade] + ((tempos_termino[atividade] - tempos_inicio[atividade]) * entre_barras)  # Início da atividade atual
@@ -464,6 +448,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_gantt.png')
         plt.close()
+        
         return fig
 
     # Cálculo das médias
@@ -586,9 +571,9 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         valores_unicos, contagem_acumulada = np.unique(duracoes_ordenadas, return_counts=True)
         contagem_acumulada = np.cumsum(contagem_acumulada)
 
-        # Criar o gráfico no formato de escada
+        # Gerar o gráfico
         plt.figure(figsize=(10, 6))
-        plt.step(valores_unicos, contagem_acumulada, where='mid', color='blue', linewidth=2, alpha=0.75)
+        plt.step(valores_unicos, contagem_acumulada, where='mid', color='blue', linewidth=2, alpha=0.75)  # Formato de escada
         plt.scatter(valores_unicos, contagem_acumulada, color='blue', s=10, alpha=0.75)  # Adicionar marcadores para os pontos
         plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto')
         plt.xlabel('Tempo (Duração do Projeto)')
