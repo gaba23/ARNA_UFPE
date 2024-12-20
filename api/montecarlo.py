@@ -11,7 +11,6 @@ import os
 from scipy import stats
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
-
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
 
     riscos_ocorridos = {risco: [] for risco in riscos}
@@ -215,11 +214,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-                plt.figure()
+                plt.figure(figsize=(5,3))
                 plt.hist(duracoes_atividade, bins=30, alpha=0.75)
-                plt.title(f'Distribuição de Duração - {atividade}')
-                plt.xlabel('Duração')
-                plt.ylabel('Frequência')
+                plt.title(f'Distribuição de Duração - {atividade}', fontsize=10)
+                plt.xlabel('Duração', fontsize=8)
+                plt.ylabel('Frequência', fontsize=8)
+                plt.xticks(fontsize=7) 
+                plt.yticks(fontsize=7)
                 plt.grid(True)
                 # Salvando a imagem para cada atividade
                 plt.savefig(f'resultadosMontecarlo/distribuicao_atividade_{atividade}.png')
@@ -325,21 +326,25 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # Gerar gráficos de caminhos
     for i, caminho in enumerate(caminhos):
         duracoes_caminho = [resultado[i] for resultado in resultados_caminhos]
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(5, 3))
         plt.hist(duracoes_caminho, bins=30, alpha=0.75, color='blue', edgecolor='black')
-        plt.xlabel('Duração')
-        plt.ylabel('Frequência')
-        plt.title(f'Distribuição das Durações do Caminho {i} : {caminho} - Simulação de Monte Carlo')
+        plt.xlabel('Duração', fontsize=8)
+        plt.ylabel('Frequência', fontsize=8)
+        plt.title(f'Distribuição das Durações do Caminho {i} : {caminho} - Simulação de Monte Carlo', fontsize=10)
+        plt.xticks(fontsize=7) 
+        plt.yticks(fontsize=7)
         plt.grid(True)
         plt.savefig(f'resultadosMontecarlo/distribuicao_caminho_{i}.png')
         plt.close()
 
     # Plotar a distribuição das durações do projeto
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(5, 3))
     plt.hist(df_duracoes_projeto["Duração do Projeto"], bins=30, alpha=0.75, color='blue', edgecolor='black')
-    plt.xlabel('Duração do Projeto')
-    plt.ylabel('Frequência')
-    plt.title('Distribuição dos Caminhos Críticos - Simulação de Monte Carlo')
+    plt.xlabel('Duração do Projeto', fontsize=8)
+    plt.ylabel('Frequência', fontsize=8)
+    plt.title('Distribuição dos Caminhos Críticos - Simulação de Monte Carlo', fontsize=10)
+    plt.xticks(fontsize=7) 
+    plt.yticks(fontsize=7)
     plt.grid(True)
     plt.savefig('resultadosMontecarlo/distribuicao_duracao_projeto.png')
     plt.close()
@@ -377,7 +382,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Plotar o gráfico de Gantt
     def plotar_grafico_gantt(tempos_inicio, tempos_termino):
-        fig, ax = plt.subplots(figsize=(13, 6))
+        fig, ax = plt.subplots(figsize=(8, 4))
 
         # Definir cores para as barras
         cores = plt.cm.tab10(np.linspace(0, 1, len(tempos_inicio)))
@@ -472,7 +477,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         impactos = list(impactos_ordenados.values())
 
         # Gerar gfráfico
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(5, 3))
         atv_bars = plt.barh(atividades, impactos, color='blue', alpha=0.7)
         # Inserindo os percentuais
         for b, i in zip(atv_bars, impactos):
@@ -494,9 +499,11 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                     fontsize=9.5,
                     color='black'
                 )
-        plt.xlabel('Impacto na Duração do Projeto')
-        plt.ylabel('Atividade')
-        plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto')
+        plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
+        plt.ylabel('Atividade', fontsize=8)
+        plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto', fontsize=10)
+        plt.xticks(fontsize=7) 
+        plt.yticks(fontsize=7)
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
@@ -525,7 +532,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # A partir daqui, pode-se continuar com a lógica de cálculo de crucialidade e criticidade
     # Por exemplo, calcular a crucialidade:
-    df['Crucialidade'] = df['Contagem Crítica'] / df['Contagem Crítica'].max()
+    df['Criticidade'] = df['Contagem Crítica'] / df['Contagem Crítica'].max()
 
     # Exibe as atividades ordenadas pela contagem crítica
     df_sorted = df.sort_values(by='Contagem Crítica', ascending=False)
@@ -533,18 +540,20 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df = pd.DataFrame(df_sorted)
 
     # Configura o gráfico
-    plt.figure(figsize=(10, 6))
-    plt.bar(df['Atividade'], df['Crucialidade'], color='skyblue')
-    plt.xlabel('Atividade')
-    plt.ylabel('Crucialidade')
-    plt.title('Gráfico de Crucialidade das Atividades')
+    plt.figure(figsize=(5, 3))
+    plt.bar(df['Atividade'], df['Criticidade'], color='skyblue')
+    plt.xlabel('Atividade', fontsize=8)
+    plt.ylabel('Criticidade', fontsize=8)
+    plt.title('Gráfico da Criticidade das Atividades', fontsize=10)
+    plt.xticks(fontsize=7) 
+    plt.yticks(fontsize=7)
     plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
 
     # Exibe o gráfico
     plt.savefig('resultadosMontecarlo/grafico_crucialidade.png')
 
     def plotar_grafico_criticidade(df_frequencia_atividades_criticas):
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(5, 3))
 
         # Ordenar os dados pela frequência
         df_frequencia_atividades_criticas = df_frequencia_atividades_criticas.sort_values(by="Frequência Crítica", ascending=False)
@@ -572,12 +581,14 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         contagem_acumulada = np.cumsum(contagem_acumulada)
 
         # Gerar o gráfico
-        plt.figure(figsize=(10, 6))
-        plt.step(valores_unicos, contagem_acumulada, where='mid', color='blue', linewidth=2, alpha=0.75)  # Formato de escada
+        plt.figure(figsize=(5, 3))
+        plt.step(valores_unicos, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)  # Formato de escada
         plt.scatter(valores_unicos, contagem_acumulada, color='blue', s=10, alpha=0.75)  # Adicionar marcadores para os pontos
-        plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto')
-        plt.xlabel('Tempo (Duração do Projeto)')
-        plt.ylabel('Número de Interações (Acumulado)')
+        plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto', fontsize=10)
+        plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
+        plt.ylabel('Número de Interações (Acumulado)', fontsize=8)
+        plt.xticks(fontsize=7) 
+        plt.yticks(fontsize=7)
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada.png')
 
@@ -589,12 +600,16 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-                plt.figure(figsize=(10, 6))
+                plt.figure(figsize=(5, 3))
                 plt.scatter(duracoes_projeto, duracoes_atividade,  alpha=0.75)
-                plt.title(f'Crucialidade - {atividade}')
-                plt.xlabel('Duração Crítica do Projeto')
-                plt.ylabel('Duração da Atividade')
+                plt.title(f'Crucialidade - {atividade}', fontsize=10)
+                plt.xlabel('Duração Crítica do Projeto', fontsize=8)
+                plt.ylabel('Duração da Atividade', fontsize=8)
+                plt.xticks(fontsize=7) 
+                plt.yticks(fontsize=7)
                 plt.grid(True)
+
+                plt.tight_layout()
                 # Salvando a imagem para cada atividade
                 try:
                     plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}.png')
@@ -627,8 +642,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     )
 
     # Criar a imagem com os valores
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.text(0.5, 0.5, valores_texto, fontsize=12, va='center', ha='center', bbox=dict(facecolor='white', alpha=0.8))
+    fig, ax = plt.subplots(figsize=(2, 1))
+    ax.text(0.5, 0.5, valores_texto, fontsize=8, va='center', ha='center', bbox=dict(facecolor='white', alpha=0.8))
     ax.axis('off')  # Remover os eixos
     plt.title('Estatísticas da Duração do Projeto')
 

@@ -24,6 +24,16 @@
                 <li><a href="#">Resultado</a></li>
                 <li><a href="/help">Ajuda</a></li>
                 <li><a href="/contact">Contato</a></li>
+                <li class="dropdown">
+                    <a href="/home">
+                        ▼ Baixar modelos
+                    </a>
+                    <div class="dropdown-content">
+                        <a class="active" href="../static/cpm.xlsx" download="cpm.xlsx">CPM</a>
+                        <a href="../static/pert.xlsx" download="pert.xlsx">PERT</a>
+                        <a href="../static/montecarlo.xlsx" download="MonteCarlo.xlsx">Monte Carlo</a>
+                    </div>
+                </li>
             </ul>
         </nav>
         <div class="profile dropdown">
@@ -48,11 +58,6 @@
                 <input type="file" name="csv_file" accept=".csv" id="csv_file" onchange="toggleInput(this)">
                 <button class="remove-button" type="button" onclick="removeFile('csv_file')">X</button>
             </div>
-            <div class="input-box json-input-box">
-                <label class="json-title" for="json_file">Importar JSON:</label>
-                <input type="file" name="json_file" accept=".json" id="json_file" onchange="toggleInput(this)">
-                <button class="remove-button" type="button" onclick="removeFile('json_file')">X</button>
-            </div>
             <div class="input-box xlsx-input-box">
                 <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
                 <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
@@ -64,7 +69,7 @@
         </form>
         
         {% if erro %}
-        <p class="error-message">{{ erro }}</p>
+        <p class="error-message">shit</p>
         {% endif %}
     </div>
 
@@ -72,7 +77,6 @@
         function toggleInput(input) {
             var fileInputs = [
                 document.getElementById('csv_file'),
-                document.getElementById('json_file'),
                 document.getElementById('xlsx_file')
             ];
             var textareas = [
@@ -109,7 +113,6 @@
             event.preventDefault(); 
             var fileInputs = [
                 document.getElementById('csv_file'),
-                document.getElementById('json_file'),
                 document.getElementById('xlsx_file')
             ];
             var textareas = [

@@ -28,6 +28,16 @@
                 <li><a href="#">Resultado</a></li>
                 <li><a href="/help">Ajuda</a></li>
                 <li><a href="/contact">Contato</a></li>
+                <li class="dropdown">
+                    <a href="/home">
+                        ▼ Baixar modelos
+                    </a>
+                    <div class="dropdown-content">
+                        <a class="active" href="../static/cpm.xlsx" download="cpm.xlsx">CPM</a>
+                        <a href="../static/pert.xlsx" download="pert.xlsx">PERT</a>
+                        <a href="../static/montecarlo.xlsx" download="MonteCarlo.xlsx">Monte Carlo</a>
+                    </div>
+                </li>
             </ul>
         </nav>
         <div class="profile dropdown">
@@ -49,22 +59,33 @@
             <div class="input-box">
                 <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades" onchange="toggleInput(this)"></textarea>
             </div>
+
+            <div class="input-table">
+                <table id="inputTable">
+                    <thead>
+                      <h3>Inserir dados</h3>
+                      <td><input type="text" name="atividades" placeholder="Atividade"></td>
+                      <td><input type="text" name="precedentes" placeholder="Precedente"></td>
+                      <td><input type="text" name="duracao" placeholder="Duração"></td>
+                    </thead>
+                    <tbody>
+                      <!-- Linhas adicionadas dinamicamente -->
+                    </tbody>
+                  </table>
+                  <button class="row-input" onclick="addRow()">Add Row</button>
+            </div>
+
             <div class="input-box csv-input-box">
                 <label class="csv-title" for="csv_file">Importar CSV:</label>
                 <input type="file" name="csv_file" accept=".csv" id="csv_file" onchange="toggleInput(this)">
                 <button class="remove-button" onclick="removeFile('csv_file')">X</button>
-            </div>
-            <div class="input-box json-input-box">
-                <label class="json-title" for="json_file">Importar JSON:</label>
-                <input type="file" name="json_file" accept=".json" id="json_file" onchange="toggleInput(this)">
-                <button class="remove-button" onclick="removeFile('json_file')">X</button>
             </div>
             <div class="input-box xlsx-input-box">
                 <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
                 <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
                 <button class="remove-button" onclick="removeFile('xlsx_file')">X</button>
             </div>
-            <button class="analyze-button" type="submit">Analisar</button>
+            <button id="analyze-button" class="analyze-button" type="submit">Analisar</button>
         </form>
         
         {% if erro %}
@@ -76,10 +97,10 @@
         function toggleInput(input) {
             var fileInputs = [
                 document.getElementById('csv_file'),
-                document.getElementById('json_file'),
                 document.getElementById('xlsx_file')
             ];
             var textarea = document.getElementById('atividades');
+            var tableInput = document.getElementById('inputTable')
 
             if (input.value) {
                 fileInputs.forEach(function(fileInput) {
@@ -88,6 +109,7 @@
                     }
                 });
                 textarea.disabled = true;
+                tableInput.disabled = true;
             } else {
                 var anyInputHasValue = fileInputs.some(function(fileInput) {
                     return fileInput.value;
@@ -98,11 +120,11 @@
                         fileInput.disabled = false;
                     });
                     textarea.disabled = false;
+                    tableInput.disabled = true;
+
                 }
             }
         }
-
-
         
         function removeFile(inputId) {
             event.preventDefault();
@@ -112,11 +134,9 @@
             var textarea = document.getElementById('atividades');
     
             if (inputId === 'csv_file') {
-                otherInputs.pudh(document.getElementById('json_file'));
-            } else if (inputId === 'json_file') {
-                otherInputs.push(document.getElementById('csv_file'));
-            } else if (inputId === 'xlsx_file') {
                 otherInputs.push(document.getElementById('xlsx_file'));
+            } else if (inputId === 'xlsx_file') {
+                otherInputs.push(document.getElementById('csv_file'));
             }
     
             otherInputs.forEach(function(otherInput) {
@@ -126,7 +146,29 @@
             )
             textarea.disabled = false;
         }
-    </script>
+
+
+        function addRow() {
+            event.preventDefault();  // Evita que o botão de análise seja acionado
+            const tableBody = document.querySelector('#inputTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" name="atividades" placeholder="Atividade"></td>
+                <td><input type="text" name="precedentes" placeholder="Precedente"></td>
+                <td><input type="text" name="duracao" placeholder="Duração"></td>
+                <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
+            `;
+
+            tableBody.appendChild(newRow);
+        }
+
+        function deleteRow(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+   
+   
+   </script>
 
 <footer style="margin-top: 450px;">
     <div class="footer-content">

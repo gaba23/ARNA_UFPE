@@ -17,6 +17,12 @@ from montecarlo import simular_montecarlo
 import os
 from pert import calcular_pert
 import networkx as nx
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 # Obtém o caminho absoluto da pasta onde o executável ou script está rodando
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -83,11 +89,12 @@ async def logout(request: Request):
 
 @app.post("/analyzeMonteCarlo")
 async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), riscos: str = Form(None), 
-                            csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
+                            csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
                             num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
+    logger.info("Analyzing Monte Carlo simulation started.")
+
     atividades_dict = {}
     riscos_dict = {}
-    
     # Processando arquivos CSV
     if csv_file and csv_file.filename:
         content = await csv_file.read()
@@ -112,19 +119,6 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
-    
-    # Processando arquivos JSON
-    elif json_file and json_file.filename:
-        content = await json_file.read()
-        if not content:
-            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
-        
-        try:
-            data = json.loads(content.decode('utf-8'))
-            atividades_dict = data.get('atividades', {})
-            riscos_dict = data.get('riscos', {})
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
         
     # Processando arquivos XLSX
     if xlsx_file and xlsx_file.filename:
@@ -358,7 +352,7 @@ def parse_mc_csv(df_atv, df_riscos):
     return atividades, riscos
 
 @app.post("/analyzePERT")
-async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
+async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -375,19 +369,8 @@ async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
 
-    # Processando arquivos JSON
-    elif json_file and json_file.filename:
-        content = await json_file.read()
-        if not content:
-            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
-
-        try:
-            atividades_dict = json.loads(content.decode('utf-8'))
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
-
     # Processando arquivos XLSX
-    if xlsx_file and xlsx_file.filename:
+    elif xlsx_file and xlsx_file.filename:
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
@@ -467,7 +450,7 @@ async def gauss(data: dict):
     return {"message": "Cálculo Gaussiano realizado com sucesso!"}
 
 @app.post("/analyze")
-async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
+async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -484,19 +467,8 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
 
-    # Processando arquivos JSON
-    elif json_file and json_file.filename:
-        content = await json_file.read()
-        if not content:
-            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
-
-        try:
-            atividades_dict = json.loads(content.decode('utf-8'))
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
-
     # Processando arquivos XLSX
-    if xlsx_file and xlsx_file.filename:
+    elif xlsx_file and xlsx_file.filename:
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
@@ -528,7 +500,7 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
     return RedirectResponse(url='/result', status_code=303)
 
 @app.post("/analyze")
-async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None), json_file: UploadFile = File(None)):
+async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -544,17 +516,6 @@ async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
-
-    # Processando arquivos JSON
-    elif json_file and json_file.filename:
-        content = await json_file.read()
-        if not content:
-            raise HTTPException(status_code=400, detail="Arquivo JSON vazio")
-
-        try:
-            atividades_dict = json.loads(content.decode('utf-8'))
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Erro ao decodificar arquivo JSON")
 
     # Processando entradas de texto
     else:

@@ -71,6 +71,8 @@ nav ul li a:hover {
   text-decoration: underline;
 }
 
+
+
 .profile img {
   width: 40px;
   height: 40px;
@@ -83,8 +85,26 @@ nav ul li a:hover {
   margin-bottom: 20px;
 }
 
-.input-box {
-  margin-bottom: 20px;
+h3 {
+  margin-top: 0px;
+}
+#inputTable td input {
+  padding: 8px;
+  width: 200px;
+  text-align: left;
+}
+
+.row-input {
+  margin-top: 10px;
+}
+
+.delete-input-row {
+  margin-left: 8px;
+}
+
+.input-table {
+  padding: 10px;
+  margin: 20px;
 }
 
 input[type="text"] {

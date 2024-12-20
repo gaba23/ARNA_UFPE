@@ -165,7 +165,17 @@
                 .then(data => {
                     const container = document.getElementById('imageContainer');
                     container.innerHTML = ''; // Limpa o container antes de adicionar novas imagens
-                    data.imagens.forEach(imagem => {
+
+                    const prioritizedImage = 'grafico_gantt.png';  // Grafico de Gantt aparecendo em primeiro
+                    const images = [...data.imagens];
+
+                    const prioritizedIndex = images.indexOf(prioritizedImage);
+                    if (prioritizedIndex !== -1) {  // Mover para o início
+                        images.splice(prioritizedIndex, 1); 
+                        images.unshift(prioritizedImage);  
+                    }
+
+                    images.forEach(imagem => {
                         const imageDiv = document.createElement('div');
                         imageDiv.className = 'image-container';
 
@@ -190,7 +200,7 @@
                         container.appendChild(imageDiv);
                     });
                 })
-                .catch(error => console.error('Erro ao carregar imagens:', error));
+                .catch(error => console.error('Erro ao carregar imagens: ', error));
         }
 
         // Close the modal if the user clicks outside of it
