@@ -94,6 +94,36 @@ h3 {
   text-align: left;
 }
 
+#inputTablePert td input {
+  padding: 8px;
+  width: 50px;
+  text-align: left;
+}
+
+#inputTableMC td.s input {
+  width: 35px;
+  text-align: left;
+}
+
+#inputTableMC td.m input {
+  width: 80px;
+  text-align: left;
+}
+
+#inputTableMC td.g input {
+  width: 115px;
+  text-align: left;
+}
+
+#inputTableMC td.gg input {
+  width: 125px;
+  text-align: left;
+}
+
+th {
+  text-align: left;
+}
+
 .row-input {
   margin-top: 10px;
 }
@@ -107,10 +137,23 @@ h3 {
   margin: 20px;
 }
 
-input[type="text"] {
-  width: 100%;
+.input-table-pert {
+  padding: 5px;
+  margin: 20px;
+}
+
+#inputTable input[type="text"] {
+  width: 200px;
   padding: 10px;
   font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #CCCCCC;
+}
+
+#inputTablePert input[type="text"] {
+  width: 110px;
+  padding: 7px;
+  font-size: 13px;
   border-radius: 5px;
   border: 1px solid #CCCCCC;
 }
@@ -292,7 +335,8 @@ footer {
 
 
 .container {
-  max-width: 800px;
+  width: 800px;
+  transition: width 0.3s ease;
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
@@ -310,7 +354,7 @@ h1 {
   margin-bottom: 20px;
 }
 
-textarea, input[type="file"] {
+textarea, #inputTable input[type="file"] {
   width: 97%;
   padding: 10px;
   border: 1px solid #ccc;

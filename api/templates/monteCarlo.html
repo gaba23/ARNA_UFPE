@@ -53,19 +53,27 @@
                 <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades"></textarea>
                 <textarea name="riscos" id="riscos" rows="4" cols="50" placeholder="Digite os riscos"></textarea>
             </div>
+
+            <div id="table-container" class="input-table">
+                <button id="enable-table-button">Show Table</button>
+                <!--Tabela inserida dinamicamente aqui-->
+            </div>
+
             <div class="input-box csv-input-box">
                 <label class="csv-title" for="csv_file">Importar CSV:</label>
                 <input type="file" name="csv_file" accept=".csv" id="csv_file" onchange="toggleInput(this)">
                 <button class="remove-button" type="button" onclick="removeFile('csv_file')">X</button>
             </div>
+
             <div class="input-box xlsx-input-box">
                 <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
                 <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
                 <button class="remove-button" type="button" onclick="removeFile('xlsx_file')">X</button>
             </div>
+
             <label for="num_interacoes">Número de Interações:</label>
             <input type="number" id="num_interacoes" name="num_interacoes" required>
-            <button class="analyze-button" type="submit">Analisar</button>
+            <button class="analyze-button" id="analyze-button" type="submit">Analisar</button>
         </form>
         
         {% if erro %}
@@ -134,6 +142,130 @@
                 });
             }
         }
+
+        document.addEventListener("DOMContentLoaded", function () {  // Tabela
+            const tableContainer = document.getElementById("table-container");
+            const enableTableButton = document.getElementById("enable-table-button");
+
+            const tableHTML = `
+                <table id="inputTableMC">
+                    <tbody>
+                        <tr>
+                            <th colspan="12"><h3>Inserir dados (riscos)</h3></th>
+                        </tr>
+                        <tr>
+                            <td class="s"><input type="text" name="tabela_r_nome" placeholder="Nome"></td>
+                            <td class="s"><input type="text" name="tabela_r_id" placeholder="ID"></td>
+                            <td class="s"><input type="text" name="tabela_r_tipo" placeholder="Tipo"></td>
+                            <td class="g"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição"></td>
+                            <td class="s"><input type="text" name="tabela_r_custo" placeholder="Custo"></td>
+                            <td class="m"><input type="text" name="tabela_r_prob" placeholder="Probabilidade"></td>    
+                            <td class="g"><input type="text" name="tabela_r_atv_afetadas" placeholder="Atividades Afetadas"></td>                      
+                            <td class="g"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
+                            <td class="m"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Médio"></td>
+                            <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
+                            <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
+                            <td class="gg"><input type="text" name="tabela_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                        </tr>
+                        <!-- Linhas adicionadas dinamicamente -->
+                    </tbody>
+                </table>
+                <button class="row-input" onclick="addRow()">Add Row</button>
+                
+                <button id="disable-table-button">Hide Table</button>
+            `;
+
+            enableTableButton.addEventListener("click", function () {
+                event.preventDefault();  // Evita que o botão de análise seja acionado
+
+                tableContainer.innerHTML = tableHTML; 
+                tableContainer.style.display = "block";
+                enableTableButton.style.display = "none"; 
+                document.querySelector('.container').style.width = "900px";
+                // Disable other inputs
+             //   otherInputs.querySelectorAll("textarea, input").forEach(input => {
+               //     input.disabled = true;
+               // });
+            });
+
+            tableContainer.addEventListener("click", function (event) {
+                if (event.target && event.target.id === "disable-table-button") {
+                    event.preventDefault(); // Prevent default actio
+
+                    hiddenTableHTML = `<button id="enable-table-button">Show Table</button>`;
+                    tableContainer.innerHTML = hiddenTableHTML; 
+                    tableContainer.style.display = "block";
+
+                    document.querySelector('.container').style.width = "800px";
+                }
+
+                if (event.target && event.target.id === "enable-table-button") {
+                    event.preventDefault(); 
+
+                    hiddenTableHTML = `<button id="enable-table-button">Show Table</button>`;
+                    tableContainer.innerHTML = tableHTML; 
+                    tableContainer.style.display = "block";
+
+                    document.querySelector('.container').style.width = "1220px";
+                }
+            });
+        });
+
+        document.getElementById("analyze-button").addEventListener("click", function (event) {
+            if (document.getElementById("inputTableMC")) {
+                var table = document.getElementById("inputTableMC");
+                var rows = table.querySelectorAll("tbody tr");
+                var tableData = [];
+
+                rows.forEach(function (row) {
+                    var cells = row.querySelectorAll("input");
+                    var rowData = {
+                        Atividade: cells[0]?.value || "",
+                        Precedentes: cells[1]?.value || "",
+                        Duracao: cells[2]?.value || "",
+                    };
+                    tableData.push(rowData);
+                });
+
+                var tabelaInput = document.createElement("input");
+                tabelaInput.type = "hidden";
+                tabelaInput.name = "tabela";
+                tabelaInput.value = JSON.stringify(tableData);
+
+                this.closest("form").appendChild(tabelaInput);
+                }
+        });
+
+        function addRow() {
+            event.preventDefault();  // Evita que o botão de análise seja acionado
+
+            const tableBody = document.querySelector('#inputTableMC tbody');
+            const newRow = document.createElement('tr');
+
+            newRow.innerHTML = `
+                <td class="s"><input type="text" name="tabela_r_nome" placeholder="Nome"></td>
+                <td class="s"><input type="text" name="tabela_r_id" placeholder="ID"></td>
+                <td class="s"><input type="text" name="tabela_r_tipo" placeholder="Tipo"></td>
+                <td class="g"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição"></td>
+                <td class="s"><input type="text" name="tabela_r_custo" placeholder="Custo"></td>
+                <td class="m"><input type="text" name="tabela_r_prob" placeholder="Probabilidade"></td>    
+                <td class="g"><input type="text" name="tabela_r_atv_afetadas" placeholder="Atividades Afetadas"></td>                      
+                <td class="g"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
+                <td class="m"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Médio"></td>
+                <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
+                <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
+                <td class="gg"><input type="text" name="tabela_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
+            `;
+
+            tableBody.appendChild(newRow);
+        }
+
+        function deleteRow(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+
     </script>
 
 <footer style="margin-top: 450px;">

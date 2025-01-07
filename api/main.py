@@ -88,7 +88,7 @@ async def logout(request: Request):
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/analyzeMonteCarlo")
-async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), riscos: str = Form(None), 
+async def analyzeMonteCarlo(request: Request, tabela: str = Form(None), atividades: str = Form(None), riscos: str = Form(None), 
                             csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
                             num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
     logger.info("Analyzing Monte Carlo simulation started.")
@@ -147,23 +147,35 @@ async def analyzeMonteCarlo(request: Request, atividades: str = Form(None), risc
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
-            
+            print(df_atv)
+            print(df_riscos)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
         
     # Processando entradas de texto
     else:
-        if atividades:
+        if tabela:
             try:
-                atividades_dict = json.loads(atividades)
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
-        
-        if riscos:
-            try:
-                riscos_dict = json.loads(riscos)
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="Erro ao decodificar riscos")
+                df = pd.DataFrame(json.loads(tabela))
+                df.reset_index(drop=True,inplace=True)  # Resetar index, ponteiro
+                atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)
+
+            except pd.errors.EmptyDataError:
+                raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+        else:
+            if atividades:
+                try:
+                    atividades_dict = json.loads(atividades)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+            
+            if riscos:
+                try:
+                    riscos_dict = json.loads(riscos)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar riscos")
 
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_interacoes)  # Passa o num_interacoes para a função
@@ -194,49 +206,6 @@ async def listar_imagens():
     imagens = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
     imagens = [os.path.basename(imagem) for imagem in imagens]
     return JSONResponse(content={"imagens": imagens})
-
-# Função para parse de CSV
-# def parse_csv(df):
-#     print('parse un')
-#     atividades = {}
-#     riscos = {}
-#     for index, row in df.iterrows():
-#         # Verifica se é uma atividade
-#         if row['Tipo'] == "Atividade":
-#             # Garante que 'Precedentes' seja tratado corretamente
-#             precedentes = row['Precedentes']
-#             if isinstance(precedentes, str):  # Verifica se 'Precedentes' é uma string
-#                 # Usa strip() para remover espaços em branco ao redor dos precedentes
-#                 precedentes_list = [p.strip() for p in precedentes.split(',')] if precedentes else []
-#             else:
-#                 precedentes_list = []  # Caso contrário, define como lista vazia
-
-#             atividades[row['ID']] = {
-#                 "precedentes": precedentes_list,
-#                 "tipo": row['Tipo de Distribuicao'],
-#                 "t_otimista": row.get('Tempo Otimista', None),
-#                 "t_provavel": row.get('Tempo Provavel', None),
-#                 "t_pessimista": row.get('Tempo Pessimista', None),
-#                 "t_minimo": row.get('Tempo Minimo', None),
-#                 "t_moda": row.get('Tempo Moda', None),
-#                 "t_maximo": row.get('Tempo Maximo', None),
-#                 "t_media": row.get('Tempo Medio', None),
-#                 "custo": row.get('Custo', 0),
-#                 "descricao": row.get('Descricao', "")
-#             }
-        
-#         # Verifica se é um risco
-#         elif row['Tipo'] == "Risco":
-#             riscos[row['ID']] = {
-#                 "probabilidade": row['Probabilidade'],
-#                 "tipo": row['Tipo de Distribuicao'],
-#                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-#                 "atraso_minimo": row.get('Atraso Minimo', None),
-#                 "atraso_medio": row.get('Atraso Medio', None),
-#                 "atraso_maximo": row.get('Atraso Maximo', None)
-#             }
-            
-#     return atividades, riscos
 
 def parse_mc_csv(df_atv, df_riscos):
     atividades = {}
@@ -352,7 +321,7 @@ def parse_mc_csv(df_atv, df_riscos):
     return atividades, riscos
 
 @app.post("/analyzePERT")
-async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
+async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -389,11 +358,34 @@ async def analyzePERT(atividades: str = Form(None), csv_file: UploadFile = File(
         
     # Processando entradas de texto
     else:
-        if atividades:
+        if tabela:
             try:
-                atividades_dict = json.loads(atividades)
+                df = pd.DataFrame(json.loads(tabela))
+
+                df = df[~(df == '').all(axis=1)]  # Remover linhas vazias
+                df['Precedentes'] = df['Precedentes'].replace('', np.nan)  # Trocar valores vaziios por NaN
+                df['t_otimista'] = df['t_otimista'].replace('', np.nan)
+                df['t_pessimista'] = df['t_pessimista'].replace('', np.nan)
+                df['t_provavel'] = df['t_provavel'].replace('', np.nan)
+                df['t_otimista'] = pd.to_numeric(df['t_otimista'], errors='coerce')  # Converter strings em valores numericos
+                df['t_pessimista'] = pd.to_numeric(df['t_pessimista'], errors='coerce')  
+                df['t_provavel'] = pd.to_numeric(df['t_provavel'], errors='coerce')
+
+                df.reset_index(drop=True, inplace=True)  # Resetar index, ponteiro
+
+                atividades_dict = parse_pert_csv(df)
             except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+                raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Erro ao processar tabela: {str(e)}")
+        
+        else:
+            if atividades:
+                try:
+                    atividades_dict = json.loads(atividades)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
 
     # Chama a função de cálculo PERT
     imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
@@ -450,7 +442,7 @@ async def gauss(data: dict):
     return {"message": "Cálculo Gaussiano realizado com sucesso!"}
 
 @app.post("/analyze")
-async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
+async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None)):
     atividades_dict = {}
 
     # Processando arquivos CSV
@@ -461,7 +453,9 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
 
         try:
             df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            print(df)
             atividades_dict = parse_cpm_csv(df)
+            print(atividades_dict)
         except pd.errors.EmptyDataError:
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
@@ -472,6 +466,7 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
+            print('he')
             excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
             csv_buffer = io.StringIO()
             excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
@@ -481,17 +476,37 @@ async def analyzeCPM(atividades: str = Form(None), csv_file: UploadFile = File(N
             if df.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             atividades_dict = parse_cpm_csv(df)  
+            print(atividades_dict)
             
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
     
     # Processando entradas de texto
     else:
-        if atividades:
+        if tabela:
             try:
-                atividades_dict = json.loads(atividades)
+                df = pd.DataFrame(json.loads(tabela))
+
+                df = df[~(df == '').all(axis=1)]  # Remover linhas vazias
+                df['Precedentes'] = df['Precedentes'].replace('', np.nan)  # Trocar valores vazios por NaN
+                df['Duracao'] = pd.to_numeric(df['Duracao'], errors='coerce')  # Converter strings em números
+        
+                df.reset_index(drop=True, inplace=True)  # Resetar index, ponteiro
+
+                atividades_dict = parse_cpm_csv(df)  
+                print(atividades_dict)
             except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+                raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+            
+        else:
+            if atividades:
+                try:
+                    atividades_dict = json.loads(atividades)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
 
     # Chama a função de cálculo CPM
     imagem = calcular_cpm(atividades_dict)

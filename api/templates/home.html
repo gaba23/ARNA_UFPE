@@ -60,19 +60,9 @@
                 <textarea name="atividades" id="atividades" rows="4" cols="50" placeholder="Digite as atividades" onchange="toggleInput(this)"></textarea>
             </div>
 
-            <div class="input-table">
-                <table id="inputTable">
-                    <thead>
-                      <h3>Inserir dados</h3>
-                      <td><input type="text" name="atividades" placeholder="Atividade"></td>
-                      <td><input type="text" name="precedentes" placeholder="Precedente"></td>
-                      <td><input type="text" name="duracao" placeholder="Duração"></td>
-                    </thead>
-                    <tbody>
-                      <!-- Linhas adicionadas dinamicamente -->
-                    </tbody>
-                  </table>
-                  <button class="row-input" onclick="addRow()">Add Row</button>
+            <div id="table-container" class="input-table">
+                <button id="enable-table-button">Show Table</button>
+                <!--Tabela inserida dinamicamente aqui-->
             </div>
 
             <div class="input-box csv-input-box">
@@ -80,11 +70,13 @@
                 <input type="file" name="csv_file" accept=".csv" id="csv_file" onchange="toggleInput(this)">
                 <button class="remove-button" onclick="removeFile('csv_file')">X</button>
             </div>
+
             <div class="input-box xlsx-input-box">
                 <label class="xlsx-title" for="xlsx_file">Importar Excel:</label>
                 <input type="file" name="xlsx_file" accept=".xlsx" id="xlsx_file" onchange="toggleInput(this)">
                 <button class="remove-button" onclick="removeFile('xlsx_file')">X</button>
             </div>
+
             <button id="analyze-button" class="analyze-button" type="submit">Analisar</button>
         </form>
         
@@ -147,14 +139,94 @@
             textarea.disabled = false;
         }
 
+        document.addEventListener("DOMContentLoaded", function () {  // Tabela
+            const tableContainer = document.getElementById("table-container");
+            const enableTableButton = document.getElementById("enable-table-button");
+
+            const tableHTML = `
+                <table id="inputTable">
+                    <tbody>
+                        <tr>
+                            <th colspan="3"><h3>Inserir dados</h3></th>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="tabela_atividades" placeholder="Atividade"></td>
+                            <td><input type="text" name="tabela_precedentes" placeholder="Precedentes"></td>
+                            <td><input type="text" name="tabela_duracao" placeholder="Duração"></td>
+                            <!-- Linhas adicionadas dinamicamente -->
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="row-input" onclick="addRow()">Add Row</button>
+                
+                <button id="disable-table-button">Hide Table</button>
+            `;
+
+            enableTableButton.addEventListener("click", function () {
+                event.preventDefault();  // Evita que o botão de análise seja acionado
+
+                tableContainer.innerHTML = tableHTML; 
+                tableContainer.style.display = "block";
+                enableTableButton.style.display = "none"; 
+                // Disable other inputs
+             //   otherInputs.querySelectorAll("textarea, input").forEach(input => {
+               //     input.disabled = true;
+               // });
+            });
+
+            tableContainer.addEventListener("click", function (event) {
+                if (event.target && event.target.id === "disable-table-button") {
+                    event.preventDefault(); 
+
+                    hiddenTableHTML = `<button id="enable-table-button">Show Table</button>`;
+                    tableContainer.innerHTML = hiddenTableHTML; 
+                    tableContainer.style.display = "block";
+                }
+
+                if (event.target && event.target.id === "enable-table-button") {
+                    event.preventDefault(); 
+
+                    hiddenTableHTML = `<button id="enable-table-button">Show Table</button>`;
+                    tableContainer.innerHTML = tableHTML; 
+                    tableContainer.style.display = "block";
+                }
+            });
+        });
+
+        document.getElementById("analyze-button").addEventListener("click", function (event) {
+            if (document.getElementById("inputTable")) {
+                var table = document.getElementById("inputTable");
+                var rows = table.querySelectorAll("tbody tr");
+                var tableData = [];
+
+                rows.forEach(function (row) {
+                    var cells = row.querySelectorAll("input");
+                    var rowData = {
+                        Atividade: cells[0]?.value || "",
+                        Precedentes: cells[1]?.value || "",
+                        Duracao: cells[2]?.value || "",
+                    };
+                    tableData.push(rowData);
+                });
+
+                var tabelaInput = document.createElement("input");
+                tabelaInput.type = "hidden";
+                tabelaInput.name = "tabela";
+                tabelaInput.value = JSON.stringify(tableData);
+
+                this.closest("form").appendChild(tabelaInput);
+                }
+        });
 
         function addRow() {
             event.preventDefault();  // Evita que o botão de análise seja acionado
+
             const tableBody = document.querySelector('#inputTable tbody');
             const newRow = document.createElement('tr');
+
             newRow.innerHTML = `
                 <td><input type="text" name="atividades" placeholder="Atividade"></td>
-                <td><input type="text" name="precedentes" placeholder="Precedente"></td>
+                <td><input type="text" name="precedentes" placeholder="Precedentes"></td>
                 <td><input type="text" name="duracao" placeholder="Duração"></td>
                 <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
             `;
@@ -166,8 +238,7 @@
             const row = button.parentElement.parentElement;
             row.remove();
         }
-   
-   
+ 
    </script>
 
 <footer style="margin-top: 450px;">

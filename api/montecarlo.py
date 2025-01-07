@@ -9,6 +9,8 @@ import glob
 import networkx as nx
 import os
 from scipy import stats
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
@@ -210,6 +212,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # print("Atividades críticas e frequências:", frequencia_atividades_criticas)
     # print("Crucialidade das atividades:", crucialidade_atividades)
 
+    ####    GRÁFICOS    ####
+
     def plotar_distribuicao_atividades(resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
@@ -245,6 +249,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     for risco in riscos:
         df_riscos_ocorridos[f"Tempo {risco}"] = tempos_riscos[risco]
 
+    print(df_riscos_ocorridos)
+    print('---------------------------------------')
+    
+
     df_contagem_caminhos_criticos = pd.DataFrame(list(contagem_caminhos_criticos.items()), columns=["Caminho", "Contagem Crítica"])
     df_frequencia_caminhos_criticos = pd.DataFrame(list(frequencia_caminhos_criticos.items()), columns=["Caminho", "Frequência Crítica"])
     df_caminhos_criticos = pd.merge(df_contagem_caminhos_criticos, df_frequencia_caminhos_criticos, on="Caminho")
@@ -253,6 +261,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df_crucialidade_atividades = pd.DataFrame(list(crucialidade_atividades.items()), columns=["Atividade", "Crucialidade"])
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
+    df_duracoes_riscos = pd.DataFrame()
 
     # Criando a planilha
     planilha_path = 'Modelo_Riscos.xlsx'
@@ -572,30 +581,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.savefig('resultadosMontecarlo/grafico_criticidade_atividades.png')
         plt.close()
 
-    def plotar_grafico_distribuicao_acumulada_colunas(duracoes_projeto):
-        # Arredondar as durações para inteiros e ordenar
-        duracoes_ordenadas = np.sort(np.round(duracoes_projeto).astype(int))
-
-        # Contagem acumulada para cada valor de duração
-        valores_unicos, contagem_acumulada = np.unique(duracoes_ordenadas, return_counts=True)
-        contagem_acumulada = np.cumsum(contagem_acumulada)
-
-        # Gerar o gráfico
-        plt.figure(figsize=(5, 3))
-        plt.step(valores_unicos, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)  # Formato de escada
-        plt.scatter(valores_unicos, contagem_acumulada, color='blue', s=10, alpha=0.75)  # Adicionar marcadores para os pontos
-        plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto', fontsize=10)
-        plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
-        plt.ylabel('Número de Interações (Acumulado)', fontsize=8)
-        plt.xticks(fontsize=7) 
-        plt.yticks(fontsize=7)
-        plt.grid(True)
-        plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada.png')
-
-    plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"])
-
-
-
     def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
@@ -641,16 +626,80 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         f"Desvio Padrão: {desvio_padrao:.2f}"
     )
 
-    # Criar a imagem com os valores
-    fig, ax = plt.subplots(figsize=(2, 1))
-    ax.text(0.5, 0.5, valores_texto, fontsize=8, va='center', ha='center', bbox=dict(facecolor='white', alpha=0.8))
-    ax.axis('off')  # Remover os eixos
-    plt.title('Estatísticas da Duração do Projeto')
+    def plotar_grafico_distribuicao_acumulada_colunas(duracoes_projeto, valores_texto, bin_size=0.5):
+        duracoes_min = np.min(duracoes_projeto)  # Intervalos agrupados para deixar a distibuição mais ranular
+        duracoes_max = np.max(duracoes_projeto)
+        bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+        
+        hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
+        contagem_acumulada = np.cumsum(hist)
+        
+        bin_midpoints = bin_edges[:-1] + bin_size / 2  # Meio do intervalo é o valor do eixo x
 
-    # Salvar a imagem
-    plt.savefig('resultadosMontecarlo/estatisticas_duracao_projeto.png')
+        plt.figure(figsize=(5, 3))
+        plt.step(bin_midpoints, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)  # Formato de escada
+       # plt.scatter(bin_midpoints, contagem_acumulada, color='blue', s=10, alpha=0.75)  
+        plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto', fontsize=10)
+        plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
+        plt.ylabel('Número de Interações (Acumulado)', fontsize=8)
 
-    # Adicione essa parte ao final da função, para coletar os nomes das imagens geradas:
+        xticks = np.linspace(duracoes_min, duracoes_max, 7)  # Adicionar valores laterais
+        yticks = np.linspace(0, contagem_acumulada[-1], 7)
+        plt.xticks(xticks, fontsize=7)
+        plt.yticks(yticks, fontsize=7)
+        plt.grid(True)
+
+        ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
+        ax_inset.text(0.5, 0.5, valores_texto, fontsize=7, va='center', ha='center', 
+                    bbox=dict(facecolor='white', alpha=0.8))
+        ax_inset.axis('off')  
+
+        plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada_com_estatisticas.png')
+
+    plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
+
+    def plotar_grafico_distribuicao_acumulada_riscos(tempos_riscos):
+        print(tempos_riscos)
+        plt.figure(figsize=(5, 3))
+        cores = ['blue', 'red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
+        duracoes_min_tot = min(np.min(tempos) for tempos in tempos_riscos.values())
+        duracoes_max_tot = max(np.max(tempos) for tempos in tempos_riscos.values())
+        i = 0
+
+        for risco, tempos in tempos_riscos.items():
+            duracoes_min = np.min(tempos)
+            duracoes_max = np.max(tempos)
+            bin_size = 0.5  # Tamanho do intervalo
+            bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+    
+            hist, bin_edges = np.histogram(tempos, bins=bins)
+            contagem_acumulada = np.cumsum(hist)
+    
+            bin_midpoints = bin_edges[:-1] + bin_size / 2
+    
+            # Plotando o gráfico
+            plt.step(bin_midpoints, contagem_acumulada, where='mid', color=cores[i], linewidth=1, alpha=0.85, label=f'Risco {risco}')
+            i += 1
+            #plt.scatter(bin_midpoints, contagem_acumulada, color=cores[i % len(cores)], s=10, alpha=0.85)
+    
+        # Configurações do gráfico
+        plt.title('Distribuição Acumulada - Duração dos Riscos', fontsize=10)
+        plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
+        plt.ylabel('Número de Iterações (Acumuladas)', fontsize=8)
+        plt.grid(True)
+        plt.legend(fontsize=7)
+    
+        # Ajuste de ticks no eixo x e y
+        xticks = np.linspace(duracoes_min_tot, duracoes_max_tot, 7)
+        yticks = np.linspace(0, contagem_acumulada[-1], 7)
+        plt.xticks(xticks, fontsize=8)
+        plt.yticks(yticks, fontsize=8)
+            
+        plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_risco.png')
+
+    plotar_grafico_distribuicao_acumulada_riscos(tempos_riscos)
+
+
     imagem_diagrama = ["diagrama_atividades.png"]
     imagens_atividades = glob.glob("resultadosMontecarlo/distribuicao_atividade_*.png")
     imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
