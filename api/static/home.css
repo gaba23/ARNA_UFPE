@@ -100,22 +100,22 @@ h3 {
   text-align: left;
 }
 
-#inputTableMC td.s input {
+#inputTableRiskMC td.s input, #inputTableActivityMC td.s input {
   width: 35px;
   text-align: left;
 }
 
-#inputTableMC td.m input {
+#inputTableRiskMC td.m input, #inputTableActivityMC td.m input {
   width: 80px;
   text-align: left;
 }
 
-#inputTableMC td.g input {
+#inputTableRiskMC td.g input, #inputTableActivityMC td.g input {
   width: 115px;
   text-align: left;
 }
 
-#inputTableMC td.gg input {
+#inputTableRiskMC td.gg input, #inputTableActivityMC tg.gg input {
   width: 125px;
   text-align: left;
 }

@@ -148,7 +148,33 @@
             const enableTableButton = document.getElementById("enable-table-button");
 
             const tableHTML = `
-                <table id="inputTableMC">
+                <table id="inputTableActivityMC">
+                    <tbody>
+                        <tr>
+                            <th colspan="14"><h3>Inserir dados (atividades)</h3></th>
+                        </tr>
+                        <tr>
+                            <td class="s"><input type="text" name="tabela_a_nome" placeholder="Nome"></td>
+                            <td class="s"><input type="text" name="tabela_a_id" placeholder="ID"></td>
+                            <td class="m"><input type="text" name="tabela_a_precedentes" placeholder="Precedentes"></td>
+                            <td class="g"><input type="text" name="tabela_a_tipo_dist" placeholder="Tipo de Distribuição"></td>
+                            <td class="g"><input type="text" name="tabela_a_t_otimista" placeholder="Tempo Otimista"></td>
+                            <td class="g"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Provável"></td>    
+                            <td class="g"><input type="text" name="tabela_a_t_pessimista" placeholder="Tempo Pessimista"></td>                      
+                            <td class="m"><input type="text" name="tabela_a_t_min" placeholder="Tempo Mínimo"></td>
+                            <td class="m"><input type="text" name="tabela_a_t_mod" placeholder="Tempo Moda"></td>
+                            <td class="g"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>
+                            <td class="m"><input type="text" name="tabela_a_t_med" placeholder="Tempo Médio"></td>
+                            <td class="m"><input type="text" name="tabela_a_custo_fix" placeholder="Custo Fixo"></td>
+                            <td class="m"><input type="text" name="tabela_a_desc" placeholder="Descrição"></td>
+                            <td class="gg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
+                        </tr>
+                        <!-- Linhas adicionadas dinamicamente -->
+                    </tbody>
+                </table>
+                <button class="row-input-activity" onclick="addRowActivity()">Add Row</button>
+
+                <table id="inputTableRiskMC">
                     <tbody>
                         <tr>
                             <th colspan="12"><h3>Inserir dados (riscos)</h3></th>
@@ -165,12 +191,12 @@
                             <td class="m"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Médio"></td>
                             <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
                             <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
-                            <td class="gg"><input type="text" name="tabela_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                            <td class="gg"><input type="text" name="tabela_r_custo_fix" placeholder="Custo Fixo Adicional"></td>
                         </tr>
                         <!-- Linhas adicionadas dinamicamente -->
                     </tbody>
                 </table>
-                <button class="row-input" onclick="addRow()">Add Row</button>
+                <button class="row-input-risk" onclick="addRowRisk()">Add Row</button>
                 
                 <button id="disable-table-button">Hide Table</button>
             `;
@@ -181,7 +207,7 @@
                 tableContainer.innerHTML = tableHTML; 
                 tableContainer.style.display = "block";
                 enableTableButton.style.display = "none"; 
-                document.querySelector('.container').style.width = "900px";
+                document.querySelector('.container').style.width = "1550px";
                 // Disable other inputs
              //   otherInputs.querySelectorAll("textarea, input").forEach(input => {
                //     input.disabled = true;
@@ -206,23 +232,32 @@
                     tableContainer.innerHTML = tableHTML; 
                     tableContainer.style.display = "block";
 
-                    document.querySelector('.container').style.width = "1220px";
+                    document.querySelector('.container').style.width = "1550px";
                 }
             });
         });
 
         document.getElementById("analyze-button").addEventListener("click", function (event) {
-            if (document.getElementById("inputTableMC")) {
-                var table = document.getElementById("inputTableMC");
+            if (document.getElementById("inputTableRiskMC")) {
+                var table = document.getElementById("inputTableRiskMC");
                 var rows = table.querySelectorAll("tbody tr");
                 var tableData = [];
 
                 rows.forEach(function (row) {
                     var cells = row.querySelectorAll("input");
                     var rowData = {
-                        Atividade: cells[0]?.value || "",
-                        Precedentes: cells[1]?.value || "",
-                        Duracao: cells[2]?.value || "",
+                        Nome: cells[0]?.value || "",
+                        ID: cells[1]?.value || "",
+                        Tipo: cells[2]?.value || "",
+                        Tipo_distribuição: cells[3]?.value || "",
+                        Custo: cells[4]?.value || "",
+                        Probabilidade: cells[5]?.value || "",
+                        Atividades_afetadas: cells[6]?.value || "",
+                        Atraso_min: cells[7]?.value || "",
+                        Atraso_med: cells[8]?.value || "",
+                        Atraso_max: cells[9]?.value || "",
+                        Descricao: cells[10]?.value || "",
+                        Custo_fixo_adicional: cells[11]?.value || "",
                     };
                     tableData.push(rowData);
                 });
@@ -236,10 +271,10 @@
                 }
         });
 
-        function addRow() {
+        function addRowRisk() {
             event.preventDefault();  // Evita que o botão de análise seja acionado
 
-            const tableBody = document.querySelector('#inputTableMC tbody');
+            const tableBody = document.querySelector('#inputTableRiskMC tbody');
             const newRow = document.createElement('tr');
 
             newRow.innerHTML = `
@@ -255,6 +290,33 @@
                 <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
                 <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
                 <td class="gg"><input type="text" name="tabela_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
+            `;
+
+            tableBody.appendChild(newRow);
+        }
+
+        function addRowActivity() {
+            event.preventDefault();  // Evita que o botão de análise seja acionado
+
+            const tableBody = document.querySelector('#inputTableActivityMC tbody');
+            const newRow = document.createElement('tr');
+
+            newRow.innerHTML = `
+                <td class="s"><input type="text" name="tabela_a_nome" placeholder="Nome"></td>
+                <td class="s"><input type="text" name="tabela_a_id" placeholder="ID"></td>
+                <td class="m"><input type="text" name="tabela_a_precedentes" placeholder="Precedentes"></td>
+                <td class="g"><input type="text" name="tabela_a_tipo_dist" placeholder="Tipo de Distribuição"></td>
+                <td class="g"><input type="text" name="tabela_a_t_otimista" placeholder="Tempo Otimista"></td>
+                <td class="g"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Provável"></td>    
+                <td class="g"><input type="text" name="tabela_a_t_pessimista" placeholder="Tempo Pessimista"></td>                      
+                <td class="m"><input type="text" name="tabela_a_t_min" placeholder="Tempo Mínimo"></td>
+                <td class="m"><input type="text" name="tabela_a_t_mod" placeholder="Tempo Moda"></td>
+                <td class="g"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>
+                <td class="m"><input type="text" name="tabela_a_t_med" placeholder="Tempo Médio"></td>
+                <td class="m"><input type="text" name="tabela_a_custo_fix" placeholder="Custo Fixo"></td>
+                <td class="m"><input type="text" name="tabela_a_desc" placeholder="Descrição"></td>
+                <td class="gg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
                 <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
             `;
 

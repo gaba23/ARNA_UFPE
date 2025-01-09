@@ -16,8 +16,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
 
     riscos_ocorridos = {risco: [] for risco in riscos}
-    tempos_riscos = {risco: [] for risco in riscos}
-
 
     # Adicionando um número ao nó e progredindo
     mapa_atividades = {atividade: i + 2 for i, atividade in enumerate(atividades_pert.keys())}
@@ -80,12 +78,14 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         return caminhos
 
     # Função para calcular a duração de um caminho
-    def calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades):
+    def calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividade, tempos_riscos):
         duracao = 0
+
         for i in range(len(caminho) - 1):
             no_inicial = caminho[i]
             no_final = caminho[i + 1]
             for atividade in atividades_convertidas:
+
                 if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
                     if "duracao" in atividade:
                         duracao_atividade = atividade["duracao"]
@@ -122,6 +122,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
                     # Verificar se os riscos ocorreram nesta iteração
                     for risco, detalhes in riscos.items():
+
                         ocorreu = random.random() < detalhes["probabilidade"]
                         riscos_ocorridos[risco].append(ocorreu)
                         if ocorreu:
@@ -142,9 +143,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             tempos_riscos[risco].append(atraso_total)
                         else:
                             tempos_riscos[risco].append(0)
-                
+                        
+                    duracao_risco = {risco: sum(valores) for risco, valores in tempos_riscos.items()}
                     break
-        return duracao
+        return duracao, duracao_risco
 
     # Solicitar o número de interações para a simulação de Monte Carlo
     #num_interacoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
@@ -161,19 +163,29 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     resultados_caminhos = []
     resultados_caminhos_criticos = []
     duracoes_projeto = []
+    duracoes_risco = {risco: [] for risco in riscos}
+    iteracao_c = 0 ###
 
     for iteracao in range(num_interacoes):
+        tempos_riscos = {risco: [] for risco in riscos}
         duracoes_atividades = [0] * len(atividades_pert)
         duracoes_caminhos = []
         caminho_critico = None
         duracao_maxima = 0
+        duracao_risco_maxima = {risco: 0 for risco in riscos}
 
-        for caminho in caminhos:
-            duracao = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades)
+        for caminho in caminhos:  # duracao_risco {a:[], b:[]}  --> dict, list //// duracao_risco [1, 2]
+            duracao, duracao_risco = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
             duracoes_caminhos.append(duracao)
             if duracao > duracao_maxima:
                 duracao_maxima = duracao
                 caminho_critico = caminho
+            for risco in duracao_risco:
+                if duracao_risco[risco] > duracao_risco_maxima[risco]:
+                    duracao_risco_maxima[risco] = duracao_risco[risco]
+        
+        for risco in riscos:
+            duracoes_risco[risco].append(duracao_risco_maxima[risco])  ### 
 
         resultados_atividades.append(duracoes_atividades)
         resultados_caminhos.append(duracoes_caminhos)
@@ -246,12 +258,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df_caminhos = pd.DataFrame(resultados_caminhos, columns=[f"Caminho {i+1}" for i in range(len(caminhos))])
     df_criticos = pd.DataFrame(resultados_caminhos_criticos)
     df_riscos_ocorridos = pd.DataFrame(riscos_ocorridos)
-    for risco in riscos:
-        df_riscos_ocorridos[f"Tempo {risco}"] = tempos_riscos[risco]
-
-    print(df_riscos_ocorridos)
-    print('---------------------------------------')
-    
 
     df_contagem_caminhos_criticos = pd.DataFrame(list(contagem_caminhos_criticos.items()), columns=["Caminho", "Contagem Crítica"])
     df_frequencia_caminhos_criticos = pd.DataFrame(list(frequencia_caminhos_criticos.items()), columns=["Caminho", "Frequência Crítica"])
@@ -261,7 +267,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df_crucialidade_atividades = pd.DataFrame(list(crucialidade_atividades.items()), columns=["Atividade", "Crucialidade"])
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
-    df_duracoes_riscos = pd.DataFrame()
+    df_duracoes_riscos = pd.DataFrame(duracoes_risco)
+    print(df_duracoes_riscos)
 
     # Criando a planilha
     planilha_path = 'Modelo_Riscos.xlsx'
@@ -638,7 +645,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
         plt.figure(figsize=(5, 3))
         plt.step(bin_midpoints, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)  # Formato de escada
-       # plt.scatter(bin_midpoints, contagem_acumulada, color='blue', s=10, alpha=0.75)  
         plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
         plt.ylabel('Número de Interações (Acumulado)', fontsize=8)
@@ -658,15 +664,18 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
 
-    def plotar_grafico_distribuicao_acumulada_riscos(tempos_riscos):
-        print(tempos_riscos)
+    def plotar_grafico_distribuicao_acumulada_riscos(duracao_risco):
         plt.figure(figsize=(5, 3))
         cores = ['blue', 'red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
-        duracoes_min_tot = min(np.min(tempos) for tempos in tempos_riscos.values())
-        duracoes_max_tot = max(np.max(tempos) for tempos in tempos_riscos.values())
+        duracoes_min_tot = duracao_risco.min().min()
+        duracoes_max_tot = duracao_risco.max().max()
         i = 0
+         
+        acumulada_total = 0 
 
-        for risco, tempos in tempos_riscos.items():
+        for risco in duracao_risco.columns:
+            tempos = duracao_risco[risco].values
+
             duracoes_min = np.min(tempos)
             duracoes_max = np.max(tempos)
             bin_size = 0.5  # Tamanho do intervalo
@@ -674,13 +683,12 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     
             hist, bin_edges = np.histogram(tempos, bins=bins)
             contagem_acumulada = np.cumsum(hist)
-    
+            print(contagem_acumulada, hist)
             bin_midpoints = bin_edges[:-1] + bin_size / 2
     
             # Plotando o gráfico
             plt.step(bin_midpoints, contagem_acumulada, where='mid', color=cores[i], linewidth=1, alpha=0.85, label=f'Risco {risco}')
             i += 1
-            #plt.scatter(bin_midpoints, contagem_acumulada, color=cores[i % len(cores)], s=10, alpha=0.85)
     
         # Configurações do gráfico
         plt.title('Distribuição Acumulada - Duração dos Riscos', fontsize=10)
@@ -697,7 +705,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_risco.png')
 
-    plotar_grafico_distribuicao_acumulada_riscos(tempos_riscos)
+    plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
 
 
     imagem_diagrama = ["diagrama_atividades.png"]
