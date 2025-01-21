@@ -13,6 +13,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
+
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
 
     riscos_ocorridos = {risco: [] for risco in riscos}
@@ -164,7 +165,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     resultados_caminhos_criticos = []
     duracoes_projeto = []
     duracoes_risco = {risco: [] for risco in riscos}
-    iteracao_c = 0 ###
 
     for iteracao in range(num_interacoes):
         tempos_riscos = {risco: [] for risco in riscos}
@@ -224,6 +224,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # print("Atividades críticas e frequências:", frequencia_atividades_criticas)
     # print("Crucialidade das atividades:", crucialidade_atividades)
 
+    # ATIVUDADE NA SETA
+    def encontrar_caminhos_seta(atividades_pert):
+        print('e')
+        # READ  atividades_pert
+        # WRITE grafo (print)
+
+
     ####    GRÁFICOS    ####
 
     def plotar_distribuicao_atividades(resultados_atividades, atividades_pert):
@@ -244,6 +251,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
 
+
+    # Grafo da atividade na seta
+
+    ###
     crucialidade_caminhos = {}
     for i, caminho in enumerate(caminhos):
         duracoes_caminho = [duracao[i] for duracao in resultados_caminhos]
@@ -268,7 +279,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
     df_duracoes_riscos = pd.DataFrame(duracoes_risco)
-    print(df_duracoes_riscos)
 
     # Criando a planilha
     planilha_path = 'Modelo_Riscos.xlsx'
@@ -566,7 +576,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
 
     # Exibe o gráfico
-    plt.savefig('resultadosMontecarlo/grafico_crucialidade.png')
+    plt.savefig('resultadosMontecarlo/grafico_criticidade.png')
 
     def plotar_grafico_criticidade(df_frequencia_atividades_criticas):
         plt.figure(figsize=(5, 3))
@@ -666,7 +676,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     def plotar_grafico_distribuicao_acumulada_riscos(duracao_risco):
         plt.figure(figsize=(5, 3))
-        cores = ['blue', 'red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
+        cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
         duracoes_min_tot = duracao_risco.min().min()
         duracoes_max_tot = duracao_risco.max().max()
         i = 0
@@ -683,7 +693,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     
             hist, bin_edges = np.histogram(tempos, bins=bins)
             contagem_acumulada = np.cumsum(hist)
-            print(contagem_acumulada, hist)
+
             bin_midpoints = bin_edges[:-1] + bin_size / 2
     
             # Plotando o gráfico
@@ -691,7 +701,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             i += 1
     
         # Configurações do gráfico
-        plt.title('Distribuição Acumulada - Duração dos Riscos', fontsize=10)
+        plt.title('Gráfico da Distribuição Acumulada - Duração dos Riscos', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
         plt.ylabel('Número de Iterações (Acumuladas)', fontsize=8)
         plt.grid(True)
@@ -706,6 +716,61 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_risco.png')
 
     plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
+
+    def plotar_distribuicao_acumulada_colunas_e_riscos(duracoes_projeto, duracoes_risco):
+        plt.figure(figsize=(5, 3))
+        bin_size = 0.5  # Tamanho do intervalo
+
+        # Projeto
+        duracoes_min = np.min(duracoes_projeto)  # Intervalos agrupados para deixar a distibuição mais ranular
+        duracoes_max = np.max(duracoes_projeto)
+        bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+
+        hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
+        contagem_acumulada = np.cumsum(hist)
+        
+        bin_midpoints = bin_edges[:-1] + bin_size / 2  # Meio do intervalo é o valor do eixo x
+
+        plt.step(bin_midpoints, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75, label='Projeto')  # Formato de escada
+
+        # Riscos
+        cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
+        duracoes_min_tot = duracoes_risco.min().min()
+        duracoes_max_tot = duracoes_risco.max().max()
+        i = 0
+         
+        for risco in duracoes_risco.columns:
+            tempos = duracoes_risco[risco].values
+
+            duracoes_min = np.min(tempos)
+            duracoes_max = np.max(tempos)
+            bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+    
+            hist, bin_edges = np.histogram(tempos, bins=bins)
+            contagem_acumulada = np.cumsum(hist)
+
+            bin_midpoints = bin_edges[:-1] + bin_size / 2
+    
+            # Plotando o gráfico
+            plt.step(bin_midpoints, contagem_acumulada, where='mid', color=cores[i], linewidth=1, linestyle=':', alpha=0.85, label=f'Risco {risco}')
+            i += 1
+    
+        # Configurações do gráfico
+        plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto e Riscos', fontsize=10)
+        plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
+        plt.ylabel('Número de Iterações (Acumuladas)', fontsize=8)
+        plt.grid(True)
+        plt.legend(fontsize=7)
+    
+        # Ajuste de ticks no eixo x e y
+        xticks = np.linspace(duracoes_min_tot, duracoes_max_tot, 7)
+        yticks = np.linspace(0, contagem_acumulada[-1], 7)
+        plt.xticks(xticks, fontsize=8)
+        plt.yticks(yticks, fontsize=8)
+            
+        plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_projeto_e_riscos.png')
+
+    plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
 
 
     imagem_diagrama = ["diagrama_atividades.png"]
