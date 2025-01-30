@@ -8,15 +8,18 @@ import matplotlib.patches as patches
 import glob
 import networkx as nx
 import os
+import csv
 from scipy import stats
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 
 def simular_montecarlo(atividades_pert, riscos, num_interacoes):
-
+   # print(atividades_pert)
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
-
     riscos_ocorridos = {risco: [] for risco in riscos}
+    # custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
+    # custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
 
     # Adicionando um número ao nó e progredindo
     mapa_atividades = {atividade: i + 2 for i, atividade in enumerate(atividades_pert.keys())}
@@ -57,6 +60,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Adicionar nós e arestas ao diagrama
     for atividade, no in mapa_atividades.items():
+        # print(no)  # 9, 10, 1
+        # print(atividade)  # 8, fim, início
         dot.node(str(no), atividade)
 
     for no_inicial, nos_finais in grafo.items():
@@ -64,7 +69,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             dot.edge(str(no_inicial), str(no_final))
     
     # Função para encontrar todos os caminhos usando DFS (Busca em Profundidade)
-    def encontrar_caminhos(grafo, inicio, fim, caminho=[]):
+    def encontrar_caminhos(grafo, inicio, fim, caminho=[]): 
         caminho = caminho + [inicio]
         if inicio == fim:
             return [caminho]
@@ -120,7 +125,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             duracao_atividade = np.random.normal(mu, sigma)
                     duracao += duracao_atividade
                     duracoes_atividades[atividade["no_final"] - 2] = duracao_atividade  # Atribui a duração da atividade no índice correto
-
+                   # print('e')
+                  #  print(duracoes_atividades)
                     # Verificar se os riscos ocorreram nesta iteração
                     for risco, detalhes in riscos.items():
 
@@ -144,48 +150,69 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             tempos_riscos[risco].append(atraso_total)
                         else:
                             tempos_riscos[risco].append(0)
-                        
+                    
+                    # for atividade, detalhes in atividades_pert.items():
+                    #     index_atividade = mapa_atividades[atividade] - 2
+                        # custo_atividades[index_atividade] = custo_fixo[index_atividade] + (custo_variavel[index_atividade] * duracoes_atividade[index_atividade])
+
                     duracao_risco = {risco: sum(valores) for risco, valores in tempos_riscos.items()}
+                    # custo_total = {atividade: detalhes["id"] for atividade, detalhes in atividades_pert.items()}
                     break
-        return duracao, duracao_risco
+        return duracao, duracao_risco#, custo_total
 
     # Solicitar o número de interações para a simulação de Monte Carlo
-    #num_interacoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
+    # num_interacoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
     # num_interacoes = 1000
     # Encontrar e reunir em uma lista os caminhos
     caminhos = encontrar_caminhos(grafo, mapa_atividades["inicio"], mapa_atividades['fim'])
 
     # Inicializar contadores para os caminhos críticos e atividades críticas
-    contagem_caminhos_criticos = {tuple(caminho): 0 for caminho in caminhos}
+    contagem_caminhos_criticos = {tuple(caminho): 0 for caminho in caminhos}  ## converter aqui?
+
     contagem_atividades_criticas = {atividade: 0 for atividade in atividades_pert.keys()}
 
     # Realizar a simulação de Monte Carlo
-    resultados_atividades = []
+    resultados_atividades = []  # lista de listas dos valores da duracao de cada iteração
     resultados_caminhos = []
     resultados_caminhos_criticos = []
+    #custo_atividades = {atividade: [] for atividade in atividades_pert}
     duracoes_projeto = []
     duracoes_risco = {risco: [] for risco in riscos}
 
     for iteracao in range(num_interacoes):
         tempos_riscos = {risco: [] for risco in riscos}
-        duracoes_atividades = [0] * len(atividades_pert)
+        #custos_atividades = {atividade: 0 for atividade in atividades_pert.items()}
+        duracoes_atividades = [0] * len(atividades_pert)  # lista dos valores das duracoes da iteracao atual
+        #custos_atividades = [0] * len(atividades_pert)
         duracoes_caminhos = []
         caminho_critico = None
         duracao_maxima = 0
         duracao_risco_maxima = {risco: 0 for risco in riscos}
+      #  custo_maximo = {custo: 0 for custo in atividades_pert.items()}
 
         for caminho in caminhos:  # duracao_risco {a:[], b:[]}  --> dict, list //// duracao_risco [1, 2]
             duracao, duracao_risco = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
+         #   duracao, duracao_risco, custo_total = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
             duracoes_caminhos.append(duracao)
             if duracao > duracao_maxima:
                 duracao_maxima = duracao
                 caminho_critico = caminho
+                # print('caminho do for ')
+                # print(caminho_critico)
+        
             for risco in duracao_risco:
                 if duracao_risco[risco] > duracao_risco_maxima[risco]:
                     duracao_risco_maxima[risco] = duracao_risco[risco]
+
+            # for custo in custo_total:
+            #     if custo_total[custo] > custo_maximo[custo]:
+            #         custo_maximo[risco] = custo_total[custo]
         
         for risco in riscos:
-            duracoes_risco[risco].append(duracao_risco_maxima[risco])  ### 
+            duracoes_risco[risco].append(duracao_risco_maxima[risco])  
+            
+        # for atividade in atividades_pert:
+        #     custo_atividades[atividade].append(custo_maximo[atividade])
 
         resultados_atividades.append(duracoes_atividades)
         resultados_caminhos.append(duracoes_caminhos)
@@ -194,6 +221,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             "Número do caminho": f'Caminho {caminhos.index(caminho_critico)}',
             "Duração Crítica": duracao_maxima
         })
+        #custo_atividades.append(custos_atividades)
         duracoes_projeto.append(duracao_maxima)
 
         # Atualizar contadores
@@ -205,6 +233,19 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     # Calcular frequências
     frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
+    # Correção da visualização dos nós baseado no índice
+    contagem_caminhos_criticos_originais = contagem_caminhos_criticos
+    frequencia_caminhos_criticos_originais = frequencia_caminhos_criticos
+
+    contagem_caminhos_criticos = { 
+        ('start',) + tuple(item - 1 if isinstance(item, int) else item for item in key[1:-1]) + ('end',): value
+        for key, value in contagem_caminhos_criticos.items()
+    } 
+    frequencia_caminhos_criticos = { 
+        ('start',) + tuple(item - 1 if isinstance(item, int) else item for item in key[1:-1]) + ('end',): value
+        for key, value in frequencia_caminhos_criticos.items()
+    } 
+
     frequencia_atividades_criticas = {atividade: contagem / num_interacoes for atividade, contagem in contagem_atividades_criticas.items()}
 
     # Calcular a crucialidade das atividades usando correlação
@@ -224,11 +265,27 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # print("Atividades críticas e frequências:", frequencia_atividades_criticas)
     # print("Crucialidade das atividades:", crucialidade_atividades)
 
-    # ATIVUDADE NA SETA
-    def encontrar_caminhos_seta(atividades_pert):
-        print('e')
-        # READ  atividades_pert
-        # WRITE grafo (print)
+    # ATIVIDADE NA SETA
+    def is_critical(atividade, atividades_criticas):
+        frequencia_critica = atividades_criticas.get(atividade)
+        if frequencia_critica > 0:
+            return 'y'
+        else:
+            return 'n'
+    
+    with open('diagramDataset.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ActivityId", "Predecessors", "Crucial"])  # colunas
+        
+        for atv, pred in precedentes_atividades.items():  # escrever linhas
+            pred_str = " ".join(pred)  # Convert list to space-separated string
+            critico = is_critical(atv, frequencia_atividades_criticas) 
+            if atv == 'fim':
+                writer.writerow([int(len(precedentes_atividades)), pred_str, critico])
+            else:
+                writer.writerow([atv, pred_str, critico])
+
+    encontrar_caminhos_seta('./diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
 
 
     ####    GRÁFICOS    ####
@@ -251,10 +308,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
 
-
-    # Grafo da atividade na seta
-
-    ###
     crucialidade_caminhos = {}
     for i, caminho in enumerate(caminhos):
         duracoes_caminho = [duracao[i] for duracao in resultados_caminhos]
@@ -263,6 +316,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         else:
             correlacao = np.corrcoef(duracoes_caminho, duracoes_projeto)[0, 1]
             crucialidade_caminhos[tuple(caminho)] = correlacao
+    
+    crucialidade_caminhos = { ('start',) + tuple(n - 1 for n in caminho[1:-1]) + ('end',): valor for caminho, valor in crucialidade_caminhos.items() }  # correção da visualização dos nós baseado no índice
 
     # Converter os resultados em dataframes para facilitar a exportação
     df_atividades = pd.DataFrame(resultados_atividades, columns=list(atividades_pert.keys()))
@@ -272,11 +327,19 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     df_contagem_caminhos_criticos = pd.DataFrame(list(contagem_caminhos_criticos.items()), columns=["Caminho", "Contagem Crítica"])
     df_frequencia_caminhos_criticos = pd.DataFrame(list(frequencia_caminhos_criticos.items()), columns=["Caminho", "Frequência Crítica"])
+    df_contagem_caminhos_criticos_originais = pd.DataFrame(list(contagem_caminhos_criticos_originais.items()), columns=["Caminho", "Contagem Crítica"])
+    df_frequencia_caminhos_criticos_originais = pd.DataFrame(list(frequencia_caminhos_criticos_originais.items()), columns=["Caminho", "Frequência Crítica"])
+
+
     df_caminhos_criticos = pd.merge(df_contagem_caminhos_criticos, df_frequencia_caminhos_criticos, on="Caminho")
+    df_caminhos_criticos_originais = pd.merge(df_contagem_caminhos_criticos_originais, df_frequencia_caminhos_criticos_originais, on="Caminho")
+    df_caminhos_criticos_originais.insert(0, "Número do Caminho", range(len(df_contagem_caminhos_criticos_originais)))
+
     df_contagem_atividades_criticas = pd.DataFrame(list(contagem_atividades_criticas.items()), columns=["Atividade", "Contagem Crítica"])
     df_frequencia_atividades_criticas = pd.DataFrame(list(frequencia_atividades_criticas.items()), columns=["Atividade", "Frequência Crítica"])
     df_crucialidade_atividades = pd.DataFrame(list(crucialidade_atividades.items()), columns=["Atividade", "Crucialidade"])
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
+
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
     df_duracoes_riscos = pd.DataFrame(duracoes_risco)
 
@@ -311,9 +374,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
 
-    def criar_diagrama_atualizado(planilha_path):
-        df_frequencia_caminhos_criticos = pd.read_excel(planilha_path, sheet_name='Caminhos Críticos')
-        
+    def criar_diagrama_atualizado(caminhos_df):
         dot = graphviz.Digraph(comment='Diagrama de Atividades Atualizado', format='png')
         dot.attr(rankdir='LR')  # Layout horizontal
         dot.attr('node', shape='rectangle')  # Formato dos nós
@@ -324,7 +385,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
         arestas = {}   # Dicionário para rastrear arestas com suas cores
 
-        for _, row in df_frequencia_caminhos_criticos.iterrows():
+        for _, row in caminhos_df.iterrows():
             caminho = row['Caminho']
             frequencia = row['Frequência Crítica']
             
@@ -347,7 +408,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         dot.render('resultadosMontecarlo/diagrama_atividades_atualizado')
 
     # Chamar a função após a criação da planilha
-    criar_diagrama_atualizado('Modelo_Riscos.xlsx')
+    criar_diagrama_atualizado(df_caminhos_criticos_originais)
 
     # Gerar gráficos de caminhos
     for i, caminho in enumerate(caminhos):
@@ -375,7 +436,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     plt.savefig('resultadosMontecarlo/distribuicao_duracao_projeto.png')
     plt.close()
 
-    # print(precedentes_atividades)
     # Coletar a média dos tempos pela planilha
 
     # Função para calcular as médias dos tempos das atividades
@@ -780,7 +840,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
+    imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + [planilha_path]
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + imagem_seta + [planilha_path]
 
