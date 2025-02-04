@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import glob
 from montecarlo import simular_montecarlo
+from cpm import calcular_cpm
 import os
 from pert import calcular_pert
 import networkx as nx
@@ -91,7 +92,7 @@ async def logout(request: Request):
 async def analyzeMonteCarlo(request: Request, tabela: str = Form(None), atividades: str = Form(None), riscos: str = Form(None), 
                             csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
                             num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
-    logger.info("Analyzing Monte Carlo simulation started.")
+  #  logger.info("Analyzing Monte Carlo simulation started.")
 
     atividades_dict = {}
     riscos_dict = {}
@@ -466,7 +467,6 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            print('he')
             excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
             csv_buffer = io.StringIO()
             excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
@@ -494,7 +494,7 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
                 df.reset_index(drop=True, inplace=True)  # Resetar index, ponteiro
 
                 atividades_dict = parse_cpm_csv(df)  
-                print(atividades_dict)
+
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
             except Exception as e:
@@ -509,6 +509,7 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
 
 
     # Chama a função de cálculo CPM
+    print(atividades_dict)
     imagem = calcular_cpm(atividades_dict)
 
     # Redirecionar para a página de resultados
@@ -569,9 +570,5 @@ async def download_xls_cpm():
     file_path = "caminho/para/o/seu/arquivo_cpm.xlsx" 
     return FileResponse(file_path, filename="resultado_cpm.xlsx")
 
-# Implementação da função de cálculo CPM
-def calcular_cpm(atividades_dict):
-    # Lógica do cálculo CPM
-    imagem = "resultadosCPM/atividades_cpm.png"
-    return imagem
+
 

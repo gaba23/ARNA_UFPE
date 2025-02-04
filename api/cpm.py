@@ -2,19 +2,21 @@ import networkx as nx
 from graphviz import Digraph
 
 # Definindo as atividades do projeto com durações fixas
-atividades_cpm = {
-    "A": {"precedentes": [], "duracao": 5},  # Duração fixa
-    "B": {"precedentes": ["A"], "duracao": 6},  # Duração fixa
-    "C": {"precedentes": ["A"], "duracao": 5},  # Duração fixa
-    "D": {"precedentes": ["B"], "duracao": 8},  # Duração fixa
-    "E": {"precedentes": ["B"], "duracao": 10},  # Duração fixa
-    "F": {"precedentes": ["C"], "duracao": 5},  # Duração fixa
-    "G": {"precedentes": ["D", "E"], "duracao": 8},  # Duração fixa
-    "H": {"precedentes": ["F"], "duracao": 5},  # Duração fixa
-    "fim": {"precedentes": ["G", "H"], "duracao": 0}  # Duração zero para o nó final
-}
+# atividades_cpm = {
+#     "A": {"precedentes": [], "duracao": 5},  # Duração fixa
+#     "B": {"precedentes": ["A"], "duracao": 6},  # Duração fixa
+#     "C": {"precedentes": ["A"], "duracao": 5},  # Duração fixa
+#     "D": {"precedentes": ["B"], "duracao": 8},  # Duração fixa
+#     "E": {"precedentes": ["B"], "duracao": 10},  # Duração fixa
+#     "F": {"precedentes": ["C"], "duracao": 5},  # Duração fixa
+#     "G": {"precedentes": ["D", "E"], "duracao": 8},  # Duração fixa
+#     "H": {"precedentes": ["F"], "duracao": 5},  # Duração fixa
+#     "fim": {"precedentes": ["G", "H"], "duracao": 0}  # Duração zero para o nó final
+# }
+
 
 def calcular_cpm(atividades_cpm):
+
     def is_edge_in_critical_path(u, v):
         return (u, v) in zip(critical_path[:-1], critical_path[1:])
 
@@ -94,4 +96,4 @@ def calcular_cpm(atividades_cpm):
     imagem = ["atividades_cpm.png"]
     return imagem
 
-calcular_cpm(atividades_cpm)
+# calcular_cpm(atividades_cpm)
