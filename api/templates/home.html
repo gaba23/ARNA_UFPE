@@ -92,7 +92,7 @@
                 document.getElementById('xlsx_file')
             ];
             var textarea = document.getElementById('atividades');
-            var tableInput = document.getElementById('inputTable')
+            var tableInput = document.getElementById('inputTable');
 
             if (input.value) {
                 fileInputs.forEach(function(fileInput) {
@@ -168,10 +168,7 @@
                 tableContainer.innerHTML = tableHTML; 
                 tableContainer.style.display = "block";
                 enableTableButton.style.display = "none"; 
-                // Disable other inputs
-             //   otherInputs.querySelectorAll("textarea, input").forEach(input => {
-               //     input.disabled = true;
-               // });
+                
             });
 
             tableContainer.addEventListener("click", function (event) {

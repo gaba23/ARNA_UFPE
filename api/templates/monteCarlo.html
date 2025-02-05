@@ -91,6 +91,8 @@
                 document.getElementById('atividades'),
                 document.getElementById('riscos')
             ];
+            var tableAtvInput = document.getElementById('inputTableActivityMC');
+            var tableRiskInput = document.getElementById('inputTableRiskMC');
 
             if (input.value) {
                 fileInputs.forEach(function(fileInput) {
@@ -101,6 +103,8 @@
                 textareas.forEach(function(textarea) {
                     textarea.disabled = true;
                 });
+                tableAtvInput.disabled = true;
+                tableRiskInput.disabled = true;
             } else {
                 var anyInputHasValue = fileInputs.some(function(fileInput) {
                     return fileInput.value;
@@ -113,6 +117,9 @@
                     textareas.forEach(function(textarea) {
                         textarea.disabled = false;
                     });
+                    tableAtvInput.disabled = true;
+                    tableRiskInput.disabled = true;
+
                 }
             }
         }
@@ -208,15 +215,12 @@
                 tableContainer.style.display = "block";
                 enableTableButton.style.display = "none"; 
                 document.querySelector('.container').style.width = "1550px";
-                // Disable other inputs
-             //   otherInputs.querySelectorAll("textarea, input").forEach(input => {
-               //     input.disabled = true;
-               // });
+                
             });
 
             tableContainer.addEventListener("click", function (event) {
                 if (event.target && event.target.id === "disable-table-button") {
-                    event.preventDefault(); // Prevent default actio
+                    event.preventDefault(); 
 
                     hiddenTableHTML = `<button id="enable-table-button">Show Table</button>`;
                     tableContainer.innerHTML = hiddenTableHTML; 
@@ -239,36 +243,73 @@
 
         document.getElementById("analyze-button").addEventListener("click", function (event) {
             if (document.getElementById("inputTableRiskMC")) {
-                var table = document.getElementById("inputTableRiskMC");
-                var rows = table.querySelectorAll("tbody tr");
-                var tableData = [];
+                var tableRisk = document.getElementById("inputTableRiskMC");
+                var rowsRisk = tableRisk.querySelectorAll("tbody tr");
+                var tableDataRisk = [];
 
-                rows.forEach(function (row) {
-                    var cells = row.querySelectorAll("input");
+                rowsRisk.forEach(function (row) {
+                    var cellsR = row.querySelectorAll("input");
                     var rowData = {
-                        Nome: cells[0]?.value || "",
-                        ID: cells[1]?.value || "",
-                        Tipo: cells[2]?.value || "",
-                        Tipo_distribuição: cells[3]?.value || "",
-                        Custo: cells[4]?.value || "",
-                        Probabilidade: cells[5]?.value || "",
-                        Atividades_afetadas: cells[6]?.value || "",
-                        Atraso_min: cells[7]?.value || "",
-                        Atraso_med: cells[8]?.value || "",
-                        Atraso_max: cells[9]?.value || "",
-                        Descricao: cells[10]?.value || "",
-                        Custo_fixo_adicional: cells[11]?.value || "",
+                        Nome: cellsR[0]?.value || "",
+                        ID: cellsR[1]?.value || "",
+                        Tipo: cellsR[2]?.value || "",
+                        Tipo_distribuição: cellsR[3]?.value || "",
+                        Custo: cellsR[4]?.value || "",
+                        Probabilidade: cellsR[5]?.value || "",
+                        Atividades_afetadas: cellsR[6]?.value || "",
+                        Atraso_min: cellsR[7]?.value || "",
+                        Atraso_med: cellsR[8]?.value || "",
+                        Atraso_max: cellsR[9]?.value || "",
+                        Descricao: cellsR[10]?.value || "",
+                        Custo_fixo_adicional: cellsR[11]?.value || "",
                     };
-                    tableData.push(rowData);
+                    tableDataRisk.push(rowData);
                 });
 
-                var tabelaInput = document.createElement("input");
-                tabelaInput.type = "hidden";
-                tabelaInput.name = "tabela";
-                tabelaInput.value = JSON.stringify(tableData);
+                var tabelaInputR = document.createElement("input");
+                tabelaInputR.type = "hidden";
+                tabelaInputR.name = "tabela_risco";
+                tabelaInputR.value = JSON.stringify(tableDataRisk);
 
-                this.closest("form").appendChild(tabelaInput);
-                }
+                document.querySelector("form").appendChild(tabelaInputR);
+
+            }
+
+            if (document.getElementById("inputTableActivityMC")) {
+                var tableAtv = document.getElementById("inputTableActivityMC");
+                var rowsAtv = tableAtv.querySelectorAll("tbody tr");
+                var tableDataAtv = [];
+
+                rowsAtv.forEach(function (row) {
+                    var cellsA = row.querySelectorAll("input");
+                    var rowData = {
+                        Nome: cellsA[0]?.value || "",
+                        ID: cellsA[1]?.value || "",
+                        Precedentes: cellsA[2]?.value || "",
+                        Tipo_distribuição: cellsA[3]?.value || "",
+                        T_otimista: cellsA[4]?.value || "",
+                        T_provavel: cellsA[5]?.value || "",
+                        T_pessimista: cellsA[6]?.value || "",
+                        T_min: cellsA[7]?.value || "",
+                        T_moda: cellsA[8]?.value || "",
+                        T_max: cellsA[9]?.value || "",
+                        T_medio: cellsA[10]?.value || "",
+                        Custo_fixo: cellsA[11]?.value || "",
+                        Decricao: cellsA[12]?.value || "",
+                        Custo_un_t: cellsA[13]?.value || "",
+                    };
+                    tableDataAtv.push(rowData);
+                });
+
+                var tabelaInputA = document.createElement("input");
+                tabelaInputA.type = "hidden";
+                tabelaInputA.name = "tabela_atividade";
+                tabelaInputA.value = JSON.stringify(tableDataAtv);
+
+                document.querySelector("form").appendChild(tabelaInputA);
+
+            }
+
         });
 
         function addRowRisk() {

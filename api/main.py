@@ -89,7 +89,7 @@ async def logout(request: Request):
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/analyzeMonteCarlo")
-async def analyzeMonteCarlo(request: Request, tabela: str = Form(None), atividades: str = Form(None), riscos: str = Form(None), 
+async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None), tabela_risco: str = Form(None), atividades: str = Form(None), riscos: str = Form(None), 
                             csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
                             num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
   #  logger.info("Analyzing Monte Carlo simulation started.")
@@ -110,10 +110,8 @@ async def analyzeMonteCarlo(request: Request, tabela: str = Form(None), atividad
 
             # Erros de conversão do segundo dataframe
             df_riscos.dropna(how='all', inplace=True)
-            df_riscos.rename(columns={'Tipo de Distribuicao.1': 'Tipo de Distribuicao'}, inplace=True)
-            df_riscos.rename(columns={'Descricao.1': 'Descricao'}, inplace=True)
-            df_riscos.rename(columns={'ID.1': 'ID'}, inplace=True)
-            
+            df_riscos.rename(columns={'Tipo de Distribuicao.1': 'Tipo de Distribuicao', 'Descricao.1': 'Descricao', 'ID.1': 'ID'}, inplace=True)
+
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)
 
         except pd.errors.EmptyDataError:
@@ -148,23 +146,93 @@ async def analyzeMonteCarlo(request: Request, tabela: str = Form(None), atividad
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
-            print(df_atv)
-            print(df_riscos)
+
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
         
     # Processando entradas de texto
     else:
-        if tabela:
+        if tabela_atividade  and tabela_risco:  # sempre envia as duas tabelas, mesmo que uma esteja vazia
             try:
-                df = pd.DataFrame(json.loads(tabela))
-                df.reset_index(drop=True,inplace=True)  # Resetar index, ponteiro
+                df_atv = pd.DataFrame(json.loads(tabela_atividade))
+                df_atv.reset_index(drop=True,inplace=True)  # Resetar index, ponteiro
+                df_riscos = pd.DataFrame(json.loads(tabela_risco))
+                df_riscos.reset_index(drop=True,inplace=True)
+
+                # Alterando nomes do Dataframe
+                df_atv.rename(columns={
+                    'Tipo_distribuição': 'Tipo de Distribuicao', 'T_otimista': 'Tempo Otimista', 'T_provavel': 'Tempo Provavel', 'T_pessimista': 'Tempo Pessimista',
+                    'T_min': 'Tempo Minimo', 'T_moda': 'Tempo Moda', 'T_max': 'Tempo Maximo', 'T_medio': 'Tempo Medio', 'Custo_fixo': 'Custo Fixo', 'Custo_un_t': 'Custo por Unidade de Tempo'
+                    }, inplace=True)
+                df_riscos.rename(columns={
+                    'Tipo_distribuição': 'Tipo de Distribuicao', 'Atividades_afetadas': 'Atividades Afetadas', 'Atraso_min': 'Atraso Minimo',
+                    'Atraso_med': 'Atraso Medio', 'Atraso_max': 'Atraso Maximo', 'Custo_fixo_adicional': 'Custo Fixo Adicional'
+                    }, inplace=True)
+
+                # Removendo linhas ou conjuntos vazios
+                df_atv = df_atv[~(df_atv.eq("").all(axis=1) | df_atv.isna().all(axis=1))]
+                df_riscos = df_riscos[~(df_riscos.eq("").all(axis=1) | df_riscos.isna().all(axis=1))]
+
                 atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)
 
+                # Coverter stirng em variáveis numéricas
+                for atividade, valores in atividades_dict.items():
+                    if 't_otimista' in valores:
+                        if valores['t_otimista'] != None and valores['t_otimista'] != '':
+                            valores['t_otimista'] = float(valores['t_otimista'])
+                    if 't_provavel' in valores:
+                        if valores['t_provavel'] != None and valores['t_provavel'] != '':
+                            valores['t_provavel'] = float(valores['t_provavel'])
+                    if 't_pessimista' in valores:
+                        if valores['t_pessimista'] != None and valores['t_pessimista'] != '':
+                            valores['t_pessimista'] = float(valores['t_pessimista'])
+                    if 'custo' in valores:
+                        if valores['custo'] != None and valores['custo'] != '':
+                            valores['custo'] = int(valores['custo'])
+                    if 'custo_fix' in valores:
+                        if valores['custo_fix'] != None and valores['custo_fix'] != '':
+                            valores['custo_fix'] = int(valores['custo_fix'])
+                    if 'custo_un' in valores:
+                        if valores['custo_un'] != None and valores['custo_un'] != '':
+                            valores['custo_un'] = float(valores['custo_un'])
+                    if 't_minimo' in valores:
+                        if valores['t_minimo'] != None and valores['t_minimo'] != '':
+                            valores['t_minimo'] = float(valores['t_minimo'])
+                    if 't_moda' in valores:
+                        if valores['t_moda'] != None and valores['t_moda'] != '':
+                            valores['t_moda'] = float(valores['t_moda'])
+                    if 't_maximo' in valores:
+                        if valores['t_maximo'] != None and valores['t_maximo'] != '':
+                            valores['t_maximo'] = float(valores['t_maximo'])
+                    if 't_media' in valores:
+                        if valores['t_media'] != None and valores['t_media'] != '':
+                            valores['t_media'] = float(valores['t_media'])
+
+                for risco, valores in riscos_dict.items():
+                    if 'probabilidade' in valores:
+                        if valores['probabilidade'] != None and valores['probabilidade'] != '':
+                            valores['probabilidade'] = float(valores['probabilidade'])
+                    if 'atraso_minimo' in valores:
+                        if valores['atraso_minimo'] != None and valores['atraso_minimo'] != '':
+                            valores['atraso_minimo'] = float(valores['atraso_minimo'])
+                    if 'atraso_medio' in valores:
+                        if valores['atraso_medio'] != None and valores['atraso_medio'] != '':
+                            valores['atraso_medio'] = float(valores['atraso_medio'])
+                    if 'atraso_maximo' in valores:
+                        if valores['atraso_maximo'] != None and valores['atraso_maximo'] != '':
+                            valores['atraso_maximo'] = float(valores['atraso_maximo'])
+                    if 'custo_fix' in valores:
+                        if valores['custo_fix'] != None and valores['custo_fix'] != '':
+                            valores['custo_fix'] = float(valores['custo_fix'])
+                    if 'custo' in valores:
+                        if valores['custo'] != None and valores['custo'] != '':
+                            valores['custo'] = int(valores['custo'])
+
             except pd.errors.EmptyDataError:
-                raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+                raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
             except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")            
+            
         else:
             if atividades:
                 try:
@@ -454,9 +522,8 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
 
         try:
             df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-            print(df)
             atividades_dict = parse_cpm_csv(df)
-            print(atividades_dict)
+
         except pd.errors.EmptyDataError:
             raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
         except Exception as e:
@@ -476,7 +543,6 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
             if df.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             atividades_dict = parse_cpm_csv(df)  
-            print(atividades_dict)
             
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
@@ -509,7 +575,6 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
 
 
     # Chama a função de cálculo CPM
-    print(atividades_dict)
     imagem = calcular_cpm(atividades_dict)
 
     # Redirecionar para a página de resultados
