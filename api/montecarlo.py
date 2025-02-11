@@ -32,8 +32,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     custo_fixo.update({end_atv_key: end_atv_fix_value})
     custo_variavel.update({end_atv_key: end_atv_var_value})
 
-    print(custo_fixo)
-    print(custo_variavel)
+   # print(custo_fixo)
+  #  print(custo_variavel)
     # Adicionando um número ao nó e progredindo
     mapa_atividades = {atividade: i + 2 for i, atividade in enumerate(atividades_pert.keys())}
     mapa_atividades["inicio"] = 1
@@ -230,8 +230,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             "Duração Crítica": duracao_maxima
         })
         duracoes_projeto.append(duracao_maxima)
-        custos_projeto.append(custo_maximo)  # riscos tem que ser adicionador
-        # print(custos_projeto)
+        custos_projeto.append(custo_maximo)  # riscos não inclusos
+
         # Atualizar contadores
         contagem_caminhos_criticos[tuple(caminho_critico)] += 1
         for no in caminho_critico:
@@ -239,6 +239,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 atividade = list(mapa_atividades.keys())[list(mapa_atividades.values()).index(no)]
                 contagem_atividades_criticas[atividade] += 1
 
+   # print('riscos')
+  #  print(duracoes_risco)
     # Calcular frequências
     frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
     # Correção da visualização dos nós baseado no índice
@@ -558,6 +560,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
     fig = plotar_grafico_gantt(tempos_inicio, tempos_termino)
 
+    dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
+
     def plotar_grafico_tornado():
         # Calcular impacto percentual
         impactos_atividades = {}
@@ -569,6 +573,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
         atividades = list(impactos_ordenados.keys())
         impactos = list(impactos_ordenados.values())
+        atividades.pop()
+        impactos.pop()
 
         # Gerar gfráfico
         plt.figure(figsize=(5, 3))
@@ -593,6 +599,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                     fontsize=9.5,
                     color='black'
                 )
+
         plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
         plt.ylabel('Atividade', fontsize=8)
         plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto', fontsize=10)
@@ -601,10 +608,71 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
-    dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
+    # Exibir o gráfico
+  #  plotar_grafico_tornado()
+
+    def plotar_grafico_tornado_riscos():
+        # Calcular impacto percentual
+        impactos_atividades = {}
+        for i, atividade in enumerate(atividades_pert.keys()):
+            duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+            correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
+            impactos_atividades[atividade] = correlacao # * np.std(duracoes_atividade)  normalize??
+
+        impactos_riscos = {}
+        for r in duracoes_risco:
+            correlacao_risco = np.corrcoef(duracoes_risco[r], duracoes_projeto)[0, 1]
+            impactos_riscos[r] = correlacao_risco
+
+        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
+        atividades = list(impactos_ordenados.keys())
+        impactos_atv = list(impactos_ordenados.values())
+        impactos_atv.pop()
+        atividades.pop()
+
+        impactos_riscos_ordenados = dict(sorted(impactos_riscos.items(), key=lambda item: abs(item[1]), reverse=True))
+        riscos = list(impactos_riscos_ordenados.keys())
+        impactos_risk = list(impactos_riscos_ordenados.values())
+
+        # Gerar gfráfico
+        plt.figure(figsize=(5, 3))
+        atv_bars = plt.barh(atividades, impactos_atv, color='blue', alpha=0.7, label='Atividade')
+        risk_bars = plt.barh(riscos, impactos_risk, color='red', alpha=0.7, label='Risco')
+
+        # Inserindo os percentuais
+        deslocamento_texto = 0.1  # Ajuste para evitar sobreposição
+        for b, i in zip(atv_bars, impactos_atv):
+            plt.text(
+                b.get_width() + 0.005 if i > 0 else b.get_width() - 0.1,
+                b.get_y() + b.get_height() / 2 - deslocamento_texto,  # Deslocamento para cima
+                f'{i:.3f}%',
+                va='center',
+                fontsize=9.5,
+                color='black'
+            )
+
+        for r, i in zip(risk_bars, impactos_risk):
+            plt.text(
+                r.get_width() + 0.005 if i > 0 else r.get_width() - 0.1,
+                r.get_y() + r.get_height() / 2 + deslocamento_texto,  # Deslocamento para baixo
+                f'{i:.3f}%',
+                va='center',
+                fontsize=9.5,
+                color='black'
+            )
+
+        
+        plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
+        plt.ylabel('Atividade/Risco', fontsize=8)
+        plt.title('Gráfico de Tornado - Duração do Projeto e Riscos por Atividade', fontsize=10)
+        plt.xticks(fontsize=7) 
+        plt.yticks(fontsize=7)
+        plt.legend(loc='upper right', fontsize=6.5)
+        plt.grid(True)
+        plt.savefig('resultadosMontecarlo/grafico_tornado_riscos.png')
 
     # Exibir o gráfico
-    plotar_grafico_tornado()
+    plotar_grafico_tornado_riscos()
 
     # Carrega a planilha que contém os dados
     file_path = 'Modelo_Riscos.xlsx'
@@ -845,8 +913,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         custos.sort()
 
         x, y = np.array(duracoes), np.array(custos)
-        print(x)
-        print(y)
 
         X_Y_Spline = make_interp_spline(x, y)
         X_ = np.linspace(x.min(), x.max(), 500)
@@ -877,9 +943,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
+    imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + imagem_seta + [planilha_path]
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagens_atv_crucialidade + imagem_seta + [planilha_path]
 

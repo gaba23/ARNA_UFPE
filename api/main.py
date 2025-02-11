@@ -246,6 +246,13 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
                 except json.JSONDecodeError:
                     raise HTTPException(status_code=400, detail="Erro ao decodificar riscos")
 
+    # Remover resultados antigos
+    for filename in os.listdir('./resultadosMontecarlo/'):
+        file_path = os.path.join('./resultadosMontecarlo/', filename)
+        if os.path.isfile(file_path) and filename != 'montecarlo.txt':
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_interacoes)  # Passa o num_interacoes para a função
     lista_imagens = resultados[:-1]  # Todas as imagens
