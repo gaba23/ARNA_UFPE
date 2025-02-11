@@ -700,6 +700,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     df_sorted = df.sort_values(by='Contagem Crítica', ascending=False)
 
     df = pd.DataFrame(df_sorted)
+    # Removendo a atividade dummy
+    df = df[df['Atividade'] != 'fim']
 
     # Configura o gráfico
     plt.figure(figsize=(5, 3))
@@ -707,7 +709,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     plt.xlabel('Atividade', fontsize=8)
     plt.ylabel('Criticidade', fontsize=8)
     plt.title('Gráfico da Criticidade das Atividades', fontsize=10)
-    plt.xticks(fontsize=7) 
+    plt.xticks(ticks=range(len(df['Atividade'])), labels=df['Atividade'], fontsize=7)  
     plt.yticks(fontsize=7)
     plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
 

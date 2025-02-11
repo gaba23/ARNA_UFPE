@@ -48,8 +48,8 @@ class EventActivityGraphGenerator:
             self.event_mapping[activity.id] = (start_event, end_event)
             end_event_counter += 1
 
-            graph.node(start_event, shape="circle", label="")
-            graph.node(end_event, shape="circle", label="")
+            graph.node(start_event, shape="circle", label=start_event)
+            graph.node(end_event, shape="circle", label=end_event)
 
             # Setas (Atividades)
             if activity.id == last_activity:
