@@ -170,9 +170,11 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                         else:
                             tempos_riscos[risco].append(0)  
                     
-
                     duracao_risco = {risco: sum(valores) for risco, valores in tempos_riscos.items()}
+
                     break
+        duracao +=  sum(duracao_risco.values()) # adicionar o valor de cada risco à duração
+
         return duracao, duracao_risco, custo_total
 
     # Solicitar o número de interações para a simulação de Monte Carlo
@@ -215,7 +217,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 if duracao_risco[risco] > duracao_risco_maxima[risco]:
                     duracao_risco_maxima[risco] = duracao_risco[risco]
 
-            if custo_total > custo_maximo:  
+            if custo_total > custo_maximo: # riscos não inclusos no cálculo 
                 custo_maximo = custo_total
 
         
@@ -858,12 +860,11 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     def plotar_distribuicao_acumulada_colunas_e_riscos(duracoes_projeto, duracoes_risco):
         plt.figure(figsize=(5, 3))
         bin_size = 0.5  # Tamanho do intervalo
+        duracoes_min_tot = min(duracoes_projeto.min(), duracoes_risco.min().min())  # Intervalos agrupados para deixar a distibuição mais granular
+        duracoes_max_tot = max(duracoes_projeto.max(), duracoes_risco.max().max())
+        bins = np.arange(duracoes_min_tot, duracoes_max_tot + bin_size, bin_size)
 
         # Projeto
-        duracoes_min = np.min(duracoes_projeto)  # Intervalos agrupados para deixar a distibuição mais ranular
-        duracoes_max = np.max(duracoes_projeto)
-        bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
-
         hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
         contagem_acumulada = np.cumsum(hist)
         
@@ -873,24 +874,15 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
         # Riscos
         cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
-        duracoes_min_tot = duracoes_risco.min().min()
-        duracoes_max_tot = duracoes_risco.max().max()
-        i = 0
-         
+
+        i = 0    
         for risco in duracoes_risco.columns:
             tempos = duracoes_risco[risco].values
-
-            duracoes_min = np.min(tempos)
-            duracoes_max = np.max(tempos)
-            bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
-    
             hist, bin_edges = np.histogram(tempos, bins=bins)
-            contagem_acumulada = np.cumsum(hist)
+            contagem_acumulada = np.cumsum(hist)  
 
-            bin_midpoints = bin_edges[:-1] + bin_size / 2
-    
             # Plotando o gráfico
-            plt.step(bin_midpoints, contagem_acumulada, where='mid', color=cores[i], linewidth=1, linestyle=':', alpha=0.85, label=f'Risco {risco}')
+            plt.step(bin_midpoints, contagem_acumulada, where='post', color=cores[i], linewidth=1, linestyle=':', alpha=0.85, label=f'Risco {risco}')
             i += 1
     
         # Configurações do gráfico
