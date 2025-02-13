@@ -25,8 +25,8 @@ class EventActivityGraphGenerator:
         graph.attr(rankdir='LR')  # , splines='false')
 
         # Nós (Eventos)
-        start_event_counter = 1
-        end_event_counter = 1
+        start_event_counter = 0
+        end_event_counter = 0
         for dep in self.activity_dependencies:
             activity = dep.activity
 
@@ -49,15 +49,14 @@ class EventActivityGraphGenerator:
             end_event_counter += 1
 
             graph.node(start_event, shape="circle", label=start_event)
-            graph.node(end_event, shape="circle", label=end_event)
+            if activity.id != last_activity:  # último nó (do evento de fim) é ignorado
+                graph.node(end_event, shape="circle", label=end_event)
 
             # Setas (Atividades)
-            if activity.id == last_activity:
-                edge_label = 'end'
-            else:
+            if activity.id != last_activity:  # sem aresta pra atividade fim (dummy)
                 edge_label = f"{activity.id}"
-            edge_color = "red" if activity.id in self.critical_activities else "black"  # caminho crítico em vermelho
-            graph.edge(start_event, end_event, label=edge_label, color=edge_color)
+                edge_color = "red" if activity.id in self.critical_activities else "black"  # caminho crítico em vermelho
+                graph.edge(start_event, end_event, label=edge_label, color=edge_color)
         #  print(self.event_mapping)
 
         # Representação de dependências

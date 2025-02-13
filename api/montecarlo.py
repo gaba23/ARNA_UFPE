@@ -570,7 +570,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for i, atividade in enumerate(atividades_pert.keys()):
             duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
             correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
-            impactos_atividades[atividade] = correlacao * np.std(duracoes_atividade)
+            impactos_atividades[atividade] = correlacao # * np.std(duracoes_atividade)
 
         impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
         atividades = list(impactos_ordenados.keys())
@@ -611,7 +611,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.savefig('resultadosMontecarlo/grafico_tornado.png')
 
     # Exibir o gráfico
-  #  plotar_grafico_tornado()
+    plotar_grafico_tornado()
 
     def plotar_grafico_tornado_riscos():
         # Calcular impacto percentual
@@ -787,7 +787,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         duracoes_min = np.min(duracoes_projeto)  # Intervalos agrupados para deixar a distibuição mais ranular
         duracoes_max = np.max(duracoes_projeto)
         bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
-        
+
         hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
         contagem_acumulada = np.cumsum(hist)
         
@@ -820,7 +820,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         duracoes_min_tot = duracao_risco.min().min()
         duracoes_max_tot = duracao_risco.max().max()
         i = 0
-         
+
         acumulada_total = 0 
 
         for risco in duracao_risco.columns:
