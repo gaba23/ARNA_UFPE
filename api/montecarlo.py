@@ -15,7 +15,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 
-def simular_montecarlo(atividades_pert, riscos, num_interacoes):
+def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
    # print(atividades_pert)
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
     riscos_ocorridos = {risco: [] for risco in riscos}
@@ -184,8 +184,8 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         return duracao, duracao_risco, custo_total
 
     # Solicitar o número de interações para a simulação de Monte Carlo
-    # num_interacoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
-    # num_interacoes = 1000
+    # num_iteracoes = int(input("Digite o número de interações para a simulação de Monte Carlo: "))
+    # num_iteracoes = 1000
     # Encontrar e reunir em uma lista os caminhos
     caminhos = encontrar_caminhos(grafo, mapa_atividades["inicio"], mapa_atividades['fim'])
 
@@ -202,7 +202,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     duracoes_risco = {risco: [] for risco in riscos}
     custos_projeto = []
 
-    for iteracao in range(num_interacoes):
+    for iteracao in range(num_iteracoes):
         tempos_riscos = {risco: [] for risco in riscos}
         duracoes_atividades = [0] * len(atividades_pert)  # lista dos valores das duracoes da iteracao atual
         duracoes_caminhos = []
@@ -253,7 +253,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
    # print('riscos')
   #  print(duracoes_risco)
     # Calcular frequências
-    frequencia_caminhos_criticos = {caminho: contagem / num_interacoes for caminho, contagem in contagem_caminhos_criticos.items()}
+    frequencia_caminhos_criticos = {caminho: contagem / num_iteracoes for caminho, contagem in contagem_caminhos_criticos.items()}
     # Correção da visualização dos nós baseado no índice
     contagem_caminhos_criticos_originais = contagem_caminhos_criticos
     frequencia_caminhos_criticos_originais = frequencia_caminhos_criticos
@@ -267,7 +267,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for key, value in frequencia_caminhos_criticos.items()
     } 
 
-    frequencia_atividades_criticas = {atividade: contagem / num_interacoes for atividade, contagem in contagem_atividades_criticas.items()}
+    frequencia_atividades_criticas = {atividade: contagem / num_iteracoes for atividade, contagem in contagem_atividades_criticas.items()}
 
     # Calcular a crucialidade das atividades usando correlação
     crucialidade_atividades = {}
@@ -930,17 +930,24 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
     criar_diagrama_atualizado(df_caminhos_criticos_originais)
     plotar_grafico_gantt(tempos_inicio, tempos_termino)
-    plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
     plotar_crucialidade_atividades(df_duracoes_projeto["Duração do Projeto"], resultados_atividades, atividades_pert)
     plotar_grafico_tornado()
-    plotar_analise_custos(custos_projeto, duracoes_projeto)
     plotar_grafico_criticidade(df_frequencia_atividades_criticas)
     dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
 
+    if num_iteracoes > 3:  # isola gráficos que necessitam de um valor mínimo para plotar corretamente 
+        plotar_analise_custos(custos_projeto, duracoes_projeto)
+
+    if num_iteracoes > 1:
+        plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
+
     if riscos:  # riscos opcionais (dicionário não está vazio)
-        plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
-        plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
         plotar_grafico_tornado_riscos()
+        
+        if num_iteracoes > 1:
+            plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
+            plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
+
 
 
     imagem_diagrama = ["diagrama_atividades.png"]

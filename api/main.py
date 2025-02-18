@@ -91,8 +91,11 @@ async def logout(request: Request):
 @app.post("/analyzeMonteCarlo")
 async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None), tabela_risco: str = Form(None), atividades: str = Form(None), riscos: str = Form(None), 
                             csv_file: UploadFile = File(None), xlsx_file: UploadFile = File(None),
-                            num_interacoes: int = Form(...)):  # Adicione o novo parâmetro aqui
+                            num_iteracoes: int = Form(...)):  # Adicione o novo parâmetro aqui
   #  logger.info("Analyzing Monte Carlo simulation started.")
+    
+    if num_iteracoes < 1:
+        raise HTTPException(status_code=400, detail="Número de iterações deve ser superior a zero")
 
     atividades_dict = {}
     riscos_dict = {}
@@ -136,7 +139,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
             # Reconverter em dataframe
             df_atv = pd.read_csv(csv_buffer_atv)
 
-            if s_riscos:  # não é necessário passar a aba dos riscos
+            if s_riscos is not None:  # não é necessário passar a aba dos riscos
                 csv_buffer_riscos = io.StringIO()
                 s_riscos.to_csv(csv_buffer_riscos, index=False)
                 csv_buffer_riscos.seek(0)
@@ -144,7 +147,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
                 df_riscos = pd.read_csv(csv_buffer_riscos)
             
             else:
-                df_riscos = None
+                df_riscos = pd.DataFrame()  # dataframe vazio
     
             if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
@@ -258,7 +261,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
             print(f"Deleted: {file_path}")
 
     # Realizar a simulação de Monte Carlo
-    resultados = simular_montecarlo(atividades_dict, riscos_dict, num_interacoes)  # Passa o num_interacoes para a função
+    resultados = simular_montecarlo(atividades_dict, riscos_dict, num_iteracoes)  # Passa o num_iteracoes para a função
     lista_imagens = resultados[:-1]  # Todas as imagens
     xls_path = resultados[-1]  # O caminho do arquivo Excel
 
@@ -369,7 +372,7 @@ def parse_mc_csv(df_atv, df_riscos):
         
 
     # Risco
-    if df_riscos:  # riscos são inputs opcionais
+    if not df_riscos.empty:  # riscos são inputs opcionais
         for index, row in df_riscos.iterrows():
             if row['Tipo de Distribuicao'] == "triangular":
                 riscos[row['ID']] = {
