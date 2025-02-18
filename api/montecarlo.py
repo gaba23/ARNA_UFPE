@@ -112,7 +112,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                     else:
                         # Calcular a duração com base no tipo de distribuição
                         tipo = atividade["tipo"]
-                        if tipo == "beta_pert":
+                        if tipo == "beta_pert":     # errado
                             t_o = atividade["t_otimista"]
                             t_p = atividade["t_pessimista"]
                             t_m = atividade["t_provavel"]
@@ -124,6 +124,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             # Gerando uma variável aleatória beta e escalando para o intervalo [t_o, t_p]
                             beta_random = np.random.beta(alpha, beta)
                             duracao_atividade = beta_random * (t_p - t_o) + t_o
+
+                            # print(f'atv stats for each way activity {atividade}')
+                            # print(f'alpha: {alpha}, beta: {beta}, random: {beta_random}')
+                            # print(f'duração: {duracao_atividade}')
                         elif tipo == "triangular":
                             t_min = atividade["t_minimo"]
                             t_mode = atividade["t_moda"]
@@ -139,6 +143,7 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                             duracao_atividade = np.random.normal(mu, sigma)
                     duracao += duracao_atividade  
                     duracoes_atividades[atividade["no_final"] - 2] = duracao_atividade  # Atribui a duração da atividade no índice correto
+                    # print(duracoes_atividades[atividade["no_final"] - 2])
                     # Custo
                     idx = str(atividade.get("no_inicial"))
                     custo_fix = custo_fixo.get(idx)
@@ -157,19 +162,20 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                                 index_atividade = mapa_atividades[atividade] - 2
                                 if detalhes["tipo_dist"] == "triangular":
                                     atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
-                                elif detalhes["tipo_dist"] == "uniforme":
-                                    atraso = random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
+                                elif detalhes["tipo_dist"] == "uniforme":   # erro?
+                                    atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
 
                                 if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
                                     duracoes_atividades[index_atividade] += atraso
                                 else:  # Tipo do risco é percentual
-                                    duracoes_atividades[index_atividade] *= (1 + atraso)
+                                    duracoes_atividades[index_atividade] *= (1 + atraso)  # erro
 
                                 atraso_total += atraso
                             tempos_riscos[risco].append(atraso_total)
                         else:
                             tempos_riscos[risco].append(0)  
-                    
+                    # print(f'duracao final: ')
+                    # print(duracoes_atividades)
                     duracao_risco = {risco: sum(valores) for risco, valores in tempos_riscos.items()}
 
                     break
@@ -224,7 +230,10 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for risco in riscos:
             duracoes_risco[risco].append(duracao_risco_maxima[risco])  
 
-        resultados_atividades.append(duracoes_atividades)
+        resultados_atividades.append(duracoes_atividades)  ## errado
+        print('res atv 2 e 3: ')
+        print(resultados_atividades[iteracao][1])
+        print(resultados_atividades[iteracao][2])
         resultados_caminhos.append(duracoes_caminhos)
         resultados_caminhos_criticos.append({
             "Caminho Crítico": caminho_critico,
@@ -317,8 +326,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 # Salvando a imagem para cada atividade
                 plt.savefig(f'resultadosMontecarlo/distribuicao_atividade_{atividade}.png')
                 plt.close()
-
-    plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
 
     crucialidade_caminhos = {}
     for i, caminho in enumerate(caminhos):
@@ -456,6 +463,13 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         for i, atividade in enumerate(atividades_pert.keys()):
             duracoes = [resultado[i] for resultado in resultados_atividades]
             medias[atividade] = np.mean(duracoes)
+            # print(atividade)
+            # print('max & min duration:')
+            # print(max(duracoes))
+            # print(min(duracoes))
+            # print('médias:')
+            # print(medias[atividade])
+
         return medias
 
     # Função para determinar os tempos de início e término
@@ -560,10 +574,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     # Cálculo dos tempos de início e término
     tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
-    fig = plotar_grafico_gantt(tempos_inicio, tempos_termino)
-
-    dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
-
     def plotar_grafico_tornado():
         # Calcular impacto percentual
         impactos_atividades = {}
@@ -609,9 +619,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.yticks(fontsize=7)
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_tornado.png')
-
-    # Exibir o gráfico
-    plotar_grafico_tornado()
 
     def plotar_grafico_tornado_riscos():
         # Calcular impacto percentual
@@ -673,9 +680,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.grid(True)
         plt.savefig('resultadosMontecarlo/grafico_tornado_riscos.png')
 
-    # Exibir o gráfico
-    plotar_grafico_tornado_riscos()
-
     # Carrega a planilha que contém os dados
     file_path = 'Modelo_Riscos.xlsx'
 
@@ -721,17 +725,20 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
     def plotar_grafico_criticidade(df_frequencia_atividades_criticas):
         plt.figure(figsize=(5, 3))
 
+        df = df_frequencia_atividades_criticas[df_frequencia_atividades_criticas['Atividade'] != 'fim']  # remove atividade fim do dataframe
+
         # Ordenar os dados pela frequência
-        df_frequencia_atividades_criticas = df_frequencia_atividades_criticas.sort_values(by="Frequência Crítica", ascending=False)
+        df = df.sort_values(by="Frequência Crítica", ascending=False)
 
         # Plotar o gráfico de barras
-        plt.bar(df_frequencia_atividades_criticas["Atividade"], df_frequencia_atividades_criticas["Frequência Crítica"], color='skyblue')
+        plt.bar(df["Atividade"], df["Frequência Crítica"], color='skyblue')
 
         # Adicionar títulos e labels
-        plt.xlabel('Atividade')
-        plt.ylabel('Frequência Crítica')
-        plt.title('Frequência de Atividades Críticas - Simulação de Monte Carlo')
-        plt.xticks(rotation=0)  # Rotacionar os rótulos do eixo X para melhor legibilidade
+        plt.xlabel('Atividade', fontsize=8)
+        plt.ylabel('Frequência Crítica', fontsize=8)
+        plt.title('Frequência de Atividades Críticas - Simulação de Monte Carlo', fontsize=10)
+        plt.xticks(rotation=0, fontsize=7)  # Rotacionar os rótulos do eixo X para melhor legibilidade
+        plt.yticks(fontsize=7)
         plt.grid(axis='y', linestyle='--', alpha=0.7)
 
         # Salvar o gráfico
@@ -758,8 +765,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
                 except Exception as e:
                     print(f"Erro ao salvar a imagem para a atividade {atividade}: {e}")                
                 plt.close()
-
-    plotar_crucialidade_atividades(df_duracoes_projeto["Duração do Projeto"], resultados_atividades, atividades_pert)
 
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto_series = df_duracoes_projeto["Duração do Projeto"]
@@ -812,8 +817,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
         plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada_com_estatisticas.png')
 
-    plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
-
     def plotar_grafico_distribuicao_acumulada_riscos(duracao_risco):
         plt.figure(figsize=(5, 3))
         cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
@@ -854,8 +857,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
         plt.yticks(yticks, fontsize=8)
             
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_risco.png')
-
-    plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
 
     def plotar_distribuicao_acumulada_colunas_e_riscos(duracoes_projeto, duracoes_risco):
         plt.figure(figsize=(5, 3))
@@ -900,8 +901,6 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
             
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_projeto_e_riscos.png')
 
-    plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
-
     def plotar_analise_custos(custos, duracoes):
         duracoes.sort()
         custos.sort()
@@ -927,8 +926,21 @@ def simular_montecarlo(atividades_pert, riscos, num_interacoes):
 
         plt.savefig(f'resultadosMontecarlo/grafico_analise_custos.png')
 
-
+    # Plotar gráficos
+    plotar_distribuicao_atividades(resultados_atividades, atividades_pert)
+    criar_diagrama_atualizado(df_caminhos_criticos_originais)
+    plotar_grafico_gantt(tempos_inicio, tempos_termino)
+    plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
+    plotar_crucialidade_atividades(df_duracoes_projeto["Duração do Projeto"], resultados_atividades, atividades_pert)
+    plotar_grafico_tornado()
     plotar_analise_custos(custos_projeto, duracoes_projeto)
+    plotar_grafico_criticidade(df_frequencia_atividades_criticas)
+    dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
+
+    if riscos:  # riscos opcionais (dicionário não está vazio)
+        plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
+        plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
+        plotar_grafico_tornado_riscos()
 
 
     imagem_diagrama = ["diagrama_atividades.png"]

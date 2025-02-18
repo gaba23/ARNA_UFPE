@@ -127,21 +127,25 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
 
             sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl')  # extrair as páginas
             s_atividades = sheets.get("Atividades")
-            s_riscos = sheets.get("Riscos")
+            s_riscos = sheets.get("Riscos")                
 
             # Converter em CSV evita formatações ocultas
             csv_buffer_atv = io.StringIO()
             s_atividades.to_csv(csv_buffer_atv, index=False)
             csv_buffer_atv.seek(0)
-
-            csv_buffer_riscos = io.StringIO()
-            s_riscos.to_csv(csv_buffer_riscos, index=False)
-            csv_buffer_riscos.seek(0)
-
             # Reconverter em dataframe
             df_atv = pd.read_csv(csv_buffer_atv)
-            df_riscos = pd.read_csv(csv_buffer_riscos)
 
+            if s_riscos:  # não é necessário passar a aba dos riscos
+                csv_buffer_riscos = io.StringIO()
+                s_riscos.to_csv(csv_buffer_riscos, index=False)
+                csv_buffer_riscos.seek(0)
+
+                df_riscos = pd.read_csv(csv_buffer_riscos)
+            
+            else:
+                df_riscos = None
+    
             if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
@@ -365,34 +369,35 @@ def parse_mc_csv(df_atv, df_riscos):
         
 
     # Risco
-    for index, row in df_riscos.iterrows():
-        if row['Tipo de Distribuicao'] == "triangular":
-            riscos[row['ID']] = {
-            "probabilidade": row['Probabilidade'],
-            "tipo_dist": row['Tipo de Distribuicao'],
-            "tipo": row['Tipo'],
-            "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-            "atraso_minimo": row.get('Atraso Minimo', None),
-            "atraso_medio": row.get('Atraso Medio', None),
-            "atraso_maximo": row.get('Atraso Maximo', None),
-            "custo_fix": row.get('Custo Fixo Adicional', 0),
-            "custo": row.get('Custo', 0),
-            "descricao": row.get('Descricao', None)
-        }
+    if df_riscos:  # riscos são inputs opcionais
+        for index, row in df_riscos.iterrows():
+            if row['Tipo de Distribuicao'] == "triangular":
+                riscos[row['ID']] = {
+                "probabilidade": row['Probabilidade'],
+                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo": row['Tipo'],
+                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atraso_minimo": row.get('Atraso Minimo', None),
+                "atraso_medio": row.get('Atraso Medio', None),
+                "atraso_maximo": row.get('Atraso Maximo', None),
+                "custo_fix": row.get('Custo Fixo Adicional', 0),
+                "custo": row.get('Custo', 0),
+                "descricao": row.get('Descricao', None)
+            }
 
-        elif row['Tipo de Distribuicao'] == "uniforme":
-            riscos[row['ID']] = {
-            "probabilidade": row['Probabilidade'],
-            "tipo_dist": row['Tipo de Distribuicao'],
-            "tipo": row['Tipo'],
-            "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
-            "atraso_minimo": row.get('Atraso Minimo', None),
-            "atraso_maximo": row.get('Atraso Maximo', None),
-            "custo_fix": row.get('Custo Fixo Adicional', 0),
-            "custo": row.get('Custo', 0),
-            "descricao": row.get('Descricao', None)
+            elif row['Tipo de Distribuicao'] == "uniforme":
+                riscos[row['ID']] = {
+                "probabilidade": row['Probabilidade'],
+                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo": row['Tipo'],
+                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atraso_minimo": row.get('Atraso Minimo', None),
+                "atraso_maximo": row.get('Atraso Maximo', None),
+                "custo_fix": row.get('Custo Fixo Adicional', 0),
+                "custo": row.get('Custo', 0),
+                "descricao": row.get('Descricao', None)
 
-        }
+            }
 
     return atividades, riscos
 
