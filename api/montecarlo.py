@@ -434,12 +434,16 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     # Gerar gráficos de caminhos
     for i, caminho in enumerate(caminhos):
+
         duracoes_caminho = [resultado[i] for resultado in resultados_caminhos]
+
         plt.figure(figsize=(5, 3))
         plt.hist(duracoes_caminho, bins=30, alpha=0.75, color='blue', edgecolor='black')
         plt.xlabel('Duração', fontsize=8)
         plt.ylabel('Frequência', fontsize=8)
-        plt.title(f'Distribuição das Durações do Caminho {i} : {caminho} - Simulação de Monte Carlo', fontsize=10)
+
+        caminho_update =  [x - 1 for x in caminho[1:-1]]
+        plt.title(f'Distribuição das Durações do Caminho {i} : {caminho_update} - Simulação de Monte Carlo', fontsize=10)
         plt.xticks(fontsize=7) 
         plt.yticks(fontsize=7)
         plt.grid(True)
@@ -751,6 +755,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
+                R = 'Correlação: ' + str(round(crucialidade_atividades.get(atividade), 8))
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
                 plt.figure(figsize=(5, 3))
                 plt.scatter(duracoes_projeto, duracoes_atividade,  alpha=0.75)
@@ -760,6 +765,11 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.xticks(fontsize=7) 
                 plt.yticks(fontsize=7)
                 plt.grid(True)
+
+                ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
+                ax_inset.text(0.5, 0.25, R, fontsize=7, va='center', ha='center', 
+                    bbox=dict(facecolor='white', alpha=0.8))
+                ax_inset.axis('off')  
 
                 plt.tight_layout()
                 # Salvando a imagem para cada atividade
