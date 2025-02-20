@@ -164,11 +164,18 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                                     atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
                                 elif detalhes["tipo_dist"] == "uniforme":   # erro?
                                     atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
+                                    print('delay:')
+                                    print(atraso)
 
                                 if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
                                     duracoes_atividades[index_atividade] += atraso
                                 else:  # Tipo do risco é percentual
-                                    duracoes_atividades[index_atividade] *= (1 + atraso)  # erro
+                                   # print('duracao antes atraso :')
+                                    #print(duracoes_atividades[index_atividade])
+                                    duracoes_atividades[index_atividade] *= (1 + atraso)  # erro?
+                                    #print('duracao após risco:')
+                                    #print(duracoes_atividades[index_atividade])
+
 
                                 atraso_total += atraso
                             tempos_riscos[risco].append(atraso_total)
@@ -337,6 +344,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             crucialidade_caminhos[tuple(caminho)] = correlacao
     
     crucialidade_caminhos = { ('start',) + tuple(n - 1 for n in caminho[1:-1]) + ('end',): valor for caminho, valor in crucialidade_caminhos.items() }  # correção da visualização dos nós baseado no índice
+    for item in resultados_caminhos_criticos:   
+        item["Caminho Crítico"] = ['start', *[x - 1 for x in item["Caminho Crítico"][1:-1]], 'end']
 
     # Converter os resultados em dataframes para facilitar a exportação
     df_atividades = pd.DataFrame(resultados_atividades, columns=list(atividades_pert.keys()))
@@ -356,6 +365,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     df_contagem_atividades_criticas = pd.DataFrame(list(contagem_atividades_criticas.items()), columns=["Atividade", "Contagem Crítica"])
     df_frequencia_atividades_criticas = pd.DataFrame(list(frequencia_atividades_criticas.items()), columns=["Atividade", "Frequência Crítica"])
+    df_merged = df_contagem_atividades_criticas.merge(df_frequencia_atividades_criticas, on="Atividade", how="outer")
+
     df_crucialidade_atividades = pd.DataFrame(list(crucialidade_atividades.items()), columns=["Atividade", "Crucialidade"])
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
 
@@ -363,6 +374,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     df_duracoes_riscos = pd.DataFrame(duracoes_risco)
 
     # Criando a planilha
+    print('will write')
     planilha_path = 'Modelo_Riscos.xlsx'
     with pd.ExcelWriter(planilha_path) as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
@@ -370,16 +382,17 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         df_caminhos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=0, index_label="Iteração")
         df_criticos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + len(df_caminhos.columns) + 4, index_label="Iteração")
         df_riscos_ocorridos.to_excel(writer, sheet_name='Riscos', index=False)
-
         # Unir "Contagem Caminhos Críticos", "Frequência Caminhos Críticos", "Contagem Atividades Críticas", "Frequência Atividades Críticas", "Crucialidade das Atividades" e "Crucialidade dos Caminhos" em outra página
         df_caminhos_criticos.to_excel(writer, sheet_name='Caminhos Críticos', startrow=0, index_label="Número do Caminho")
 
+        df_merged.to_excel(writer, sheet_name='Atividades Críticas', index=False)
+
         # Salva o primeiro DataFrame na aba 'Atividades Críticas'
-        df_contagem_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, index=False)
+ #       df_contagem_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, index=False)
         # Calcula o deslocamento correto para o segundo DataFrame (número de colunas, não de linhas)
-        start_col_offset = df_contagem_atividades_criticas.shape[1] + 5  # Número de colunas + espaço entre os DataFrames
+  #      start_col_offset = df_contagem_atividades_criticas.shape[1] + 5  # Número de colunas + espaço entre os DataFrames
         # Salva o segundo DataFrame na mesma aba, a partir de uma coluna deslocada
-        df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, startcol=start_col_offset, index=False)
+   #     df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, startcol=start_col_offset, index=False)
 
         df_crucialidade_atividades.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, index=False)
 
@@ -392,6 +405,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
+
+    print('have written')
 
     def criar_diagrama_atualizado(caminhos_df):
         dot = graphviz.Digraph(comment='Diagrama de Atividades Atualizado', format='png')
@@ -943,7 +958,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     if riscos:  # riscos opcionais (dicionário não está vazio)
         plotar_grafico_tornado_riscos()
-        
+
         if num_iteracoes > 1:
             plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
             plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
