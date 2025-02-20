@@ -374,39 +374,27 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     df_duracoes_riscos = pd.DataFrame(duracoes_risco)
 
     # Criando a planilha
-    print('will write')
     planilha_path = 'Modelo_Riscos.xlsx'
-    with pd.ExcelWriter(planilha_path) as writer:
+    with pd.ExcelWriter(planilha_path, engine="openpyxl") as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
         df_atividades.to_excel(writer, sheet_name='Atividades', startrow=0, startcol=0, index_label="Iteração")
-        df_caminhos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=0, index_label="Iteração")
-        df_criticos.to_excel(writer, sheet_name='Caminhos', startrow=0, startcol=len(df_atividades.columns) + len(df_caminhos.columns) + 4, index_label="Iteração")
+        df_caminhos.to_excel(writer, sheet_name='Caminhos por Iteração', startrow=0, startcol=0, index_label="Iteração")
+        df_criticos.to_excel(writer, sheet_name='Caminhos Críticos por Iteração', startrow=0, startcol=0, index_label="Iteração")
         df_riscos_ocorridos.to_excel(writer, sheet_name='Riscos', index=False)
         # Unir "Contagem Caminhos Críticos", "Frequência Caminhos Críticos", "Contagem Atividades Críticas", "Frequência Atividades Críticas", "Crucialidade das Atividades" e "Crucialidade dos Caminhos" em outra página
         df_caminhos_criticos.to_excel(writer, sheet_name='Caminhos Críticos', startrow=0, index_label="Número do Caminho")
 
         df_merged.to_excel(writer, sheet_name='Atividades Críticas', index=False)
 
-        # Salva o primeiro DataFrame na aba 'Atividades Críticas'
- #       df_contagem_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, index=False)
-        # Calcula o deslocamento correto para o segundo DataFrame (número de colunas, não de linhas)
-  #      start_col_offset = df_contagem_atividades_criticas.shape[1] + 5  # Número de colunas + espaço entre os DataFrames
-        # Salva o segundo DataFrame na mesma aba, a partir de uma coluna deslocada
-   #     df_frequencia_atividades_criticas.to_excel(writer, sheet_name='Atividades Críticas', startrow=0, startcol=start_col_offset, index=False)
-
-        df_crucialidade_atividades.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, index=False)
-
-        # Calcula a coluna de início para df_crucialidade_caminhos
-        start_col_offset = df_crucialidade_atividades.shape[1] + 2  # Número de colunas + espaço entre os DataFrames
+        df_crucialidade_atividades.to_excel(writer, sheet_name='Crucialidade Atividades', startrow=0, index=False)
 
         # Salva df_crucialidade_caminhos ao lado do primeiro DataFrame
-        df_crucialidade_caminhos.to_excel(writer, sheet_name='Crucialidade Caminhos e Atividades', startrow=0, startcol=start_col_offset, index=False)
-
+        df_crucialidade_caminhos.to_excel(writer, sheet_name='Crucialidade Caminhos', startrow=0, startcol=0, index=False)
 
         # Adicionar os dados de risco à planilha
-        df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', index=False)
+        df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', startcol=0, index=False)
 
-    print('have written')
+        writer.book.save(planilha_path)
 
     def criar_diagrama_atualizado(caminhos_df):
         dot = graphviz.Digraph(comment='Diagrama de Atividades Atualizado', format='png')
