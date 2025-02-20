@@ -153,7 +153,8 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
-
+            print('dict')
+            print(atividades_dict)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
         
@@ -304,19 +305,20 @@ def parse_mc_csv(df_atv, df_riscos):
         else:
             precedentes_list = []  # Caso contrário, define como lista vazia
 
-        if row['Tipo de Distribuicao'] == "beta_pert":
-            if row['ID'] == "fim":
-                atividades[row['ID']] = {
-                    "precedentes": precedentes_list,
-                    "tipo": row['Tipo de Distribuicao'],
-                    "duracao": 0,
-                    "custo": row.get('Custo', 0),
-                    "custo": row.get('Custo', 0),
-                    "custo_fix": row.get('Custo Fixo', 0),
-                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                    "descricao": row.get('Descricao', "")
-                    }
-            else:
+        if row['ID'] == "fim":
+            atividades[row['ID']] = {
+                "precedentes": precedentes_list,
+                "duracao": 0,
+                "custo": row.get('Custo', 0),
+                "custo": row.get('Custo', 0),
+                "custo_fix": row.get('Custo Fixo', 0),
+                "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                "descricao": row.get('Descricao', "")
+                }
+       
+        else:
+
+            if row['Tipo de Distribuicao'] == "beta_pert":
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
@@ -330,46 +332,46 @@ def parse_mc_csv(df_atv, df_riscos):
                     "descricao": row.get('Descricao', "")
                     }
 
-        elif row['Tipo de Distribuicao'] == "triangular":
-            atividades[row['ID']] = {
-                "precedentes": precedentes_list,
-                "tipo": row['Tipo de Distribuicao'],
-                "t_minimo": row.get('Tempo Minimo', None),
-                "t_moda": row.get('Tempo Moda', None),
-                "t_maximo": row.get('Tempo Maximo', None),
-                "custo": row.get('Custo', 0),
-                "custo": row.get('Custo', 0),
-                "custo_fix": row.get('Custo Fixo', 0),
-                "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                "descricao": row.get('Descricao', "")
-            }
+            elif row['Tipo de Distribuicao'] == "triangular":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "t_minimo": row.get('Tempo Minimo', None),
+                    "t_moda": row.get('Tempo Moda', None),
+                    "t_maximo": row.get('Tempo Maximo', None),
+                    "custo": row.get('Custo', 0),
+                    "custo": row.get('Custo', 0),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                    "descricao": row.get('Descricao', "")
+                }
 
-        elif row['Tipo de Distribuicao'] == "uniforme":
-            atividades[row['ID']] = {
-                "precedentes": precedentes_list,
-                "tipo": row['Tipo de Distribuicao'],
-                "t_minimo": row.get('Tempo Minimo', None),
-                "t_maximo": row.get('Tempo Maximo', None),
-                "custo": row.get('Custo', 0),
-                "custo": row.get('Custo', 0),
-                "custo_fix": row.get('Custo Fixo', 0),
-                "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                "descricao": row.get('Descricao', "")
-            }
+            elif row['Tipo de Distribuicao'] == "uniforme":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "t_minimo": row.get('Tempo Minimo', None),
+                    "t_maximo": row.get('Tempo Maximo', None),
+                    "custo": row.get('Custo', 0),
+                    "custo": row.get('Custo', 0),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                    "descricao": row.get('Descricao', "")
+                }
 
-        elif row['Tipo de Distribuicao'] == "normal":
-            atividades[row['ID']] = {
-                "precedentes": precedentes_list,
-                "tipo": row['Tipo de Distribuicao'],
-                "t_otimista": row.get('Tempo Otimista', None),
-                "t_pessimista": row.get('Tempo Pessimista', None),
-                "t_media": row.get('Tempo Medio', None),
-                "custo": row.get('Custo', 0),
-                "custo_fix": row.get('Custo Fixo', 0),
-                "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                "descricao": row.get('Descricao', "")
-            }
-        
+            elif row['Tipo de Distribuicao'] == "normal":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "t_otimista": row.get('Tempo Otimista', None),
+                    "t_pessimista": row.get('Tempo Pessimista', None),
+                    "t_media": row.get('Tempo Medio', None),
+                    "custo": row.get('Custo', 0),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                    "descricao": row.get('Descricao', "")
+                }
+            
 
     # Risco
     if not df_riscos.empty:  # riscos são inputs opcionais

@@ -16,24 +16,23 @@ from arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 
 def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
-   # print(atividades_pert)
+
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
     riscos_ocorridos = {risco: [] for risco in riscos}
- 
+
     custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
     custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
  
     end_atv_key = str(len(atividades_pert))
     end_atv_fix_value = custo_fixo.get("fim")
     end_atv_var_value = custo_variavel.get("fim")
+
     custo_fixo.pop('fim')
     custo_variavel.pop('fim')
 
     custo_fixo.update({end_atv_key: end_atv_fix_value})
     custo_variavel.update({end_atv_key: end_atv_var_value})
 
-   # print(custo_fixo)
-  #  print(custo_variavel)
     # Adicionando um número ao nó e progredindo
     mapa_atividades = {atividade: i + 2 for i, atividade in enumerate(atividades_pert.keys())}
     mapa_atividades["inicio"] = 1
@@ -470,12 +469,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         for i, atividade in enumerate(atividades_pert.keys()):
             duracoes = [resultado[i] for resultado in resultados_atividades]
             medias[atividade] = np.mean(duracoes)
-            # print(atividade)
-            # print('max & min duration:')
-            # print(max(duracoes))
-            # print(min(duracoes))
-            # print('médias:')
-            # print(medias[atividade])
 
         return medias
 
