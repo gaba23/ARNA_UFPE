@@ -590,10 +590,10 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
         # Gerar gfráfico
         plt.figure(figsize=(5, 3))
-        atv_bars = plt.barh(atividades, impactos, color='blue', alpha=0.7)
+        atv_bars = plt.barh(atividades, impactos, color='cyan', alpha=0.7)
         # Inserindo os percentuais
         for b, i in zip(atv_bars, impactos):
-            if i > 0:
+            if i >= 0:
                 plt.text(
                     b.get_width() + 0.005,
                     b.get_y() + b.get_height() / 2,
@@ -602,15 +602,24 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     fontsize=9.5,
                     color='black'
                 )
-            else:
-                    plt.text(
-                    b.get_width() - 0.1,
+            if i < 0:
+                plt.text(
+                    b.get_width() + 0.005,
                     b.get_y() + b.get_height() / 2,
                     f'{i:.3f}%',
                     va='center',
                     fontsize=9.5,
                     color='black'
                 )
+            # else:
+            #         plt.text(
+            #         b.get_width() - 0.1,
+            #         b.get_y() + b.get_height() / 2,
+            #         f'{i:.3f}%',
+            #         va='center',
+            #         fontsize=9.5,
+            #         color='black'
+            #     )
 
         plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
         plt.ylabel('Atividade', fontsize=8)
@@ -745,13 +754,21 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.savefig('resultadosMontecarlo/grafico_criticidade_atividades.png')
         plt.close()
 
+
     def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
                 R = 'Correlação: ' + str(round(crucialidade_atividades.get(atividade), 8))
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+                
                 plt.figure(figsize=(5, 3))
-                plt.scatter(duracoes_projeto, duracoes_atividade,  alpha=0.75)
+                plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
+
+                # Adicionando uma linha de tendência fina
+                coef = np.polyfit(duracoes_projeto, duracoes_atividade, 1)
+                poly1d_fn = np.poly1d(coef)
+                plt.plot(duracoes_projeto, poly1d_fn(duracoes_projeto), 'r-', linewidth=0.5)  # Linha fina em vermelho
+
                 plt.title(f'Crucialidade - {atividade}', fontsize=10)
                 plt.xlabel('Duração Crítica do Projeto', fontsize=8)
                 plt.ylabel('Duração da Atividade', fontsize=8)
@@ -761,17 +778,17 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                 ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
                 ax_inset.text(0.5, 0.25, R, fontsize=7, va='center', ha='center', 
-                    bbox=dict(facecolor='white', alpha=0.8))
+                            bbox=dict(facecolor='white', alpha=0.8))
                 ax_inset.axis('off')  
 
                 plt.tight_layout()
+
                 # Salvando a imagem para cada atividade
                 try:
                     plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}.png')
                 except Exception as e:
                     print(f"Erro ao salvar a imagem para a atividade {atividade}: {e}")                
                 plt.close()
-
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto_series = df_duracoes_projeto["Duração do Projeto"]
 

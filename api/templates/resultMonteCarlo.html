@@ -116,9 +116,6 @@
             <a href="#" class="download-button" onclick="openReportModalProbabilidade()">
                 <i class="fas fa-chart-bar"></i> Probabilidade Gaussiana
             </a>
-            <a href="#" class="download-button" onclick="openReportModalCalculadora()">
-                <i class="fas fa-chart-bar"></i> Calculadora Tempo Atividade
-            </a>
         </div>
         
         <div id="imageModal" class="modal">
@@ -163,13 +160,20 @@
                     const container = document.getElementById('imageContainer');
                     container.innerHTML = ''; // Limpa o container antes de adicionar novas imagens
 
-                    const prioritizedImage = 'grafico_gantt.png';  // Grafico de Gantt aparecendo em primeiro
+                    const firstImage = 'grafico_gantt.png';  // Grafico de Gantt aparecendo em primeiro
+                    const secondImage = 'diagrama_na_seta.png';
                     const images = [...data.imagens];
 
-                    const prioritizedIndex = images.indexOf(prioritizedImage);
-                    if (prioritizedIndex !== -1) {  // Mover para o início
-                        images.splice(prioritizedIndex, 1); 
-                        images.unshift(prioritizedImage);  
+                    const secondIndex = images.indexOf(secondImage);
+                    if (secondIndex !== -1) {  // Mover para o início
+                        images.splice(secondIndex, 1); 
+                        images.unshift(secondImage);  
+                    }
+
+                    const firstIndex = images.indexOf(firstImage);
+                    if (firstIndex !== -1) {  // Mover para o início
+                        images.splice(firstIndex, 1); 
+                        images.unshift(firstImage);  
                     }
 
                     images.forEach(imagem => {
