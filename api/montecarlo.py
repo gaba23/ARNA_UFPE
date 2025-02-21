@@ -611,15 +611,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     fontsize=9.5,
                     color='black'
                 )
-            # else:
-            #         plt.text(
-            #         b.get_width() - 0.1,
-            #         b.get_y() + b.get_height() / 2,
-            #         f'{i:.3f}%',
-            #         va='center',
-            #         fontsize=9.5,
-            #         color='black'
-            #     )
 
         plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
         plt.ylabel('Atividade', fontsize=8)
@@ -812,31 +803,30 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     )
 
     def plotar_grafico_distribuicao_acumulada_colunas(duracoes_projeto, valores_texto, bin_size=0.5):
-        duracoes_min = np.min(duracoes_projeto)  # Intervalos agrupados para deixar a distibuição mais ranular
+        duracoes_min = np.min(duracoes_projeto)  
         duracoes_max = np.max(duracoes_projeto)
         bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
 
         hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
-        contagem_acumulada = np.cumsum(hist)
-        
-        bin_midpoints = bin_edges[:-1] + bin_size / 2  # Meio do intervalo é o valor do eixo x
+        frequencias_relativas = hist / np.sum(hist)  # Frequência relativa de cada bin
+        distribuicao_acumulada = np.cumsum(frequencias_relativas)  # Probabilidade acumulada
+
+        bin_midpoints = bin_edges[:-1] + bin_size / 2  
 
         plt.figure(figsize=(5, 3))
-        plt.step(bin_midpoints, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)  # Formato de escada
+        plt.step(bin_midpoints, distribuicao_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75)
         plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
-        plt.ylabel('Número de Interações (Acumulado)', fontsize=8)
+        plt.ylabel('Probabilidade Acumulada', fontsize=8)  # Alterado para refletir a mudança
 
-        xticks = np.linspace(duracoes_min, duracoes_max, 7)  # Adicionar valores laterais
-        yticks = np.linspace(0, contagem_acumulada[-1], 7)
-        plt.xticks(xticks, fontsize=7)
-        plt.yticks(yticks, fontsize=7)
+        plt.xticks(np.linspace(duracoes_min, duracoes_max, 7), fontsize=7)
+        plt.yticks([0.0, 0.25, 0.50, 0.75, 1.00], fontsize=7)  # Ajustado para variar de 0 a 1
         plt.grid(True)
 
         ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
         ax_inset.text(0.5, 0.5, valores_texto, fontsize=7, va='center', ha='center', 
                     bbox=dict(facecolor='white', alpha=0.8))
-        ax_inset.axis('off')  
+        ax_inset.axis('off')
 
         plt.savefig('resultadosMontecarlo/grafico_distribuicao_acumulada_com_estatisticas.png')
 
