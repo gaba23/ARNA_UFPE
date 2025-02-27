@@ -153,8 +153,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
-            print('dict')
-            print(atividades_dict)
+
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
         
@@ -259,7 +258,6 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
         file_path = os.path.join('./resultadosMontecarlo/', filename)
         if os.path.isfile(file_path) and filename != 'montecarlo.txt':
             os.remove(file_path)
-            print(f"Deleted: {file_path}")
 
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_iteracoes)  # Passa o num_iteracoes para a função
