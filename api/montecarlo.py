@@ -99,7 +99,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     def calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividade, tempos_riscos):  # duracoes_AtividadeS ?
         duracao = 0  # duração do caminho
         custo_total = 0  # custo do caminho
-        #print(atividades_convertidas)
         for i in range(len(caminho) - 1):
             no_inicial = caminho[i]
             no_final = caminho[i + 1]
@@ -141,17 +140,13 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                             duracao_atividade = np.random.normal(mu, sigma)
                     duracao += duracao_atividade  
                     duracoes_atividades[atividade["no_final"] - 2] = duracao_atividade  # Atribui a duração da atividade no índice correto
-                    print(f'Atividade {int(atividade["no_final"] -1)}, no {atividade["no_inicial"]}-{atividade["no_final"]}; Duração atv: {duracao_atividade}, Duração caminho: {duracao}')
+                   # print(f'Atividade {int(atividade["no_final"] -1)}, no {atividade["no_inicial"]}-{atividade["no_final"]}; Duração atv: {duracao_atividade}, Duração caminho: {duracao}')
 
-                    # Custo
-                    idx = str(atividade.get("no_inicial"))  # não inclui risco ainda
-                    custo_fix = custo_fixo.get(idx)
-                    custo_var = custo_variavel.get(idx) * duracao_atividade
-                    custo = custo_fix + custo_var
-                    custo_total += custo
-
-        # Verificar se os riscos ocorreram nesta iteração
-        for risco, detalhes in riscos.items():
+        # Riscos
+        for risco, detalhes in riscos.items():  # Verificar se os riscos ocorreram nesta iteração
+            print('riscos:  ')
+            print(risco)
+            print(riscos)
             ocorreu = random.random() < detalhes["probabilidade"]
             print(f'{ocorreu}')
             riscos_ocorridos[risco].append(ocorreu)
@@ -159,26 +154,26 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 atraso_total = 0  # tempo de atraso da atividade
                 for atividade in detalhes["atividades_afetadas"]:
                     if int(atividade) + 1 in caminho:
-                        print(f'atividade: {atividade}')
+                       # print(f'atividade: {atividade}')
                         index_atividade = mapa_atividades[atividade] - 2
-                        print(f'staticiscs: idx: {index_atividade} at {mapa_atividades}')
+                      #  print(f'staticiscs: idx: {index_atividade} at {mapa_atividades}')
                         if detalhes["tipo_dist"] == "triangular":
                             atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
                         elif detalhes["tipo_dist"] == "uniforme":   
                             atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
-                            print('delay:')
-                            print(atraso)
+                         #   print('delay:')
+                         #   print(atraso)
 
                         if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
                             duracoes_atividades[index_atividade] += atraso
                         else:  # Tipo do risco é percentual
-                            print('duracao antes atraso :')
-                            print(duracoes_atividades[index_atividade])
+                        #    print('duracao antes atraso :')
+                        #    print(duracoes_atividades[index_atividade])
                             duracoes_atividades[index_atividade] *= (1 + atraso)  # erro?
                             atraso = duracoes_atividades[index_atividade] * atraso
-                            print('duracao após risco:')
-                            print(duracoes_atividades[index_atividade])
-                            print(f'novo atraso: {atraso}.')
+                        #    print('duracao após risco:')
+                        #    print(duracoes_atividades[index_atividade])
+                        #    print(f'novo atraso: {atraso}.')
 
 
                         atraso_total += atraso
@@ -187,10 +182,23 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 tempos_riscos[risco].append(0)  
             duracao_risco = {risco: sum(valores) for risco, valores in tempos_riscos.items()}
 
-            break
 
-        print(f'duracoes : {duracao}, c risco: {duracao_risco}')
-        duracao += sum(duracao_risco.values()) # adicionar o valor de cada risco à duração
+        if riscos:
+            duracao += sum(duracao_risco.values()) # adicionar o valor de cada risco à duração
+        else:
+            duracao_risco = {}
+
+        # Custo
+        for i in range(len(caminho) - 1):
+            no_inicial = caminho[i]
+            no_final = caminho[i + 1]
+            for atividade in atividades_convertidas:
+                if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
+                    idx = str(atividade.get("no_inicial"))
+                    custo_fix = custo_fixo.get(idx)
+                    custo_var = custo_variavel.get(idx) * duracao_atividade
+                    custo = custo_fix + custo_var
+                    custo_total += custo
 
         return duracao, duracao_risco, custo_total
 
@@ -227,7 +235,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
        # print(f'caminhos: ' + str(len(caminhos)) + ', ' + str(caminhos))
         for caminho in caminhos:  # duracao_risco {a:[], b:[]}  --> dict, list //// duracao_risco [1, 2]
-            print(f'caminho --> ' + str(caminho))
+           # print(f'caminho --> ' + str(caminho))
            # duracao, duracao_risco = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
             duracao, duracao_risco, custo_total = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
             duracoes_caminhos.append(duracao)
@@ -254,8 +262,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     duracoes_caminho_critico[i] = duracoes_caminho_critico[i]
 
         resultados_atividades.append(duracoes_caminho_critico)  
-        print('result atv')
-        print(resultados_atividades)
+       # print('result atv')
+       # print(resultados_atividades)
         #print('res atv 2 e 3: ')
         #print(resultados_atividades[iteracao][1])
         #print(resultados_atividades[iteracao][2])
@@ -267,8 +275,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         })
         duracoes_projeto.append(duracao_maxima)
         custos_projeto.append(custo_maximo)  # riscos não inclusos
-        print('resultados critic:')
-        print(resultados_caminhos_criticos)
+       # print('resultados critic:')
+       # print(resultados_caminhos_criticos)
         # Atualizar contadores
         contagem_caminhos_criticos[tuple(caminho_critico)] += 1
         for no in caminho_critico:
@@ -304,7 +312,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
             crucialidade_atividades[atividade] = correlacao
 
-    print(crucialidade_atividades)
+   # print(crucialidade_atividades)
 
     # Exibir os resultados das simulações
     # print("Durações dos projetos:", duracoes_projeto)
@@ -369,7 +377,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     # Converter os resultados em dataframes para facilitar a exportação
     df_atividades = pd.DataFrame(resultados_atividades, columns=list(atividades_pert.keys()))
     df_caminhos = pd.DataFrame(resultados_caminhos, columns=[f"Caminho {i+1}" for i in range(len(caminhos))])
+    print('riscos dataframe')
     df_criticos = pd.DataFrame(resultados_caminhos_criticos)
+    print(riscos_ocorridos)
     df_riscos_ocorridos = pd.DataFrame(riscos_ocorridos)
 
     df_contagem_caminhos_criticos = pd.DataFrame(list(contagem_caminhos_criticos.items()), columns=["Caminho", "Contagem Crítica"])
@@ -975,12 +985,14 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
 
     if riscos:  # riscos opcionais (dicionário não está vazio)
-        plotar_grafico_tornado_riscos()
+        if all(not lst for lst in riscos_ocorridos.values()):
+            print('All risks have not occurred in any iteration.')
+        else:
+            plotar_grafico_tornado_riscos()
 
-        if num_iteracoes > 1:
-            plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
-            plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
-
+            if num_iteracoes > 1:
+                plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
+                plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
 
 
     imagem_diagrama = ["diagrama_atividades.png"]
