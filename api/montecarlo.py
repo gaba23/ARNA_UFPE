@@ -133,16 +133,16 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                             duracao_atividade = random.uniform(t_min, t_max)
                         elif tipo == "normal":
                             mu = atividade["t_media"]
-                            sigma = (atividade["t_pessimista"] - atividade["t_otimista"]) / 6
+                            sigma = (atividade["t_pessimista"] - atividade["t_otimista"]) / 6  # não é isso vai ser o desvio padrão (inserir na tabela)
                             duracao_atividade = np.random.normal(mu, sigma)
                     duracao += duracao_atividade  
                     duracoes_atividades[atividade["no_final"] - 2] = duracao_atividade  # Atribui a duração da atividade no índice correto
-                    #print(f'Atividade {int(atividade["no_final"] -1)}, no {atividade["no_inicial"]}-{atividade["no_final"]}; Duração atv: {duracao_atividade}, Duração caminho: {duracao}')
 
         # Riscos
         for risco, detalhes in riscos.items():  # Verificar se os riscos ocorreram nesta iteração
             ocorreu = random.random() < detalhes["probabilidade"]
             riscos_ocorridos[risco].append(ocorreu)
+            # print(risco, ocorreu)
             if ocorreu:
                 atraso_total = 0  # tempo de atraso da atividade
                 for atividade in detalhes["atividades_afetadas"]:
@@ -178,10 +178,12 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             no_final = caminho[i + 1]
             for atividade in atividades_convertidas:
                 if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
+
                     idx = str(atividade.get("no_inicial"))
-                    custo_fix = custo_fixo.get(idx)
-                    custo_var = custo_variavel.get(idx) * duracao_atividade
+                    custo_fix = atividade["custo_fix"]
+                    custo_var = atividade["custo_un"] * duracoes_atividades[atividade["no_final"] - 2]
                     custo = custo_fix + custo_var
+
                     custo_total += custo
 
         return duracao, duracao_risco, custo_total
@@ -213,14 +215,14 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracao_maxima = 0
         duracao_risco_maxima = {risco: 0 for risco in riscos}
         custo_maximo = 0
-        # print('-------------------------------------------------------------------------')
-        # print(f'iteração: ' + str(iteracao))
+        print('-------------------------------------------------------------------------')
+        print(f'iteração: ' + str(iteracao))
         duracoes_caminho_critico = []
         duracoes_nao_critico = []
 
         for caminho in caminhos:  # duracao_risco {a:[], b:[]}  --> dict, list //// duracao_risco [1, 2]
-            # print('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\')
-            # print(f'caminho --> ' + str(caminho))
+            print('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\')
+            print(f'caminho --> ' + str(caminho))
 
             duracao, duracao_risco, custo_total = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, tempos_riscos)
             duracoes_caminhos.append(duracao)
