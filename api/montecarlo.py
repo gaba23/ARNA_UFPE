@@ -19,6 +19,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
     riscos_ocorridos = {risco: [] for risco in riscos}
+    print('atv pert')
+    print(atividades_pert)
 
     custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
     custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
@@ -110,9 +112,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                         # Calcular a duração com base no tipo de distribuição
                         tipo = atividade["tipo"]
                         if tipo == "beta_pert":     # errado
-                            t_o = atividade["t_otimista"]
-                            t_p = atividade["t_pessimista"]
-                            t_m = atividade["t_provavel"]
+                            t_o = atividade["t_minimo"]
+                            t_p = atividade["t_maximo"]
+                            t_m = atividade["t_medio"]
 
                             # Calculando os parâmetros alpha e beta da distribuição beta
                             alpha = 1 + 4 * (t_m - t_o) / (t_p - t_o)
@@ -124,7 +126,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                         elif tipo == "triangular":
                             t_min = atividade["t_minimo"]
-                            t_mode = atividade["t_moda"]
+                            t_mode = atividade["t_medio"]
                             t_max = atividade["t_maximo"]
                             duracao_atividade = np.random.triangular(t_min, t_mode, t_max)
                         elif tipo == "uniforme":
@@ -133,16 +135,22 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                             duracao_atividade = random.uniform(t_min, t_max)
                         elif tipo == "normal":
                             mu = atividade["t_media"]
-                            sigma = (atividade["t_pessimista"] - atividade["t_otimista"]) / 6  # não é isso vai ser o desvio padrão (inserir na tabela)
+                            sigma = atividade["d_p"]
                             duracao_atividade = np.random.normal(mu, sigma)
+                        elif tipo == "bernoulli":
+                            t_min = atividade["t_minimo"]
+                            t_max = atividade["t_maximo"]
+                            prob_otm = atividade["prob_otimista"]
+                            duracao_atividade = np.random.choice([t_min, t_max], p=[prob_otm, 1 - prob_otm])
+
                     duracao += duracao_atividade  
                     duracoes_atividades[atividade["no_final"] - 2] = duracao_atividade  # Atribui a duração da atividade no índice correto
 
-        # Riscos
+        # Riscos  # Integrar custos dos riscos
         for risco, detalhes in riscos.items():  # Verificar se os riscos ocorreram nesta iteração
             ocorreu = random.random() < detalhes["probabilidade"]
-            riscos_ocorridos[risco].append(ocorreu)
-            # print(risco, ocorreu)
+            riscos_ocorridos[risco].append(ocorreu)  
+
             if ocorreu:
                 atraso_total = 0  # tempo de atraso da atividade
                 for atividade in detalhes["atividades_afetadas"]:
@@ -179,7 +187,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             for atividade in atividades_convertidas:
                 if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
 
-                    idx = str(atividade.get("no_inicial"))
                     custo_fix = atividade["custo_fix"]
                     custo_var = atividade["custo_un"] * duracoes_atividades[atividade["no_final"] - 2]
                     custo = custo_fix + custo_var

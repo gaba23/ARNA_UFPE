@@ -307,11 +307,8 @@ def parse_mc_csv(df_atv, df_riscos):
             atividades[row['ID']] = {
                 "precedentes": precedentes_list,
                 "duracao": 0,
-                "custo": row.get('Custo', 0),
-                "custo": row.get('Custo', 0),
-                "custo_fix": row.get('Custo Fixo', 0),
                 "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                "descricao": row.get('Descricao', "")
+                "custo_fix": row.get('Custo Fixo', 0),
                 }
        
         else:
@@ -320,14 +317,11 @@ def parse_mc_csv(df_atv, df_riscos):
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
-                    "t_otimista": row.get('Tempo Otimista', None),
-                    "t_provavel": row.get('Tempo Provavel', None),
-                    "t_pessimista": row.get('Tempo Pessimista', None),
-                    "custo": row.get('Custo', 0),
-                    "custo": row.get('Custo', 0),
+                    "t_minimo": row.get('Tempo Minimo', None),
+                    "t_medio": row.get('Tempo Medio', None),
+                    "t_maximo": row.get('Tempo Maximo', None),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                    "descricao": row.get('Descricao', "")
                     }
 
             elif row['Tipo de Distribuicao'] == "triangular":
@@ -335,13 +329,10 @@ def parse_mc_csv(df_atv, df_riscos):
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
                     "t_minimo": row.get('Tempo Minimo', None),
-                    "t_moda": row.get('Tempo Moda', None),
+                    "t_medio": row.get('Tempo Medio', None),
                     "t_maximo": row.get('Tempo Maximo', None),
-                    "custo": row.get('Custo', 0),
-                    "custo": row.get('Custo', 0),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                    "descricao": row.get('Descricao', "")
                 }
 
             elif row['Tipo de Distribuicao'] == "uniforme":
@@ -350,24 +341,29 @@ def parse_mc_csv(df_atv, df_riscos):
                     "tipo": row['Tipo de Distribuicao'],
                     "t_minimo": row.get('Tempo Minimo', None),
                     "t_maximo": row.get('Tempo Maximo', None),
-                    "custo": row.get('Custo', 0),
-                    "custo": row.get('Custo', 0),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                    "descricao": row.get('Descricao', "")
                 }
 
             elif row['Tipo de Distribuicao'] == "normal":
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
-                    "t_otimista": row.get('Tempo Otimista', None),
-                    "t_pessimista": row.get('Tempo Pessimista', None),
                     "t_media": row.get('Tempo Medio', None),
-                    "custo": row.get('Custo', 0),
+                    "d_p": row.get('Desvio Padrao', 1),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
-                    "descricao": row.get('Descricao', "")
+                }
+
+            elif row['Tipo de Distribuicao'] == "bernoulli":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "t_minimo": row.get('Tempo Minimo', None),
+                    "t_maximo": row.get('Tempo Maximo', None),
+                    "prob_otimista": row.get('Probabilidade do Tempo Otimista', None),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
                 }
             
 
@@ -376,32 +372,35 @@ def parse_mc_csv(df_atv, df_riscos):
         for index, row in df_riscos.iterrows():
             if row['Tipo de Distribuicao'] == "triangular":
                 riscos[row['ID']] = {
-                "probabilidade": row['Probabilidade'],
+                "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao'],
-                "tipo": row['Tipo'],
+                "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_medio": row.get('Atraso Medio', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
-                "custo": row.get('Custo', 0),
-                "descricao": row.get('Descricao', None)
+                "custo_var": row.get('Custo Variavel Adicional', 0),
+
             }
 
             elif row['Tipo de Distribuicao'] == "uniforme":
                 riscos[row['ID']] = {
-                "probabilidade": row['Probabilidade'],
+                "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao'],
-                "tipo": row['Tipo'],
+                "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
-                "custo": row.get('Custo', 0),
-                "descricao": row.get('Descricao', None)
+                "custo_var": row.get('Custo Variavel Adicional', 0),
 
             }
 
+    print('atv')
+    print(atividades)
+    print('riscos')
+    print(riscos)
     return atividades, riscos
 
 @app.post("/analyzePERT")
