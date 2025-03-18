@@ -19,8 +19,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
     riscos_ocorridos = {risco: [] for risco in riscos}
-    print('atv pert')
-    print(atividades_pert)
 
     custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
     custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
@@ -74,8 +72,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     # Adicionar nós e arestas ao diagrama
     for atividade, no in mapa_atividades.items():
-        # print(no)  # 9, 10, 1
-        # print(atividade)  # 8, fim, início
         dot.node(str(no), atividade)
 
     for no_inicial, nos_finais in grafo.items():
@@ -532,14 +528,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         # Identificar todas as atividades iniciais (sem predecessoras)
         atividades_iniciais = [atividade for atividade in atividades if not precedentes_atividades.get(atividade)]
 
-        # Adicionar losango(s) no(s) início(s)
-        for atividade in atividades_iniciais:
-            ax.scatter(0, atividades.index(atividade), marker='D', color='green', s=100, label="Início")
-
-        # Adicionar losango no fim (atividade fim)
-        tempo_final = max(tempos_termino.values())  
-        ax.scatter(tempo_final + 1, atividades.index(ultima_atividade), marker='D', color='red', s=100, label="Fim")
-
         # Criar barras para cada atividade
         entre_barras = 0.1
         for i, atividade in enumerate(atividades):
@@ -548,13 +536,20 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             duracao = termino - inicio
 
             if atividade in atividades_iniciais:
-                print(f' atividade inicial  {atividade}')
                 espaco_x = 0
                 inicio = 0  # garante que comece no eixo x = 0
             else:
                 espaco_x = duracao * entre_barras  # Mantém espaçamento para atividades subsequentes
 
             ax.barh(atividade, duracao - espaco_x, left=inicio + espaco_x, color=cores[i % len(cores)])
+
+        # Adicionar losango(s) no(s) início(s)
+        for atividade in atividades_iniciais:
+            ax.scatter(0, atividades.index(atividade), marker='D', color='green', s=100, label="Início")
+
+        # Adicionar losango no fim (atividade fim)
+        tempo_final = max(tempos_termino.values())  
+        ax.scatter(tempo_final + 1, atividades.index(ultima_atividade), marker='D', color='red', s=100, label="Fim")
 
         # Ajustar os limites do eixo x
         x_min = 0  # Alinhar 0 ao início do eixo x
