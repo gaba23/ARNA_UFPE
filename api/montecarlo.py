@@ -526,25 +526,35 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         atividades = list(tempos_inicio.keys())
         atividades.reverse()
 
+        # Posição do fim alinhada com as atividades
+        ultima_atividade = atividades[0]    # Última atividade no eixo y
+
+        # Identificar todas as atividades iniciais (sem predecessoras)
+        atividades_iniciais = [atividade for atividade in atividades if not precedentes_atividades.get(atividade)]
+
+        # Adicionar losango(s) no(s) início(s)
+        for atividade in atividades_iniciais:
+            ax.scatter(0, atividades.index(atividade), marker='D', color='green', s=100, label="Início")
+
+        # Adicionar losango no fim (atividade fim)
+        tempo_final = max(tempos_termino.values())  
+        ax.scatter(tempo_final + 1, atividades.index(ultima_atividade), marker='D', color='red', s=100, label="Fim")
+
         # Criar barras para cada atividade
         entre_barras = 0.1
         for i, atividade in enumerate(atividades):
             inicio = tempos_inicio[atividade]
             termino = tempos_termino[atividade]
             duracao = termino - inicio
-            espaco_x = duracao * entre_barras  # Calcular o espaço no eixo x
+
+            if atividade in atividades_iniciais:
+                print(f' atividade inicial  {atividade}')
+                espaco_x = 0
+                inicio = 0  # garante que comece no eixo x = 0
+            else:
+                espaco_x = duracao * entre_barras  # Mantém espaçamento para atividades subsequentes
+
             ax.barh(atividade, duracao - espaco_x, left=inicio + espaco_x, color=cores[i % len(cores)])
-
-        # Posição do início e fim alinhada com as atividades
-        primeira_atividade = atividades[-1]  # Primeira atividade no eixo y
-        ultima_atividade = atividades[0]    # Última atividade no eixo y
-
-        # Adicionar losango no início
-        ax.scatter(0, atividades.index(primeira_atividade), marker='D', color='green', s=100, label="Início")
-
-        # Adicionar losango no fim (atividade fim)
-        tempo_final = max(tempos_termino.values())  
-        ax.scatter(tempo_final + 1, atividades.index(ultima_atividade), marker='D', color='red', s=100, label="Fim")
 
         # Ajustar os limites do eixo x
         x_min = 0  # Alinhar 0 ao início do eixo x
