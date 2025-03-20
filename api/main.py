@@ -397,10 +397,6 @@ def parse_mc_csv(df_atv, df_riscos):
 
             }
 
-    print('atv')
-    print(atividades)
-    print('riscos')
-    print(riscos)
     return atividades, riscos
 
 @app.post("/analyzePERT")
