@@ -320,7 +320,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             else:
                 writer.writerow([atv, pred_str, critico])
 
-   # encontrar_caminhos_seta('./diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
+    encontrar_caminhos_seta('./diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
 
 
     ####    GRÁFICOS    ####
@@ -380,7 +380,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     df_crucialidade_caminhos = pd.DataFrame(list(crucialidade_caminhos.items()), columns=["Caminho", "Crucialidade"])
 
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
-    df_duracoes_riscos = pd.DataFrame({k: v if isinstance(v, list) else [v] for k, v in duracoes_riscos.items()})  # conversão esquisita por causa de erro bizarro?
+    df_duracoes_riscos = pd.DataFrame(duracoes_risco)  
 
     # Criando a planilha
     planilha_path = 'Modelo_Riscos.xlsx'
@@ -791,7 +791,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                             bbox=dict(facecolor='white', alpha=0.8))
                 ax_inset.axis('off')  
 
-                plt.tight_layout()
+                plt.tight_layout()  # this axis possible error
 
                 # Salvando a imagem para cada atividade
                 try:
@@ -979,9 +979,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         else:
             plotar_grafico_tornado_riscos()
 
-           # if num_iteracoes > 1:
-                #plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
-                #plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
+            if num_iteracoes > 1:
+                plotar_grafico_distribuicao_acumulada_riscos(df_duracoes_riscos)
+                plotar_distribuicao_acumulada_colunas_e_riscos(df_duracoes_projeto["Duração do Projeto"], df_duracoes_riscos)
 
 
     imagem_diagrama = ["diagrama_atividades.png"]
