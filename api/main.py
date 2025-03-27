@@ -19,6 +19,7 @@ import os
 from pert import calcular_pert
 import networkx as nx
 import logging
+from services.generate_pdf import generate as gerar_pdf
 
 
 logging.basicConfig(level=logging.INFO)
@@ -261,6 +262,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
 
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_iteracoes)  # Passa o num_iteracoes para a função
+    gerar_pdf(resultados, "./resultadosMontecarlo/relatorio.pdf")
     lista_imagens = resultados[:-1]  # Todas as imagens
     xls_path = resultados[-1]  # O caminho do arquivo Excel
 

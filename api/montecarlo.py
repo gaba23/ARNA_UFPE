@@ -12,7 +12,7 @@ import csv
 from scipy import stats
 from scipy.interpolate import make_interp_spline, BSpline
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
+from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 
 def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
@@ -103,7 +103,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             for atividade in atividades_convertidas:
                 if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
                     duracao_atividade = duracoes_atividade[atividade["no_final"] - 2]  # índice correto
-                    print(f'Atividade {atividade["no_final"] - 1}: duração {duracao_atividade}')
+                   # print(f'Atividade {atividade["no_final"] - 1}: duração {duracao_atividade}')
 
                     duracao += duracao_atividade  
 
@@ -120,7 +120,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                     custo_total += custo
 
-        print(f'Duração final do camminho{caminho}: {duracao}')
+        #print(f'Duração final do camminho{caminho}: {duracao}')
         return duracao, custo_total
     
     # Função para calcular a duração de cada atividade e risco por atividade
@@ -224,8 +224,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracao_maxima = 0
         duracao_risco_critica = {risco: 0 for risco in riscos}
         custo_maximo = 0
-        print('-------------------------------------------------------------------------')
-        print(f'iteração: ' + str(iteracao))
+       # print('-------------------------------------------------------------------------')
+       # print(f'iteração: ' + str(iteracao))
         duracoes_caminho_critico = []
 
         duracoes_atividades, duracoes_riscos = calcular_duracoes_fixas(atividades_convertidas)  # risco deve entrar aqui
@@ -235,9 +235,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 duracoes_risco[risco].append(duracoes_riscos[risco])  
 
         for caminho in caminhos:  # duracao_risco {a:[], b:[]}  --> dict, list //// duracao_risco [1, 2]
-            print('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\')
-            print(f'caminho --> ' + str(caminho))
-            print(f'durações --> {duracoes_atividades}')
+            # print('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\')
+            # print(f'caminho --> ' + str(caminho))
+            # print(f'durações --> {duracoes_atividades}')
             duracao, custo_total = calcular_duracao_caminho(caminho, atividades_convertidas, duracoes_atividades, duracoes_riscos)
             duracoes_caminhos.append(duracao)
             if duracao > duracao_maxima:
