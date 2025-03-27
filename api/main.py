@@ -170,7 +170,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
                 # Alterando nomes do Dataframe
                 df_atv.rename(columns={
                     'Tipo_distribuição': 'Tipo de Distribuicao', 'T_otimista': 'Tempo Otimista', 'T_provavel': 'Tempo Provavel', 'T_pessimista': 'Tempo Pessimista',
-                    'T_min': 'Tempo Minimo', 'T_moda': 'Tempo Moda', 'T_max': 'Tempo Maximo', 'T_medio': 'Tempo Medio', 'Custo_fixo': 'Custo Fixo', 'Custo_un_t': 'Custo por Unidade de Tempo'
+                    'T_min': 'Tempo Minimo', 'T_moda': 'Tempo Moda', 'T_max': 'Tempo Maximo', 'T_medio': 'Tempo Mais Provavel', 'Custo_fixo': 'Custo Fixo', 'Custo_un_t': 'Custo por Unidade de Tempo'
                     }, inplace=True)
                 df_riscos.rename(columns={
                     'Tipo_distribuição': 'Tipo de Distribuicao', 'Atividades_afetadas': 'Atividades Afetadas', 'Atraso_min': 'Atraso Minimo',
@@ -320,7 +320,7 @@ def parse_mc_csv(df_atv, df_riscos):
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
                     "t_minimo": row.get('Tempo Minimo', None),
-                    "t_medio": row.get('Tempo Medio', None),
+                    "t_medio": row.get('Tempo Mais Provavel', None),
                     "t_maximo": row.get('Tempo Maximo', None),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
@@ -331,7 +331,7 @@ def parse_mc_csv(df_atv, df_riscos):
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
                     "t_minimo": row.get('Tempo Minimo', None),
-                    "t_medio": row.get('Tempo Medio', None),
+                    "t_medio": row.get('Tempo Mais Provavel', None),
                     "t_maximo": row.get('Tempo Maximo', None),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
@@ -351,7 +351,7 @@ def parse_mc_csv(df_atv, df_riscos):
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,
                     "tipo": row['Tipo de Distribuicao'],
-                    "t_media": row.get('Tempo Medio', None),
+                    "media": row.get('Media', None),
                     "d_p": row.get('Desvio Padrao', 1),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),

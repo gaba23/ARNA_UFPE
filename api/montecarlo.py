@@ -158,7 +158,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     t_max = atividade["t_maximo"]
                     duracao_atividade = random.uniform(t_min, t_max)
                 elif tipo == "normal":
-                    mu = atividade["t_media"]
+                    mu = atividade["media"]
                     sigma = atividade["d_p"]
                     duracao_atividade = np.random.normal(mu, sigma)
                 elif tipo == "bernoulli":
@@ -384,6 +384,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     df_duracoes_projeto = pd.DataFrame(duracoes_projeto, columns=["Duração do Projeto"])
     df_duracoes_riscos = pd.DataFrame(duracoes_risco)  
 
+    df_custos_projeto = pd.DataFrame(custos_projeto, columns=["Custos por Iteração"])
+
     # Criando a planilha
     planilha_path = 'Modelo_Riscos.xlsx'
     with pd.ExcelWriter(planilha_path, engine="openpyxl") as writer:
@@ -404,6 +406,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', startcol=0, index=False)
+        print(df_custos_projeto)
+
+        df_custos_projeto.to_excel(writer, sheet_name='Custos', startrow=0, startcol=0, index=False)
 
         writer.book.save(planilha_path)
 
