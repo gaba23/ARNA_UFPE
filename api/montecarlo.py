@@ -184,6 +184,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                         atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
                     elif detalhes["tipo_dist"] == "uniforme":   
                         atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
+                    elif detalhes["tipo_dist"] == "bernoulli":
+                        atraso = np.random.choice([detalhes["atraso_minimo"], detalhes["atraso_maximo"]], p=[detalhes["prob_otimista"], 1 - detalhes["prob_otimista"]])
 
                     # Substitui a duracao da atividade pelo valor com risco incluso
                     if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto

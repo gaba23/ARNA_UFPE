@@ -399,6 +399,20 @@ def parse_mc_csv(df_atv, df_riscos):
 
             }
 
+            elif row['Tipo de Distribuicao'] == "bernoulli":
+                riscos[row['ID']] = {
+                "probabilidade": row['Probabilidade do Risco Ocorrer'],
+                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo": row['Tipo de Risco'],
+                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atraso_minimo": row.get('Atraso Minimo', None),
+                "atraso_maximo": row.get('Atraso Maximo', None),
+                "prob_otimista": row.get('Probabilidade do Atraso Otimista', None),
+                "custo_fix": row.get('Custo Fixo Adicional', 0),
+                "custo_var": row.get('Custo Variavel Adicional', 0),
+
+            }
+
     return atividades, riscos
 
 @app.post("/analyzePERT")
