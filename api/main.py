@@ -372,10 +372,10 @@ def parse_mc_csv(df_atv, df_riscos):
     # Risco
     if not df_riscos.empty:  # riscos são inputs opcionais
         for index, row in df_riscos.iterrows():
-            if row['Tipo de Distribuicao'] == "triangular":
+            if row['Tipo de Distribuicao da Consequencia'] == "triangular":
                 riscos[row['ID']] = {
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
-                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
@@ -386,10 +386,10 @@ def parse_mc_csv(df_atv, df_riscos):
 
             }
 
-            elif row['Tipo de Distribuicao'] == "uniforme":
+            elif row['Tipo de Distribuicao da Consequencia'] == "uniforme":
                 riscos[row['ID']] = {
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
-                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
@@ -399,10 +399,10 @@ def parse_mc_csv(df_atv, df_riscos):
 
             }
 
-            elif row['Tipo de Distribuicao'] == "bernoulli":
+            elif row['Tipo de Distribuicao da Consequencia'] == "bernoulli":
                 riscos[row['ID']] = {
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
-                "tipo_dist": row['Tipo de Distribuicao'],
+                "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
