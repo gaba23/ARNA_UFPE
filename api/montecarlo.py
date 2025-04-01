@@ -406,7 +406,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
         # Adicionar os dados de risco à planilha
         df_duracoes_projeto.to_excel(writer, sheet_name='Distribuição Projeto e Risco', startcol=0, index=False)
-        print(df_custos_projeto)
 
         df_custos_projeto.to_excel(writer, sheet_name='Custos', startrow=0, startcol=0, index=False)
 
@@ -863,8 +862,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_max_tot = duracao_risco.max().max()
         i = 0
 
-        acumulada_total = 0 
-
         for risco in duracao_risco.columns:
             tempos = duracao_risco[risco].values
 
@@ -874,12 +871,13 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
     
             hist, bin_edges = np.histogram(tempos, bins=bins)
-            contagem_acumulada = np.cumsum(hist)
+            frequencias_relativas = hist / np.sum(hist)  # Frequência relativa (0-1)
+            contagem_relativa = np.cumsum(frequencias_relativas)
 
             bin_midpoints = bin_edges[:-1] + bin_size / 2
     
             # Plotando o gráfico
-            plt.step(bin_midpoints, contagem_acumulada, where='mid', color=cores[i], linewidth=1, alpha=0.85, label=f'Risco {risco}')
+            plt.step(bin_midpoints, contagem_relativa, where='mid', color=cores[i], linewidth=1, alpha=0.85, label=f'Risco {risco}')
             i += 1
     
         # Configurações do gráfico
@@ -890,10 +888,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.legend(fontsize=7)
     
         # Ajuste de ticks no eixo x e y
-        xticks = np.linspace(duracoes_min_tot, duracoes_max_tot, 7)
-        yticks = np.linspace(0, contagem_acumulada[-1], 7)
-        plt.xticks(xticks, fontsize=8)
-        plt.yticks(yticks, fontsize=8)
+        plt.xticks(np.linspace(duracoes_min_tot, duracoes_max_tot, 7), fontsize=7)
+        plt.yticks([0.0, 0.25, 0.50, 0.75, 1.00], fontsize=7)  # Ajustado para variar de 0 a 1
             
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_risco.png')
 
@@ -906,11 +902,12 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
         # Projeto
         hist, bin_edges = np.histogram(duracoes_projeto, bins=bins)
-        contagem_acumulada = np.cumsum(hist)
+        frequencias_relativas = hist / np.sum(hist)
+        contagem_relativa = np.cumsum(frequencias_relativas)
         
         bin_midpoints = bin_edges[:-1] + bin_size / 2  # Meio do intervalo é o valor do eixo x
 
-        plt.step(bin_midpoints, contagem_acumulada, where='mid', color='blue', linewidth=1, alpha=0.75, label='Projeto')  # Formato de escada
+        plt.step(bin_midpoints, contagem_relativa, where='mid', color='blue', linewidth=1, alpha=0.75, label='Projeto')  # Formato de escada
 
         # Riscos
         cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
@@ -919,10 +916,11 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         for risco in duracoes_risco.columns:
             tempos = duracoes_risco[risco].values
             hist, bin_edges = np.histogram(tempos, bins=bins)
-            contagem_acumulada = np.cumsum(hist)  
+            frequencias_relativas = hist / np.sum(hist)
+            contagem_relativa = np.cumsum(frequencias_relativas)  
 
             # Plotando o gráfico
-            plt.step(bin_midpoints, contagem_acumulada, where='post', color=cores[i], linewidth=1, linestyle=':', alpha=0.85, label=f'Risco {risco}')
+            plt.step(bin_midpoints, contagem_relativa, where='post', color=cores[i], linewidth=1, linestyle=':', alpha=0.85, label=f'Risco {risco}')
             i += 1
     
         # Configurações do gráfico
@@ -933,14 +931,12 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.legend(fontsize=7)
     
         # Ajuste de ticks no eixo x e y
-        xticks = np.linspace(duracoes_min_tot, duracoes_max_tot, 7)
-        yticks = np.linspace(0, contagem_acumulada[-1], 7)
-        plt.xticks(xticks, fontsize=8)
-        plt.yticks(yticks, fontsize=8)
+        plt.xticks(np.linspace(duracoes_min_tot, duracoes_max_tot, 7), fontsize=7)
+        plt.yticks([0.0, 0.25, 0.50, 0.75, 1.00], fontsize=7)  # Ajustado para variar de 0 a 1
             
         plt.savefig(f'resultadosMontecarlo/grafico_distribuicao_acumulada_projeto_e_riscos.png')
 
-    def plotar_analise_custos(custos, duracoes):
+    def plotar_custo_acumulado(custos, duracoes):
         duracoes.sort()
         custos.sort()
 
@@ -957,7 +953,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.xticks(fontsize=8)
         plt.yticks(fontsize=8)
 
-        plt.title('Análise de Valor Agregado', fontsize=10)
+        plt.title('Curva de Custo Acumulado', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
         plt.ylabel('Custo Total do Projeto', fontsize=8)
         plt.grid(True)
@@ -975,7 +971,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     dot.render('resultadosMontecarlo/diagrama_atividades', format='png', cleanup=True)
 
     if num_iteracoes > 3:  # isola gráficos que necessitam de um valor mínimo para plotar corretamente 
-        plotar_analise_custos(custos_projeto, duracoes_projeto)
+        plotar_custo_acumulado(custos_projeto, duracoes_projeto)
 
     if num_iteracoes > 1:
         plotar_grafico_distribuicao_acumulada_colunas(df_duracoes_projeto["Duração do Projeto"], valores_texto)
