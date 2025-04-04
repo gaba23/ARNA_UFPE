@@ -363,7 +363,7 @@ def parse_mc_csv(df_atv, df_riscos):
                     "tipo": row['Tipo de Distribuicao'],
                     "t_minimo": row.get('Tempo Minimo', None),
                     "t_maximo": row.get('Tempo Maximo', None),
-                    "prob_otimista": row.get('Probabilidade do Tempo Otimista', None),
+                    "prob_otimista": row.get('Probabilidade do Tempo Minimo', None),
                     "custo_fix": row.get('Custo Fixo', 0),
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
                 }
@@ -379,7 +379,7 @@ def parse_mc_csv(df_atv, df_riscos):
                 "tipo": row['Tipo de Risco'],
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
-                "atraso_medio": row.get('Atraso Medio', None),
+                "atraso_medio": row.get('Atraso Mais Provavel', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
                 "custo_var": row.get('Custo Variavel Adicional', 0),
@@ -407,7 +407,20 @@ def parse_mc_csv(df_atv, df_riscos):
                 "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
-                "prob_otimista": row.get('Probabilidade do Atraso Otimista', None),
+                "prob_otimista": row.get('Probabilidade do Atraso Minimo', None),
+                "custo_fix": row.get('Custo Fixo Adicional', 0),
+                "custo_var": row.get('Custo Variavel Adicional', 0),
+
+            }
+                
+            elif row['Tipo de Distribuicao da Consequencia'] == "normal":
+                riscos[row['ID']] = {
+                "probabilidade": row['Probabilidade do Risco Ocorrer'],
+                "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
+                "tipo": row['Tipo de Risco'],
+                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "media": row.get('Media', None),
+                "d_p": row.get('Desvio Padrao', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
                 "custo_var": row.get('Custo Variavel Adicional', 0),
 

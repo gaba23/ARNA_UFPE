@@ -186,6 +186,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                         atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
                     elif detalhes["tipo_dist"] == "bernoulli":
                         atraso = np.random.choice([detalhes["atraso_minimo"], detalhes["atraso_maximo"]], p=[detalhes["prob_otimista"], 1 - detalhes["prob_otimista"]])
+                    elif detalhes["tipo_dist"] == "normal":
+                        atraso = np.random.normal(detalhes["media"], detalhes["d_p"])
 
                     # Substitui a duracao da atividade pelo valor com risco incluso
                     if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
@@ -622,7 +624,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.text(
                     b.get_width() + 0.005,
                     b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}%',
+                    f'{i:.3f}',
                     va='center',
                     fontsize=9.5,
                     color='black'
@@ -631,7 +633,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.text(
                     b.get_width() + 0.005,
                     b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}%',
+                    f'{i:.3f}',
                     va='center',
                     fontsize=9.5,
                     color='black'
@@ -679,7 +681,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             plt.text(
                 b.get_width() + 0.005 if i > 0 else b.get_width() - 0.1,
                 b.get_y() + b.get_height() / 2 - deslocamento_texto,  # Deslocamento para cima
-                f'{i:.3f}%',
+                f'{i:.3f}',
                 va='center',
                 fontsize=9.5,
                 color='black'
@@ -689,7 +691,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             plt.text(
                 r.get_width() + 0.005 if i > 0 else r.get_width() - 0.1,
                 r.get_y() + r.get_height() / 2 + deslocamento_texto,  # Deslocamento para baixo
-                f'{i:.3f}%',
+                f'{i:.3f}',
                 va='center',
                 fontsize=9.5,
                 color='black'
@@ -883,7 +885,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         # Configurações do gráfico
         plt.title('Gráfico da Distribuição Acumulada - Duração dos Riscos', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
-        plt.ylabel('Número de Iterações (Acumuladas)', fontsize=8)
+        plt.ylabel('Probabilidade Acumulada', fontsize=8)
         plt.grid(True)
         plt.legend(fontsize=7)
     
@@ -926,7 +928,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         # Configurações do gráfico
         plt.title('Gráfico da Distribuição Acumulada - Duração do Projeto e Riscos', fontsize=10)
         plt.xlabel('Tempo (Duração do Projeto)', fontsize=8)
-        plt.ylabel('Número de Iterações (Acumuladas)', fontsize=8)
+        plt.ylabel('Probabilidade Acumulada', fontsize=8)
         plt.grid(True)
         plt.legend(fontsize=7)
     
