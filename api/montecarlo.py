@@ -9,6 +9,7 @@ import glob
 import networkx as nx
 import os
 import csv
+import textwrap
 from scipy import stats
 from scipy.interpolate import make_interp_spline, BSpline
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -459,11 +460,15 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.xlabel('Duração', fontsize=8)
         plt.ylabel('Frequência', fontsize=8)
 
-        caminho_update =  [x - 1 for x in caminho[1:-1]]
-        plt.title(f'Distribuição das Durações do Caminho {i} : {caminho_update} - Simulação de Monte Carlo', fontsize=10)
+        caminho_update = [ x - 1 for x in caminho[1:-1] ]
+        titulo = f'Distribuição das Durações do Caminho {i} : {caminho_update} - Simulação de Monte Carlo'  # wrap around
+        titulo_quebrado = "\n".join(textwrap.wrap(titulo, width=55))  # quebra a cada 40 caracteres
+        plt.title(titulo_quebrado, fontsize=10)
+
         plt.xticks(fontsize=7) 
         plt.yticks(fontsize=7)
         plt.grid(True)
+        plt.tight_layout()
         plt.savefig(f'resultadosMontecarlo/distribuicao_caminho_{i}.png')
         plt.close()
 
@@ -609,7 +614,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
             impactos_atividades[atividade] = correlacao # * np.std(duracoes_atividade)
 
-        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
+        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=False))
         atividades = list(impactos_ordenados.keys())
         impactos = list(impactos_ordenados.values())
         atividades.pop()
@@ -660,7 +665,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             correlacao_risco = np.corrcoef(duracoes_risco[r], duracoes_projeto)[0, 1]
             impactos_riscos[r] = correlacao_risco
 
-        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=True))
+        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=False))
         atividades = list(impactos_ordenados.keys())
         impactos_atv = list(impactos_ordenados.values())
         impactos_atv.pop()
@@ -736,18 +741,18 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     # Removendo a atividade dummy
     df = df[df['Atividade'] != 'fim']
 
-    # Configura o gráfico
-    plt.figure(figsize=(5, 3))
-    plt.bar(df['Atividade'], df['Criticidade'], color='skyblue')
-    plt.xlabel('Atividade', fontsize=8)
-    plt.ylabel('Criticidade', fontsize=8)
-    plt.title('Gráfico da Criticidade das Atividades', fontsize=10)
-    plt.xticks(ticks=range(len(df['Atividade'])), labels=df['Atividade'], fontsize=7)  
-    plt.yticks(fontsize=7)
-    plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
+    # # Configura o gráfico
+    # plt.figure(figsize=(5, 3))
+    # plt.bar(df['Atividade'], df['Criticidade'], color='skyblue')
+    # plt.xlabel('Atividade', fontsize=8)
+    # plt.ylabel('Criticidade', fontsize=8)
+    # plt.title('Gráfico da Criticidade das Atividades', fontsize=10)
+    # plt.xticks(ticks=range(len(df['Atividade'])), labels=df['Atividade'], fontsize=7)  
+    # plt.yticks(fontsize=7)
+    # plt.xticks(df['Atividade'])  # Define os ticks do eixo x para mostrar todas as atividades
 
-    # Exibe o gráfico
-    plt.savefig('resultadosMontecarlo/grafico_criticidade.png')
+    # # Exibe o gráfico
+    # plt.savefig('resultadosMontecarlo/grafico_criticidade.png')
 
     def plotar_grafico_criticidade(df_frequencia_atividades_criticas):
         plt.figure(figsize=(5, 3))
