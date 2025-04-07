@@ -115,8 +115,18 @@ h3 {
   text-align: left;
 }
 
-#inputTableRiskMC td.gg input, #inputTableActivityMC tg.gg input {
+#inputTableRiskMC td.gg input, #inputTableActivityMC td.gg input {
   width: 125px;
+  text-align: left;
+}
+
+#inputTableRiskMC td.xg input, #inputTableActivityMC td.xg input {
+  width: 170px;
+  text-align: left;
+}
+
+#inputTableRiskMC td.xxg input, #inputTableActivityMC td.xxg input {
+  width: 190px;
   text-align: left;
 }
 

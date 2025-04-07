@@ -165,16 +165,14 @@
                             <td class="s"><input type="text" name="tabela_a_id" placeholder="ID"></td>
                             <td class="m"><input type="text" name="tabela_a_precedentes" placeholder="Precedentes"></td>
                             <td class="g"><input type="text" name="tabela_a_tipo_dist" placeholder="Tipo de Distribuição"></td>
-                            <td class="g"><input type="text" name="tabela_a_t_otimista" placeholder="Tempo Otimista"></td>
-                            <td class="g"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Provável"></td>    
-                            <td class="g"><input type="text" name="tabela_a_t_pessimista" placeholder="Tempo Pessimista"></td>                      
                             <td class="m"><input type="text" name="tabela_a_t_min" placeholder="Tempo Mínimo"></td>
-                            <td class="m"><input type="text" name="tabela_a_t_mod" placeholder="Tempo Moda"></td>
-                            <td class="g"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>
-                            <td class="m"><input type="text" name="tabela_a_t_med" placeholder="Tempo Médio"></td>
+                            <td class="gg"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Mais Provável"></td>    
+                            <td class="m"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>                      
+                            <td class="s"><input type="text" name="tabela_a_med" placeholder="Média"></td>
+                            <td class="m"><input type="text" name="tabela_a_d_p" placeholder="Desvio Padrão"></td>
+                            <td class="xg"><input type="text" name="tabela_a_prob_min" placeholder="Probabilidade do Tempo Mínimo"></td>
                             <td class="m"><input type="text" name="tabela_a_custo_fix" placeholder="Custo Fixo"></td>
-                            <td class="m"><input type="text" name="tabela_a_desc" placeholder="Descrição"></td>
-                            <td class="gg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
+                            <td class="xg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
                         </tr>
                         <!-- Linhas adicionadas dinamicamente -->
                     </tbody>
@@ -189,16 +187,18 @@
                         <tr>
                             <td class="s"><input type="text" name="tabela_r_nome" placeholder="Nome"></td>
                             <td class="s"><input type="text" name="tabela_r_id" placeholder="ID"></td>
-                            <td class="s"><input type="text" name="tabela_r_tipo" placeholder="Tipo"></td>
-                            <td class="g"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição"></td>
-                            <td class="s"><input type="text" name="tabela_r_custo" placeholder="Custo"></td>
-                            <td class="m"><input type="text" name="tabela_r_prob" placeholder="Probabilidade"></td>    
-                            <td class="g"><input type="text" name="tabela_r_atv_afetadas" placeholder="Atividades Afetadas"></td>                      
-                            <td class="g"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
-                            <td class="m"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Médio"></td>
-                            <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
-                            <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
+                            <td class="m"><input type="text" name="tabela_r_tipo" placeholder="Tipo de Risco"></td>
+                            <td class="xg"><input type="text" name="tabela_r_prob" placeholder="Probabilidade do Risco Ocorrer"></td>    
+                            <td class="gg"><input type="text" name="tabela_r_custo" placeholder="Custo Variável Adicional"></td>
                             <td class="gg"><input type="text" name="tabela_r_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                            <td class="xxg"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição da Consequência"></td>
+                            <td class="g"><input type="text" name="tabela_r_atv_afetadas" placeholder="Atividades Afetadas"></td>                      
+                            <td class="m"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
+                            <td class="g"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Mais Provável"></td>
+                            <td class="m"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
+                            <td class="s"><input type="text" name="tabela_r_media" placeholder="Média"></td>
+                            <td class="m"><input type="text" name="tabela_r_d_p" placeholder="Desvio Padrão"></td>
+                            <td class="xxg"><input type="text" name="tabela_r_prob_min" placeholder="Probabilidade do Atraso Mínimo"></td>
                         </tr>
                         <!-- Linhas adicionadas dinamicamente -->
                     </tbody>
@@ -214,7 +214,7 @@
                 tableContainer.innerHTML = tableHTML; 
                 tableContainer.style.display = "block";
                 enableTableButton.style.display = "none"; 
-                document.querySelector('.container').style.width = "1550px";
+                document.querySelector('.container').style.width = "1700px";
                 
             });
 
@@ -236,7 +236,7 @@
                     tableContainer.innerHTML = tableHTML; 
                     tableContainer.style.display = "block";
 
-                    document.querySelector('.container').style.width = "1550px";
+                    document.querySelector('.container').style.width = "1700px";
                 }
             });
         });
@@ -252,16 +252,18 @@
                     var rowData = {
                         Nome: cellsR[0]?.value || "",
                         ID: cellsR[1]?.value || "",
-                        Tipo: cellsR[2]?.value || "",
-                        Tipo_distribuição: cellsR[3]?.value || "",
-                        Custo: cellsR[4]?.value || "",
-                        Probabilidade: cellsR[5]?.value || "",
-                        Atividades_afetadas: cellsR[6]?.value || "",
-                        Atraso_min: cellsR[7]?.value || "",
-                        Atraso_med: cellsR[8]?.value || "",
-                        Atraso_max: cellsR[9]?.value || "",
-                        Descricao: cellsR[10]?.value || "",
-                        Custo_fixo_adicional: cellsR[11]?.value || "",
+                        Tipo_risco: cellsR[2]?.value || "",
+                        Probabilidade_risco: cellsR[3]?.value || "",
+                        Custo_var: cellsR[4]?.value || "",
+                        Custo_fix: cellsR[5]?.value || "",
+                        Tipo_distribuição: cellsR[6]?.value || "",
+                        Atividades_afetadas: cellsR[7]?.value || "",
+                        Atraso_min: cellsR[8]?.value || "",
+                        Atraso_provável: cellsR[9]?.value || "",
+                        Atraso_max: cellsR[10]?.value || "",
+                        Média: cellsR[11]?.value || "",
+                        Desvio_padrão: cellsR[12]?.value || "",
+                        Probabilidade_min: cellsR[13]?.value || "",
                     };
                     tableDataRisk.push(rowData);
                 });
@@ -287,16 +289,14 @@
                         ID: cellsA[1]?.value || "",
                         Precedentes: cellsA[2]?.value || "",
                         Tipo_distribuição: cellsA[3]?.value || "",
-                        T_otimista: cellsA[4]?.value || "",
+                        T_min: cellsA[4]?.value || "",
                         T_provavel: cellsA[5]?.value || "",
-                        T_pessimista: cellsA[6]?.value || "",
-                        T_min: cellsA[7]?.value || "",
-                        T_moda: cellsA[8]?.value || "",
-                        T_max: cellsA[9]?.value || "",
-                        T_medio: cellsA[10]?.value || "",
-                        Custo_fixo: cellsA[11]?.value || "",
-                        Decricao: cellsA[12]?.value || "",
-                        Custo_un_t: cellsA[13]?.value || "",
+                        T_max: cellsA[6]?.value || "",
+                        Media: cellsA[7]?.value || "",
+                        D_p: cellsA[8]?.value || "",
+                        Prob_min: cellsA[9]?.value || "",
+                        Custo_fixo: cellsA[10]?.value || "",
+                        Custo_un_t: cellsA[11]?.value || "",
                     };
                     tableDataAtv.push(rowData);
                 });
@@ -321,16 +321,18 @@
             newRow.innerHTML = `
                 <td class="s"><input type="text" name="tabela_r_nome" placeholder="Nome"></td>
                 <td class="s"><input type="text" name="tabela_r_id" placeholder="ID"></td>
-                <td class="s"><input type="text" name="tabela_r_tipo" placeholder="Tipo"></td>
-                <td class="g"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição"></td>
-                <td class="s"><input type="text" name="tabela_r_custo" placeholder="Custo"></td>
-                <td class="m"><input type="text" name="tabela_r_prob" placeholder="Probabilidade"></td>    
+                <td class="m"><input type="text" name="tabela_r_tipo" placeholder="Tipo de Risco"></td>
+                <td class="xg"><input type="text" name="tabela_r_prob" placeholder="Probabilidade do Risco Ocorrer"></td>    
+                <td class="gg"><input type="text" name="tabela_r_custo" placeholder="Custo Variável Adicional"></td>
+                <td class="gg"><input type="text" name="tabela_r_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                <td class="xxg"><input type="text" name="tabela_r_t_dist" placeholder="Tipo de Distribuição da Consequência"></td>
                 <td class="g"><input type="text" name="tabela_r_atv_afetadas" placeholder="Atividades Afetadas"></td>                      
-                <td class="g"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
-                <td class="m"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Médio"></td>
-                <td class="g"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
-                <td class="m"><input type="text" name="tabela_r_desc" placeholder="Descrição"></td>
-                <td class="gg"><input type="text" name="tabela_custo_fix" placeholder="Custo Fixo Adicional"></td>
+                <td class="m"><input type="text" name="tabela_r_atraso_min" placeholder="Atraso Mínimo"></td>
+                <td class="g"><input type="text" name="tabela_r_atraso_medio" placeholder="Atraso Mais Provável"></td>
+                <td class="m"><input type="text" name="tabela_r_atraso_max" placeholder="Atraso Máximo"></td>
+                <td class="s"><input type="text" name="tabela_r_media" placeholder="Média"></td>
+                <td class="m"><input type="text" name="tabela_r_d_p" placeholder="Desvio Padrão"></td>
+                <td class="xxg"><input type="text" name="tabela_r_prob_min" placeholder="Probabilidade do Atraso Mínimo"></td>
                 <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
             `;
 
@@ -348,16 +350,14 @@
                 <td class="s"><input type="text" name="tabela_a_id" placeholder="ID"></td>
                 <td class="m"><input type="text" name="tabela_a_precedentes" placeholder="Precedentes"></td>
                 <td class="g"><input type="text" name="tabela_a_tipo_dist" placeholder="Tipo de Distribuição"></td>
-                <td class="g"><input type="text" name="tabela_a_t_otimista" placeholder="Tempo Otimista"></td>
-                <td class="g"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Provável"></td>    
-                <td class="g"><input type="text" name="tabela_a_t_pessimista" placeholder="Tempo Pessimista"></td>                      
                 <td class="m"><input type="text" name="tabela_a_t_min" placeholder="Tempo Mínimo"></td>
-                <td class="m"><input type="text" name="tabela_a_t_mod" placeholder="Tempo Moda"></td>
-                <td class="g"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>
-                <td class="m"><input type="text" name="tabela_a_t_med" placeholder="Tempo Médio"></td>
+                <td class="gg"><input type="text" name="tabela_a_t_provavel" placeholder="Tempo Mais Provável"></td>    
+                <td class="m"><input type="text" name="tabela_a_t_max" placeholder="Tempo Máximo"></td>                      
+                <td class="s"><input type="text" name="tabela_a_med" placeholder="Média"></td>
+                <td class="m"><input type="text" name="tabela_a_d_p" placeholder="Desvio Padrão"></td>
+                <td class="xg"><input type="text" name="tabela_a_prob_min" placeholder="Probabilidade do Tempo Mínimo"></td>
                 <td class="m"><input type="text" name="tabela_a_custo_fix" placeholder="Custo Fixo"></td>
-                <td class="m"><input type="text" name="tabela_a_desc" placeholder="Descrição"></td>
-                <td class="gg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
+                <td class="xg"><input type="text" name="tabela_a_custo_un_t" placeholder="Custo por Unidade de Tempo"></td>
                 <td><button class="delete-input-row" onclick="deleteRow(this)">Delete</button></td>
             `;
 
