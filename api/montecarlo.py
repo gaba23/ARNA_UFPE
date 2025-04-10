@@ -11,6 +11,7 @@ import os
 import csv
 import textwrap
 from scipy import stats
+from scipy.stats import spearmanr
 from scipy.interpolate import make_interp_spline, BSpline
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
@@ -287,7 +288,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     frequencia_atividades_criticas = {atividade: contagem / num_iteracoes for atividade, contagem in contagem_atividades_criticas.items()}
 
-    # Calcular a crucialidade das atividades usando correlação
+    # Calcular a crucialidade das atividades usando correlação de pearson
     crucialidade_atividades = {}
     for i, atividade in enumerate(atividades_pert.keys()):
         duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
@@ -298,6 +299,16 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
             crucialidade_atividades[atividade] = correlacao
 
+    # Crucialidade utilizando a correlação de Spearman
+    crucialidade_atividades_sp = {}
+    for i, atividade in enumerate(atividades_pert.keys()):
+        duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
+
+        if np.std(duracoes_atividades) == 0 or np.std(duracoes_projeto) == 0:
+            crucialidade_atividades_sp[atividade] = 0
+        else:
+            correlacao_sp = spearmanr(duracoes_atividade, duracoes_projeto).correlation
+            crucialidade_atividades_sp[atividade] = correlacao_sp
 
     # Exibir os resultados das simulações
     # print("Durações dos projetos:", duracoes_projeto)
@@ -781,7 +792,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     def plotar_crucialidade_atividades(duracoes_projeto, resultados_atividades, atividades_pert):
         for i, atividade in enumerate(atividades_pert.keys()):
             if atividade != "fim":  # Ignorar a atividade de fim
-                R = 'Correlação: ' + str(round(crucialidade_atividades.get(atividade), 8))
+
+                # Pearson
+                R = 'Correlação de Pearson: ' + str(round(crucialidade_atividades.get(atividade), 4))
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
                 
                 plt.figure(figsize=(5, 3))
@@ -812,6 +825,30 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 except Exception as e:
                     print(f"Erro ao salvar a imagem para a atividade {atividade}: {e}")                
                 plt.close()
+
+                # Spearman
+                R_spearman = f"Correlação de Spearman: {crucialidade_atividades_sp.get(atividade, 0):.4f}"
+
+                plt.figure(figsize=(5, 3))
+                plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
+                plt.title(f'Crucialidade (Spearman) - {atividade}', fontsize=10)
+                plt.xlabel('Duração Crítica do Projeto', fontsize=8)
+                plt.ylabel('Duração da Atividade', fontsize=8)
+                plt.xticks(fontsize=7)
+                plt.yticks(fontsize=7)
+                plt.grid(True)
+                ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
+                ax_inset.text(0.5, 0.25, R_spearman, fontsize=7, va='center', ha='center', 
+                              bbox=dict(facecolor='white', alpha=0.8))
+                ax_inset.axis('off')
+
+                plt.tight_layout()
+                try:
+                    plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}_sp.png')
+                except Exception as e:
+                    print(f"Erro ao salvar imagem Spearman da atividade {atividade}: {e}")
+                plt.close()
+
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto_series = df_duracoes_projeto["Duração do Projeto"]
 
@@ -1002,8 +1039,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagem_tornado = ["grafico_tornado.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
+    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/cruci_atividade_*_sp.png")
   #  imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagens_atv_crucialidade + [planilha_path] # + imagem_seta 
+    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
