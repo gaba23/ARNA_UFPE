@@ -1038,10 +1038,16 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado = ["grafico_tornado.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
+    imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
+    imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/cruci_atividade_*_sp.png")
   #  imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
-    return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+    if riscos:
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+
+    else:
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
