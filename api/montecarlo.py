@@ -126,7 +126,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         return duracao, custo_total
     
     # Função para calcular a duração de cada atividade e risco por atividade
-    def calcular_duracoes_fixas(atividades_convertidas):
+    def calcular_duracoes_fixas(atividades_convertidas): 
         atividades_lista = [0] * len(atividades_pert) 
         riscos_dict = {risco: int for risco in riscos}  # atraso total por risco
 
@@ -235,7 +235,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminho_critico = []
 
         duracoes_atividades, duracoes_riscos = calcular_duracoes_fixas(atividades_convertidas)  # risco deve entrar aqui
-
+        print('cco')
+        print(duracoes_riscos)
         if riscos:
             for risco in riscos:
                 duracoes_risco[risco].append(duracoes_riscos[risco])  
@@ -467,12 +468,13 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminho = [resultado[i] for resultado in resultados_caminhos]
 
         plt.figure(figsize=(5, 3))
+       # print(f'ssshhh {duracoes_caminho}  hhhh {resultados_caminhos}')
         plt.hist(duracoes_caminho, bins=30, alpha=0.75, color='blue', edgecolor='black')
         plt.xlabel('Duração', fontsize=8)
         plt.ylabel('Frequência', fontsize=8)
 
         caminho_update = [ x - 1 for x in caminho[1:-1] ]
-        titulo = f'Distribuição das Durações do Caminho {i} : {caminho_update} - Simulação de Monte Carlo'  # wrap around
+        titulo = f'Distribuição da Duração do Caminho {i} : {caminho_update} - Simulação de Monte Carlo'  # wrap around
         titulo_quebrado = "\n".join(textwrap.wrap(titulo, width=55))  # quebra a cada 40 caracteres
         plt.title(titulo_quebrado, fontsize=10)
 
@@ -904,6 +906,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
         duracoes_min_tot = duracao_risco.min().min()
         duracoes_max_tot = duracao_risco.max().max()
+        print(f'a {duracoes_min_tot}, b {duracoes_max_tot}')
         i = 0
 
         for risco in duracao_risco.columns:
@@ -912,7 +915,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             duracoes_min = np.min(tempos)
             duracoes_max = np.max(tempos)
             bin_size = 0.5  # Tamanho do intervalo
-            bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+            bins = np.arange(np.floor(duracoes_min) - bin_size, np.ceil(duracoes_max) + bin_size, bin_size)
     
             hist, bin_edges = np.histogram(tempos, bins=bins)
             frequencias_relativas = hist / np.sum(hist)  # Frequência relativa (0-1)

@@ -153,6 +153,9 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
             if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
             
+            print('kakka')
+            print(df_atv)
+            
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
 
         except Exception as e:
@@ -292,6 +295,9 @@ async def listar_imagens():
     return JSONResponse(content={"imagens": imagens})
 
 def parse_mc_csv(df_atv, df_riscos):
+    df_atv = df_atv.drop(index=0).reset_index(drop=True)  # remover atividade início
+    df_atv['Precedentes'] = df_atv['Precedentes'].replace('inicio', '', regex=False)  # limpa inicio
+
     atividades = {}
     riscos = {}
 
