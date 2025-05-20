@@ -522,12 +522,12 @@ def parse_pert_csv(df):
         # Verifica se a atividade é 'fim'
         if row['Atividade'] == "fim":
             atividades[row['Atividade']] = {
-                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
                 "duracao": 0  # Define a duração como 0 para a atividade 'fim'
             }
         else:
             atividades[row['Atividade']] = {
-                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
                 "t_otimista": int(row['t_otimista']) if pd.notna(row['t_otimista']) else None,
                 "t_provavel": int(row['t_provavel']) if pd.notna(row['t_provavel']) else None,
                 "t_pessimista": int(row['t_pessimista']) if pd.notna(row['t_pessimista']) else None,
@@ -666,7 +666,7 @@ def parse_cpm_csv(df):
     atividades = {}
     for index, row in df.iterrows():
         atividades[row['Atividade']] = {
-            "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+            "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
             "duracao": int(row['Duracao']) if pd.notna(row['Duracao']) else None,
         }
     return atividades
