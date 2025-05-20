@@ -38,7 +38,7 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .download-button {
+        .download-button, .more-button {
             display: inline-block;
             padding: 10px;
             margin: 5px;
@@ -121,12 +121,18 @@
             </a> -->
         </div>
         
-        <div id="imageModal" class="modal">
+        <div id="imageModal" class="modal"> 
             <div class="modal-content">
                 <span class="close" onclick="closeImageModal()">&times;</span>
                 <h2>Imagens Disponíveis para Visualização</h2>
                 <div id="imageContainer" class="image-container">
                     <!-- As imagens serão inseridas aqui dinamicamente -->
+                </div>
+
+                <div class="view-more-button">
+                    <a href="#" class="more-button" id="more-button" onclick="openMoreImages()">
+                        <i class="fas fa-file-image"></i> Mais Imagens
+                    </a>
                 </div>
             </div>
         </div>
@@ -150,6 +156,12 @@
         function openImageModal() {
             document.getElementById("imageModal").style.display = "block";
             loadImages(); // Carregar imagens quando o modal é aberto
+        }
+
+        function openMoreImages() {  // mostra demais imagens
+            showAllImages(); 
+
+            document.getElementById("more-button").style.display = "none";  // apaga botão de mais imagens
         }
 
         function closeImageModal() {
@@ -207,6 +219,59 @@
                 .catch(error => console.error('Erro ao carregar imagens: ', error));
         }
 
+
+        function showAllImages() {
+            fetch('/listar-imagens')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('imageContainer');
+                    container.innerHTML = ''; // Limpa o container antes de adicionar novas imagens
+
+                    const firstImage = 'grafico_gantt.png';  // Grafico de Gantt aparecendo em primeiro
+                    const secondImage = 'diagrama_na_seta.png';
+                    const images = [...data.moreImagens];
+
+                    const secondIndex = images.indexOf(secondImage);
+                    if (secondIndex !== -1) {  // Mover para o início
+                        images.splice(secondIndex, 1); 
+                        images.unshift(secondImage);  
+                    }
+
+                    const firstIndex = images.indexOf(firstImage);
+                    if (firstIndex !== -1) {  // Mover para o início
+                        images.splice(firstIndex, 1); 
+                        images.unshift(firstImage);  
+                    }
+
+                    images.forEach(imagem => {
+                        const imageDiv = document.createElement('div');
+                        imageDiv.className = 'image-container';
+
+                        const title = document.createElement('div');
+                        title.className = 'image-title';
+                        title.textContent = imagem;
+
+                        const imgElement = document.createElement('img');
+                        imgElement.src = `/resultadosMontecarlo/${imagem}`;
+                        imgElement.alt = imagem;
+
+                        const downloadButton = document.createElement('a');
+                        downloadButton.href = `/resultadosMontecarlo/${imagem}`;
+                        downloadButton.className = 'download-button';
+                        downloadButton.download = imagem;
+                        downloadButton.innerHTML = `<i class="fas fa-download"></i> Baixar`;
+
+                        imageDiv.appendChild(title);
+                        imageDiv.appendChild(imgElement);
+                        imageDiv.appendChild(downloadButton);
+
+                        container.appendChild(imageDiv);
+                    });
+                })
+                .catch(error => console.error('Erro ao carregar imagens: ', error));
+        }
+
+  
         // Close the modal if the user clicks outside of it
         window.onclick = function(event) {
             if (event.target == document.getElementById("imageModal")) {

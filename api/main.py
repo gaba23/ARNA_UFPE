@@ -152,10 +152,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
     
             if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
-            
-            print('kakka')
-            print(df_atv)
-            
+                        
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
 
         except Exception as e:
@@ -290,9 +287,13 @@ async def baixar_xls():
 @app.get("/listar-imagens")
 async def listar_imagens():
     # Lista todas as imagens na pasta resultadosMontecarlo
-    imagens = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
-    imagens = [os.path.basename(imagem) for imagem in imagens]
-    return JSONResponse(content={"imagens": imagens})
+    images = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
+    images = [os.path.basename(imagem) for imagem in images]  # todas as imagens
+
+    moreImgs = [img for img in images if img.startswith('cruci_a')]  # imagens da crucialidade
+    imagens = [img for img in images if not img.startswith('cruci_a')]  # sem imagens da crucialidade de pearson
+
+    return JSONResponse(content={"imagens": imagens, "moreImagens": moreImgs})
 
 def parse_mc_csv(df_atv, df_riscos):
     df_atv = df_atv.drop(index=0).reset_index(drop=True)  # remover atividade início

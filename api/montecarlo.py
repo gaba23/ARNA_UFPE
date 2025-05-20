@@ -235,8 +235,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminho_critico = []
 
         duracoes_atividades, duracoes_riscos = calcular_duracoes_fixas(atividades_convertidas)  # risco deve entrar aqui
-        print('cco')
-        print(duracoes_riscos)
         if riscos:
             for risco in riscos:
                 duracoes_risco[risco].append(duracoes_riscos[risco])  
@@ -796,7 +794,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             if atividade != "fim":  # Ignorar a atividade de fim
 
                 # Pearson
-                R = 'Correlação de Pearson: ' + str(round(crucialidade_atividades.get(atividade), 4))
+                R = 'Correlação (Pearson): ' + str(round(crucialidade_atividades.get(atividade), 4))
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
                 
                 plt.figure(figsize=(5, 3))
@@ -807,7 +805,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 poly1d_fn = np.poly1d(coef)
                 plt.plot(duracoes_projeto, poly1d_fn(duracoes_projeto), 'r-', linewidth=0.5)  # Linha fina em vermelho
 
-                plt.title(f'Crucialidade - {atividade}', fontsize=10)
+                plt.title(f'Crucialidade (Pearson) - {atividade}', fontsize=10)
                 plt.xlabel('Duração Crítica do Projeto', fontsize=8)
                 plt.ylabel('Duração da Atividade', fontsize=8)
                 plt.xticks(fontsize=7) 
@@ -829,10 +827,22 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.close()
 
                 # Spearman
-                R_spearman = f"Correlação de Spearman: {crucialidade_atividades_sp.get(atividade, 0):.4f}"
-
+                R_spearman = f"Correlação (Spearman): {crucialidade_atividades_sp.get(atividade, 0):.4f}"
                 plt.figure(figsize=(5, 3))
                 plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
+
+                # Adicionando uma linha de tendência fina
+                rank_x = stats.rankdata(duracoes_projeto)
+                rank_y = stats.rankdata(duracoes_atividade)
+
+                # Ajuste linear nos ranks
+                coef = np.polyfit(rank_x, rank_y, 1)
+                poly1d_fn = np.poly1d(coef)
+
+                sorted_idx = np.argsort(rank_x)
+
+                plt.plot(duracoes_projeto[sorted_idx], poly1d_fn(rank_x[sorted_idx]), 'r-', linewidth=0.5)  # Linha fina em vermelho
+                print('shibuia')
                 plt.title(f'Crucialidade (Spearman) - {atividade}', fontsize=10)
                 plt.xlabel('Duração Crítica do Projeto', fontsize=8)
                 plt.ylabel('Duração da Atividade', fontsize=8)
@@ -846,7 +856,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                 plt.tight_layout()
                 try:
-                    plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}_sp.png')
+                    plt.savefig(f'resultadosMontecarlo/sp_cruci_atividade_{atividade}.png')
                 except Exception as e:
                     print(f"Erro ao salvar imagem Spearman da atividade {atividade}: {e}")
                 plt.close()
@@ -1044,7 +1054,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
-    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/cruci_atividade_*_sp.png")
+    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
   #  imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
