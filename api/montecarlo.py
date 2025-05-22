@@ -617,52 +617,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     # Cálculo dos tempos de início e término
     tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
-    def plotar_grafico_tornado():
-        # Calcular impacto percentual
-        impactos_atividades = {}
-        for i, atividade in enumerate(atividades_pert.keys()):
-            duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-            correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
-            impactos_atividades[atividade] = correlacao # * np.std(duracoes_atividade)
-
-        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=False))
-        atividades = list(impactos_ordenados.keys())
-        impactos = list(impactos_ordenados.values())
-        atividades.pop()
-        impactos.pop()
-
-        # Gerar gfráfico
-        plt.figure(figsize=(5, 3))
-        atv_bars = plt.barh(atividades, impactos, color='cyan', alpha=0.7)
-        # Inserindo os percentuais
-        for b, i in zip(atv_bars, impactos):
-            if i >= 0:
-                plt.text(
-                    b.get_width() + 0.005,
-                    b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}',
-                    va='center',
-                    fontsize=9.5,
-                    color='black'
-                )
-            if i < 0:
-                plt.text(
-                    b.get_width() + 0.005,
-                    b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}',
-                    va='center',
-                    fontsize=9.5,
-                    color='black'
-                )
-
-        plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
-        plt.ylabel('Atividade', fontsize=8)
-        plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto', fontsize=10)
-        plt.xticks(fontsize=7) 
-        plt.yticks(fontsize=7)
-        plt.grid(True)
-        plt.savefig('resultadosMontecarlo/grafico_tornado.png')
-
     def plotar_grafico_tornado_riscos():
         # Calcular impacto percentual
         impactos_atividades = {}
@@ -1049,7 +1003,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
-    imagem_tornado = ["grafico_tornado.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
     imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
@@ -1059,8 +1012,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     
     # Retorne todas as imagens geradas
     if riscos:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
     else:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
