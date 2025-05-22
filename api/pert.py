@@ -88,11 +88,11 @@ def calcular_pert(atividades_pert):
     dot = Digraph()
     dot.attr(rankdir='LR')  # Definindo o layout horizontal da esquerda para a direita
     for node in G.nodes():
-        duracao = round(G.nodes[node]['duracao'], 4)
-        es_node = round(es[node], 4)
-        ef_node = round(ef[node], 4)
-        ls_node = round(ls[node], 4)
-        lf_node = round(lf[node], 4)
+        duracao = round(G.nodes[node]['duracao'], 2)
+        es_node = round(es[node], 2)
+        ef_node = round(ef[node], 2)
+        ls_node = round(ls[node], 2)
+        lf_node = round(lf[node], 2)
 
         # Ajustar valores negativos próximos de zero
         if ls_node == -0.0 or ls_node < 0.0:
