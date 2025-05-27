@@ -126,7 +126,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         return duracao, custo_total
     
     # Função para calcular a duração de cada atividade e risco por atividade
-    def calcular_duracoes_fixas(atividades_convertidas):
+    def calcular_duracoes_fixas(atividades_convertidas): 
         atividades_lista = [0] * len(atividades_pert) 
         riscos_dict = {risco: int for risco in riscos}  # atraso total por risco
 
@@ -235,7 +235,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminho_critico = []
 
         duracoes_atividades, duracoes_riscos = calcular_duracoes_fixas(atividades_convertidas)  # risco deve entrar aqui
-
         if riscos:
             for risco in riscos:
                 duracoes_risco[risco].append(duracoes_riscos[risco])  
@@ -467,12 +466,13 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminho = [resultado[i] for resultado in resultados_caminhos]
 
         plt.figure(figsize=(5, 3))
+       # print(f'ssshhh {duracoes_caminho}  hhhh {resultados_caminhos}')
         plt.hist(duracoes_caminho, bins=30, alpha=0.75, color='blue', edgecolor='black')
         plt.xlabel('Duração', fontsize=8)
         plt.ylabel('Frequência', fontsize=8)
 
         caminho_update = [ x - 1 for x in caminho[1:-1] ]
-        titulo = f'Distribuição das Durações do Caminho {i} : {caminho_update} - Simulação de Monte Carlo'  # wrap around
+        titulo = f'Distribuição da Duração do Caminho {i} : {caminho_update} - Simulação de Monte Carlo'  # wrap around
         titulo_quebrado = "\n".join(textwrap.wrap(titulo, width=55))  # quebra a cada 40 caracteres
         plt.title(titulo_quebrado, fontsize=10)
 
@@ -617,52 +617,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     # Cálculo dos tempos de início e término
     tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
-    def plotar_grafico_tornado():
-        # Calcular impacto percentual
-        impactos_atividades = {}
-        for i, atividade in enumerate(atividades_pert.keys()):
-            duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
-            correlacao = np.corrcoef(duracoes_atividade, duracoes_projeto)[0, 1]
-            impactos_atividades[atividade] = correlacao # * np.std(duracoes_atividade)
-
-        impactos_ordenados = dict(sorted(impactos_atividades.items(), key=lambda item: abs(item[1]), reverse=False))
-        atividades = list(impactos_ordenados.keys())
-        impactos = list(impactos_ordenados.values())
-        atividades.pop()
-        impactos.pop()
-
-        # Gerar gfráfico
-        plt.figure(figsize=(5, 3))
-        atv_bars = plt.barh(atividades, impactos, color='cyan', alpha=0.7)
-        # Inserindo os percentuais
-        for b, i in zip(atv_bars, impactos):
-            if i >= 0:
-                plt.text(
-                    b.get_width() + 0.005,
-                    b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}',
-                    va='center',
-                    fontsize=9.5,
-                    color='black'
-                )
-            if i < 0:
-                plt.text(
-                    b.get_width() + 0.005,
-                    b.get_y() + b.get_height() / 2,
-                    f'{i:.3f}',
-                    va='center',
-                    fontsize=9.5,
-                    color='black'
-                )
-
-        plt.xlabel('Impacto na Duração do Projeto', fontsize=8)
-        plt.ylabel('Atividade', fontsize=8)
-        plt.title('Gráfico de Tornado - Impacto das Atividades na Duração do Projeto', fontsize=10)
-        plt.xticks(fontsize=7) 
-        plt.yticks(fontsize=7)
-        plt.grid(True)
-        plt.savefig('resultadosMontecarlo/grafico_tornado.png')
-
     def plotar_grafico_tornado_riscos():
         # Calcular impacto percentual
         impactos_atividades = {}
@@ -794,7 +748,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             if atividade != "fim":  # Ignorar a atividade de fim
 
                 # Pearson
-                R = 'Correlação de Pearson: ' + str(round(crucialidade_atividades.get(atividade), 4))
+                R = 'Correlação (Pearson): ' + str(round(crucialidade_atividades.get(atividade), 4))
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
                 
                 plt.figure(figsize=(5, 3))
@@ -805,7 +759,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 poly1d_fn = np.poly1d(coef)
                 plt.plot(duracoes_projeto, poly1d_fn(duracoes_projeto), 'r-', linewidth=0.5)  # Linha fina em vermelho
 
-                plt.title(f'Crucialidade - {atividade}', fontsize=10)
+                plt.title(f'Crucialidade (Pearson) - {atividade}', fontsize=10)
                 plt.xlabel('Duração Crítica do Projeto', fontsize=8)
                 plt.ylabel('Duração da Atividade', fontsize=8)
                 plt.xticks(fontsize=7) 
@@ -827,10 +781,22 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.close()
 
                 # Spearman
-                R_spearman = f"Correlação de Spearman: {crucialidade_atividades_sp.get(atividade, 0):.4f}"
-
+                R_spearman = f"Correlação (Spearman): {crucialidade_atividades_sp.get(atividade, 0):.4f}"
                 plt.figure(figsize=(5, 3))
                 plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
+
+                # Adicionando uma linha de tendência fina
+                rank_x = stats.rankdata(duracoes_projeto)
+                rank_y = stats.rankdata(duracoes_atividade)
+
+                # Ajuste linear nos ranks
+                coef = np.polyfit(rank_x, rank_y, 1)
+                poly1d_fn = np.poly1d(coef)
+
+                sorted_idx = np.argsort(rank_x)
+
+                plt.plot(duracoes_projeto[sorted_idx], poly1d_fn(rank_x[sorted_idx]), 'r-', linewidth=0.5)  # Linha fina em vermelho
+                print('shibuia')
                 plt.title(f'Crucialidade (Spearman) - {atividade}', fontsize=10)
                 plt.xlabel('Duração Crítica do Projeto', fontsize=8)
                 plt.ylabel('Duração da Atividade', fontsize=8)
@@ -844,7 +810,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                 plt.tight_layout()
                 try:
-                    plt.savefig(f'resultadosMontecarlo/cruci_atividade_{atividade}_sp.png')
+                    plt.savefig(f'resultadosMontecarlo/sp_cruci_atividade_{atividade}.png')
                 except Exception as e:
                     print(f"Erro ao salvar imagem Spearman da atividade {atividade}: {e}")
                 plt.close()
@@ -904,6 +870,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         cores = ['red', 'green', 'yellow', 'cyan', 'purple', 'gray', 'brown', 'pink', 'violet']
         duracoes_min_tot = duracao_risco.min().min()
         duracoes_max_tot = duracao_risco.max().max()
+        print(f'a {duracoes_min_tot}, b {duracoes_max_tot}')
         i = 0
 
         for risco in duracao_risco.columns:
@@ -912,7 +879,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             duracoes_min = np.min(tempos)
             duracoes_max = np.max(tempos)
             bin_size = 0.5  # Tamanho do intervalo
-            bins = np.arange(duracoes_min, duracoes_max + bin_size, bin_size)
+            bins = np.arange(np.floor(duracoes_min) - bin_size, np.ceil(duracoes_max) + bin_size, bin_size)
     
             hist, bin_edges = np.histogram(tempos, bins=bins)
             frequencias_relativas = hist / np.sum(hist)  # Frequência relativa (0-1)
@@ -1036,18 +1003,17 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
-    imagem_tornado = ["grafico_tornado.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
     imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
-    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/cruci_atividade_*_sp.png")
+    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
   #  imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
     if riscos:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
     else:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 

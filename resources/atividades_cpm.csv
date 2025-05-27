@@ -1,5 +1,6 @@
 Atividade,Precedentes,Duracao
-A,,2
+inicio,,0
+A,inicio,2
 B,A,6
 C,A,4
 D,B,5
