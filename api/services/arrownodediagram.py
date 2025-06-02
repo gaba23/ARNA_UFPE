@@ -21,19 +21,19 @@ class EventActivityGraphGenerator:
         self.event_mapping = {}  # mapeia atividades (IDs) aos nós
 
     def reduction(self, graph, multiple_pred):  # remove atividades dummies geradas pelas dependências
-        redundant_nodes = set()
-        redirect_edges = {}
+        # redundant_nodes = set()
+        # redirect_edges = {}
 
-        # Identifica nós redundantes
-        for dep in self.activity_dependencies:
-            start_event, end_event = self.event_mapping[dep.activity.id]
-            if dep.activity.id in multiple_pred:
-                redundant_nodes.add(end_event)
-                if end_event not in redirect_edges:
-                    redirect_edges[end_event] = start_event
+        # # Identifica nós redundantes
+        # for dep in self.activity_dependencies:
+        #     start_event, end_event = self.event_mapping[dep.activity.id]
+        #     if dep.activity.id in multiple_pred:
+        #         redundant_nodes.add(end_event)
+        #         if end_event not in redirect_edges:
+        #             redirect_edges[end_event] = start_event
 
-        for node in redundant_nodes:
-            graph.node(node, style="invisible")  # oculta nó redundante
+        # for node in redundant_nodes:
+        #     graph.node(node, style="invisible")  # oculta nó redundante
 
         return graph
 
