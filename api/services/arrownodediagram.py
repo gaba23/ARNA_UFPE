@@ -88,10 +88,15 @@ class EventActivityGraphGenerator:
                 
                 if activity.id in multiple_pred:  # redesigna end_event para tarefas que apontam para dummies
                     corrected_end_event = f'E{int(end_event[1:]) - 1}'
+
+                    dummy_event = f"E{end_event_counter}"
+                    graph.node(dummy_event, shape="circle", label="")  # adiciona um nó intermediário
+
+                    graph.edge(start_event, dummy_event, label=edge_label, color=edge_color)  # aresta da atividade secundária
+                    graph.edge(dummy_event, corrected_end_event, style="dashed", arrowhead="normal")  # aresta dummy
+
                 else:
-                    corrected_end_event = end_event
-                
-                graph.edge(start_event, corrected_end_event, label=edge_label, color=edge_color)
+                    graph.edge(start_event, end_event, label=edge_label, color=edge_color)  # aresta regular
 
         # Representação de dependências
         # for dep in self.activity_dependencies:
@@ -171,6 +176,9 @@ def create_arrow_diagram(input_file, output_file):
     # Gerar grafo
     generator = EventActivityGraphGenerator(activities, critical_activities)
     full_graph, dummy_nodes = generator.generate_graph(len(activities))
+    print('dummy nodes')
+
+    print(dummy_nodes)
     graph = generator.reduction(full_graph, dummy_nodes)
 
     # Desenhar imagem 
