@@ -671,7 +671,7 @@ def parse_cpm_csv(df):
         }
     return atividades
 
-@app.get("/download_png")
+@app.get("/download_png_cpm")
 async def download_cpm_png():
     file_path = "resultadosCPM/atividades_cpm.png"
     return FileResponse(file_path, filename="cpm_image.png")
