@@ -152,7 +152,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
     
             if df_atv.empty and df_riscos.empty:
                 raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
-            
+                        
             atividades_dict, riscos_dict = parse_mc_csv(df_atv, df_riscos)  
 
         except Exception as e:
@@ -287,11 +287,18 @@ async def baixar_xls():
 @app.get("/listar-imagens")
 async def listar_imagens():
     # Lista todas as imagens na pasta resultadosMontecarlo
-    imagens = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
-    imagens = [os.path.basename(imagem) for imagem in imagens]
-    return JSONResponse(content={"imagens": imagens})
+    images = glob.glob("resultadosMontecarlo/*.png")  # Altere o padrão se necessário para outros tipos de imagem
+    images = [os.path.basename(imagem) for imagem in images]  # todas as imagens
+
+    moreImgs = [img for img in images if img.startswith('cruci_a')]  # imagens da crucialidade
+    imagens = [img for img in images if not img.startswith('cruci_a')]  # sem imagens da crucialidade de pearson
+
+    return JSONResponse(content={"imagens": imagens, "moreImagens": moreImgs})
 
 def parse_mc_csv(df_atv, df_riscos):
+    df_atv = df_atv.drop(index=0).reset_index(drop=True)  # remover atividade início
+    df_atv['Precedentes'] = df_atv['Precedentes'].replace('inicio', '', regex=False)  # limpa inicio
+
     atividades = {}
     riscos = {}
 
@@ -515,12 +522,12 @@ def parse_pert_csv(df):
         # Verifica se a atividade é 'fim'
         if row['Atividade'] == "fim":
             atividades[row['Atividade']] = {
-                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
                 "duracao": 0  # Define a duração como 0 para a atividade 'fim'
             }
         else:
             atividades[row['Atividade']] = {
-                "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
                 "t_otimista": int(row['t_otimista']) if pd.notna(row['t_otimista']) else None,
                 "t_provavel": int(row['t_provavel']) if pd.notna(row['t_provavel']) else None,
                 "t_pessimista": int(row['t_pessimista']) if pd.notna(row['t_pessimista']) else None,
@@ -659,12 +666,12 @@ def parse_cpm_csv(df):
     atividades = {}
     for index, row in df.iterrows():
         atividades[row['Atividade']] = {
-            "precedentes": row['Precedentes'].split(',') if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+            "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
             "duracao": int(row['Duracao']) if pd.notna(row['Duracao']) else None,
         }
     return atividades
 
-@app.get("/download_png")
+@app.get("/download_png_cpm")
 async def download_cpm_png():
     file_path = "resultadosCPM/atividades_cpm.png"
     return FileResponse(file_path, filename="cpm_image.png")
