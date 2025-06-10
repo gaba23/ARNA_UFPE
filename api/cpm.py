@@ -103,8 +103,6 @@ def calcular_cpm(atividades_cpm):
     imagem = ["atividades_cpm.png"]
 
     # Criar gráfico de Gantt
-    import matplotlib.pyplot as plt
-
     fig, ax = plt.subplots(figsize=(10, 6))
 
     y_labels = []
@@ -131,6 +129,9 @@ def calcular_cpm(atividades_cpm):
     ax.set_yticklabels(y_labels)
     ax.set_xlabel("Tempo")
     ax.set_title("Gráfico de Gantt - CPM")
+
+    # Inverter eixo Y para desenhar de cima para baixo
+    ax.invert_yaxis()
 
     # Adiciona rótulos nas barras
     for i in range(len(y_pos)):

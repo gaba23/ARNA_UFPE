@@ -62,7 +62,7 @@
             <i class="fas fa-file-excel"></i> Baixar XLS
         </a> -->
         <a href="#" class="download-button" onclick="openReportModalProbabilidade()">
-          <i class="fas fa-chart-bar"></i> Probabilidade Gaussiana
+          <i class="fas fa-chart-bar"></i> Calculadora de probabilidade de término do projeto
         </a>
         <a href="#" class="download-button" onclick="openReportModalCalculadora()">
           <i class="fas fa-chart-bar"></i> Calculadora Tempo Atividade
@@ -154,11 +154,10 @@
     <div class="modal-content">
         <form action="{{ url_for('gauss') }}" method="POST">
             <span class="close" onclick="closeReportProbabilidade()">&times;</span>
-            <h2>Calculadora de Probabilidade Gaussiana</h2>
-            <img src="https://3.bp.blogspot.com/-hU4_ZrfyzJI/WrRg6OBZ-KI/AAAAAAAAOgE/2duewIwNxus4jea6xzNvSsTjxPe2YaXdQCLcBGAs/s640/IMAGEM%2B1906%2B-%2BCURVA%2BNORMAL%2BOU%2BGAUSSIANA%2B-%2BO%2BBLOG%2BDO%2BMESTRE.jpg" alt="">
+            <h2>Calculadora de probabilidade de término do projeto</h2>
+            <img src="{{ url_for('static', path='/Tabela Normal - ARNA.png') }}" alt="">
             <p>
-                Essa calculadora tem foco em calcular a probabilidade de um projeto terminar em um tempo programado que o usuário deseja inserir, de acordo
-                com um padrão de curva de gauss (Distribuição Tabela Z), sabendo que o PERT gira em torno de trabalhar com média ponderada, não tempo exato.
+                Essa calculadora tem foco em calcular a probabilidade de um projeto terminar em até dado tempo t programado P(X<=t), considerando uma curva normal (Distribuição Tabela Z).
             </p>
     
             <label for="saida">Insira o tempo programado:</label>
