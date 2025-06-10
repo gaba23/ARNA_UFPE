@@ -458,9 +458,11 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl') # converter em dataframe
+            atividades = sheets.get("Atividades")
+
             csv_buffer = io.StringIO()
-            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            atividades.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
             csv_buffer.seek(0)
             df = pd.read_csv(csv_buffer)
 
@@ -580,9 +582,11 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl') # converter em dataframe
+            atividades = sheets.get("Atividades")
+            
             csv_buffer = io.StringIO()
-            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            atividades.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
             csv_buffer.seek(0)
             df = pd.read_csv(csv_buffer)
 

@@ -139,7 +139,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             else:
                 # Calcular a duração com base no tipo de distribuição
                 tipo = atividade["tipo"]
-                if tipo == "beta_pert":     # errado
+                if tipo == "beta_pert":     
                     t_o = atividade["t_minimo"]
                     t_p = atividade["t_maximo"]
                     t_m = atividade["t_medio"]
