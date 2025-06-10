@@ -64,9 +64,7 @@
         <a href="#" class="download-button" onclick="openReportModalProbabilidade()">
           <i class="fas fa-chart-bar"></i> Calculadora de probabilidade de término do projeto
         </a>
-        <a href="#" class="download-button" onclick="openReportModalCalculadora()">
-          <i class="fas fa-chart-bar"></i> Calculadora Tempo Atividade
-        </a>
+
     </div>
 </div>
 
@@ -101,18 +99,6 @@
         modal.style.display = "none";
     }
 
-    // Função para abrir o modal da Calculadora de Tempo
-    function openReportModalCalculadora() {
-        var modal = document.getElementById("CalculadoraModal");
-        modal.style.display = "block";
-    }
-
-    // Função para fechar o modal da Calculadora de Tempo
-    function closeReportCalculadora() {
-        var modal = document.getElementById("CalculadoraModal");
-        modal.style.display = "none";
-    }
-
     // Função para abrir o modal de Probabilidade Gaussiana
     function openReportModalProbabilidade() {
         var modal = document.getElementById("ProbabilidadeModal");
@@ -127,28 +113,6 @@
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-
-<div class="modal" id="CalculadoraModal">
-    <div class="modal-content">
-        <form action="{{ url_for('calculo_tempo') }}" method="POST">
-            <span class="close" onclick="closeReportCalculadora()">&times;</span>
-            <h2>Calculadora de Tempo</h2>
-
-            <p>Insira o nó de saída como o nó que irá ser o início e sair para um destino. O nó de chegada,
-                consequentemente, irá ser o ponto em que irá ser o fim do caminho, o destino. Caso forem conexos,
-                haverá uma linha vermelha traçando eles. Caso desconexos, não irá ter linha vermelha traçando eles 
-            </p>
-            <label for="saida">Nó de Saída:</label>
-            <input type="text" name="saida" id="saida" placeholder="Nó de Saída">
-    
-            <label for="chegada">Nó de Chegada:</label>
-            <input type="text" name="chegada" id="chegada" placeholder="Nó de Chegada">
-    
-            <button type="submit">Calcular</button>
-            <p id="resultado"></p>
-        </form>
-    </div>
-</div>
 
 <div class="modal" id="ProbabilidadeModal">
     <div class="modal-content">
