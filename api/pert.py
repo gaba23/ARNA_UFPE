@@ -2,6 +2,7 @@ import csv
 import networkx as nx
 from graphviz import Digraph
 import matplotlib.pyplot as plt
+import numpy as np
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 # atividades_pert = {
@@ -44,7 +45,26 @@ def calcular_pert(atividades_pert):
     atividades = {}
     for atividade, dados in atividades_pert.items():
         if atividade != "fim":
-            t_calculado = (dados["t_otimista"] + dados["t_pessimista"] + dados["t_provavel"] * 4) / 6
+            t_o = dados["t_otimista"]
+            t_p = dados["t_pessimista"]
+            t_m = dados["t_provavel"]
+
+            # Verificação de consistência dos dados
+            if t_p == t_o or not (t_o <= t_m <= t_p):
+                # Usa uma média simples como fallback
+                t_calculado = (t_o + 4 * t_m + t_p) / 6
+            else:
+                # Calculando os parâmetros alpha e beta da distribuição beta
+                alpha = 1 + 4 * (t_m - t_o) / (t_p - t_o)
+                beta_param = 1 + 4 * (t_p - t_m) / (t_p - t_o)
+
+                # Segurança extra para evitar valores inválidos
+                if alpha <= 0 or beta_param <= 0:
+                    t_calculado = (t_o + 4 * t_m + t_p) / 6
+                else:
+                    beta_random = np.random.beta(alpha, beta_param)
+                    t_calculado = beta_random * (t_p - t_o) + t_o
+
             atividades[atividade] = {
                 "precedentes": dados["precedentes"],
                 "duracao": t_calculado
