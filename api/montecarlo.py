@@ -327,19 +327,19 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         else:
             return 'n'
     
-    with open('diagramDataset.csv', mode='w', newline='') as file:
+    with open('./temp/diagramDataset.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["ActivityId", "Predecessors", "Crucial"])  # colunas
         
         for atv, pred in precedentes_atividades.items():  # escrever linhas
-            pred_str = " ".join(pred)  # Convert list to space-separated string
+            pred_str = " ".join(pred)  # lista separada por espaço
             critico = is_critical(atv, frequencia_atividades_criticas) 
             if atv == 'fim':
                 writer.writerow([int(len(precedentes_atividades)), pred_str, critico])
             else:
                 writer.writerow([atv, pred_str, critico])
 
-    encontrar_caminhos_seta('./diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
+    encontrar_caminhos_seta('./temp/diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
 
 
     ####    GRÁFICOS    ####

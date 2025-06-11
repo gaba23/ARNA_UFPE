@@ -1,6 +1,8 @@
+import csv
 import networkx as nx
 from graphviz import Digraph
 import matplotlib.pyplot as plt
+from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 
 # atividades_pert = {
 #         "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5},
@@ -79,16 +81,7 @@ def calcular_pert(atividades_pert):
     # Cálculo das folgas 
     folga = {node: ls[node] - es[node] for node in G.nodes()}
 
-    #print('valor es')
-    #print(es)
-    #print('valor ef')
-    #print(ef)
-    #print('valor ls')
-    #print(ls)
-    #print('valor lf')
-    #print(lf)
-
-    # Desenhar o grafo com Graphviz
+    # GRAFO
     dot = Digraph()
     dot.attr(rankdir='LR')  # Definindo o layout horizontal da esquerda para a direita
     for node in G.nodes():
@@ -117,7 +110,31 @@ def calcular_pert(atividades_pert):
 
     imagem = ["atividades_pert.png"]
 
-    # Criar gráfico de Gantt
+    # ATIVIDADE NA SETA
+    def is_critical(atividade, critical_path):
+        return 'y' if atividade in critical_path else 'n'
+
+    with open('./temp/pertDataset.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ActivityId", "Predecessors", "Crucial"])
+
+        for atividade, dados in atividades.items():
+            if atividade == 'inicio':
+                continue  # ignorar atividade início
+
+            pred = [
+                p for p in dados['precedentes'] if p != 'inicio'  # apagar atividade início dos predecessores
+            ]
+            pred_str = " ".join(pred)
+            critico = is_critical(atividade, critical_path)
+            if atividade == 'fim':
+                writer.writerow([int(len(atividades) - 1), pred_str, critico])
+            else:
+                writer.writerow([atividade, pred_str, critico])
+
+    encontrar_caminhos_seta('./temp/pertDataset.csv', './resultadosPert/diagrama_na_seta')
+
+    # GANTT
     fig, ax = plt.subplots(figsize=(10, 6))
 
     y_labels = []
@@ -164,4 +181,3 @@ def calcular_pert(atividades_pert):
 
     return imagem
 
-# calcular_pert(atividades_pert)
