@@ -1,5 +1,6 @@
 import networkx as nx
 from graphviz import Digraph
+import matplotlib.pyplot as plt
 
 # atividades_pert = {
 #         "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5},
@@ -75,6 +76,9 @@ def calcular_pert(atividades_pert):
 
     lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
 
+    # Cálculo das folgas 
+    folga = {node: ls[node] - es[node] for node in G.nodes()}
+
     #print('valor es')
     #print(es)
     #print('valor ef')
@@ -93,12 +97,15 @@ def calcular_pert(atividades_pert):
         ef_node = round(ef[node], 2)
         ls_node = round(ls[node], 2)
         lf_node = round(lf[node], 2)
+        folga_node = round(folga[node], 2)
 
         # Ajustar valores negativos próximos de zero
         if ls_node == -0.0 or ls_node < 0.0:
             ls_node = 0.0
+        if folga_node == -0.0 or folga_node < 0.0:
+            folga_node = 0.0
 
-        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}")
+        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}\nSlack: {folga_node}")
 
     for edge in G.edges():
         if is_edge_in_critical_path(edge[0], edge[1]):
@@ -109,6 +116,52 @@ def calcular_pert(atividades_pert):
     dot.render('resultadosPert/atividades_pert', format='png', cleanup=True)
 
     imagem = ["atividades_pert.png"]
+
+    # Criar gráfico de Gantt
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    y_labels = []
+    y_pos = []
+    cores = []
+    start_times = []
+    durations = []
+
+    for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
+        if node == 'fim':
+            continue  # Ignorar nó artificial 'fim'
+
+        y_labels.append(node)
+        y_pos.append(i)
+        start_times.append(es[node])
+        durations.append(G.nodes[node]['duracao'])
+        if node in critical_path:
+            cores.append('red')
+        else:
+            cores.append('skyblue')
+
+    ax.barh(y_pos, durations, left=start_times, color=cores, edgecolor='black')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y_labels)
+    ax.set_xlabel("Tempo")
+    ax.set_title("Gráfico de Gantt - PERT")
+
+    # Inverter eixo Y para desenhar de cima para baixo
+    ax.invert_yaxis()
+
+    # Adiciona rótulos nas barras
+    for i in range(len(y_pos)):
+        inicio = start_times[i]
+        fim = start_times[i] + durations[i]
+        ax.text(inicio + durations[i] / 2, y_pos[i],
+                f"{inicio:.2f} → {fim:.2f}",
+                va='center', ha='center', color='black', fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig('resultadosPERT/gantt_pert.png')
+    plt.close()
+
+    imagem.append("gantt_pert.png")
+
     return imagem
 
 # calcular_pert(atividades_pert)
