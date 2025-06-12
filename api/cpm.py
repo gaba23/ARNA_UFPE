@@ -91,7 +91,7 @@ def calcular_cpm(atividades_cpm):
         if folga_node == -0.0 or folga_node < 0.0:
             folga_node = 0.0
 
-        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}\nSlack: {folga_node}")
+        dot.node(node, shape='box', label=f"{node}\nDuration: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}\nSlack: {folga_node}")
 
     for edge in G.edges():
         if is_edge_in_critical_path(edge[0], edge[1]):
