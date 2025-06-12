@@ -682,8 +682,8 @@ async def download_cpm_png():
 
 @app.get("/download_xls_cpm", name="download_xls_cpm")
 async def download_xls_cpm():
-    file_path = "caminho/para/o/seu/arquivo_cpm.xlsx" 
-    return FileResponse(file_path, filename="resultado_cpm.xlsx")
+    file_path = "resultadosCPM/relatorio_cpm.xlsx" 
+    return FileResponse(file_path, filename="relatorio_cpm.xlsx")
 
 
 

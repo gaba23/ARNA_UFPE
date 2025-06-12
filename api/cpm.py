@@ -1,6 +1,7 @@
 import networkx as nx
 from graphviz import Digraph
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Definindo as atividades do projeto com durações fixas
 # atividades_cpm = {
@@ -143,7 +144,38 @@ def calcular_cpm(atividades_cpm):
     plt.close()
 
     imagem.append("gantt_cpm.png")
+
+    # EXCEL
+    atv_ignore = ['inicio', 'fim']  # ignorar atividades placeholders
+
+    resumo_data = []
+    for node in G.nodes():
+        if node in atv_ignore:
+            continue
+
+        resumo_data.append({
+            "Atividade": node,
+            "Duração": G.nodes[node]['duracao'],
+            "ES": es[node],
+            "EF": ef[node],
+            "LS": ls[node],
+            "LF": lf[node],
+            "Folga": folga[node],
+            "Caminho Crítico": "Sim" if node in critical_path else "Não"
+        })
+
+    df_resumo = pd.DataFrame(resumo_data)
+    df_caminho = pd.DataFrame({"Caminho Crítico": [a for a in critical_path if a != 'fim']})
+    df_folgas = df_resumo[df_resumo["Folga"] > 0][["Atividade", "Folga"]]
+
+    # Formatar dataframes
+    df_caminho = pd.DataFrame({"Caminho Crítico": [a for a in critical_path if a not in atv_ignore]})
+    df_folgas = df_resumo[df_resumo["Folga"] > 0][["Atividade", "Folga"]]
+
+    # Escrever arquivo
+    with pd.ExcelWriter("./resultadosCpm/relatorio_cpm.xlsx", engine='openpyxl') as writer:
+        df_resumo.to_excel(writer, sheet_name="Resumo das Atividades", index=False)
+        df_caminho.to_excel(writer, sheet_name="Caminho Crítico", index=False)
+        df_folgas.to_excel(writer, sheet_name="Folgas", index=False)
     
     return imagem
-
-# calcular_cpm(atividades_cpm)
