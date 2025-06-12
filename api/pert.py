@@ -132,7 +132,7 @@ def calcular_pert(atividades_pert):
 
     imagem = ["atividades_pert.png"]
 
-    # ATIVIDADE NA SETA
+    # DIAGRAMA ATIVIDADE NA SETA
     def is_critical(atividade, critical_path):
         return 'y' if atividade in critical_path else 'n'
 

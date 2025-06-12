@@ -1,7 +1,10 @@
-import networkx as nx
+import csv
 from graphviz import Digraph
 import matplotlib.pyplot as plt
+import networkx as nx
 import pandas as pd
+from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
+
 
 # Definindo as atividades do projeto com durações fixas
 # atividades_cpm = {
@@ -144,6 +147,30 @@ def calcular_cpm(atividades_cpm):
     plt.close()
 
     imagem.append("gantt_cpm.png")
+
+    # DIAGRAMA ATIVIDADE NA SETA
+    def is_critical(atividade, critical_path):
+        return 'y' if atividade in critical_path else 'n'
+
+    with open('./temp/cpmDataset.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ActivityId", "Predecessors", "Crucial"])
+
+        for atividade, dados in atividades.items():
+            if atividade == 'inicio':
+                continue  # ignorar atividade início
+
+            pred = [
+                p for p in dados['precedentes'] if p != 'inicio'  # apagar atividade início dos predecessores
+            ]
+            pred_str = " ".join(pred)
+            critico = is_critical(atividade, critical_path)
+            if atividade == 'fim':
+                writer.writerow([int(len(atividades) - 1), pred_str, critico])
+            else:
+                writer.writerow([atividade, pred_str, critico])
+
+    encontrar_caminhos_seta('./temp/cpmDataset.csv', './resultadosCpm/diagrama_na_seta')
 
     # EXCEL
     atv_ignore = ['inicio', 'fim']  # ignorar atividades placeholders

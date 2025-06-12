@@ -1,7 +1,3 @@
 api/venv
 api/__pycache__
-api/resultadosCpm/*
-api/resultadosMontecarlo/*
-api/resultadosPert/*
 api/services/__pycache__
-api/temp/*
