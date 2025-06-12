@@ -281,7 +281,7 @@ async def result_montecarlo(request: Request):
 
 @app.get("/baixar-xls")
 async def baixar_xls():
-    file_path = "Modelo_Riscos.xlsx"
+    file_path = "./resultadosMontecarlo/Modelo_Riscos.xlsx"
     return FileResponse(file_path, filename="Modelo_Riscos.xlsx")
 
 @app.get("/listar-imagens")
