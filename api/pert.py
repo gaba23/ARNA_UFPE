@@ -1,6 +1,7 @@
 import csv
 import networkx as nx
 from graphviz import Digraph
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
@@ -199,5 +200,51 @@ def calcular_pert(atividades_pert):
     plt.close()
 
     imagem.append("gantt_pert.png")
+
+    # TABELA DE ARESTAS
+    headers = ["Atividade", "Precedentes", "T. Otimista", "T. Pessimista", "T. Provável", "T. Esperado", "DP", "Variância"]
+    rows = []
+
+    for atividade, dados in atividades_pert.items():
+        if atividade in ["inicio", "fim"]:  # ignora
+            continue
+
+        t_o = dados["t_otimista"]
+        t_p = dados["t_pessimista"]
+        t_m = dados["t_provavel"]
+
+        t_esperado = (t_o + 4 * t_m + t_p) / 6
+        dp = (t_p - t_o) / 6
+        variancia = dp ** 2
+
+        precedentes_filtrados = [p for p in dados["precedentes"] if p != "inicio"]  # filtra atividade inicial dos precedentes
+        precedentes = ", ".join(precedentes_filtrados) if precedentes_filtrados else "-"
+
+        rows.append([
+            atividade,
+            precedentes,
+            round(t_o, 2),
+            round(t_p, 2),
+            round(t_m, 2),
+            round(t_esperado, 2),
+            round(dp, 2),
+            round(variancia, 2)
+        ])
+
+    # Criar png
+    fig, ax = plt.subplots(figsize=(12, max(2, len(rows) * 0.5)))
+    ax.axis('off')  # esconde os eixos
+
+    table = ax.table(cellText=rows, colLabels=headers, loc='center', cellLoc='center')
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.5)
+
+    plt.tight_layout()
+    plt.savefig("resultadosPert/tabela_arestas.png")
+    plt.close()
+
+    imagem.append("tabela_arestas.png")
 
     return imagem

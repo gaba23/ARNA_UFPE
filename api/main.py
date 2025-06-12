@@ -262,7 +262,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
 
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_iteracoes)  # Passa o num_iteracoes para a função
-    gerar_pdf(resultados, "./resultadosMontecarlo/relatorio.pdf")
+    gerar_pdf(resultados, "./resultadosMontecarlo/relatorio.pdf", "mc")
     lista_imagens = resultados[:-1]  # Todas as imagens
     xls_path = resultados[-1]  # O caminho do arquivo Excel
 
@@ -506,6 +506,8 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
 
     # Chama a função de cálculo PERT
     imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+
+    gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosPert/tabela_arestas.pdf", "pt")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)

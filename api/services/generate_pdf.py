@@ -23,16 +23,21 @@ class PDF(FPDF):
 
         self.image(image_path, x_offset, y_offset, new_width, new_height)
 
-def generate(images, output_pdf):
+def generate(images, output_pdf, param):
     pdf = PDF()
 
-    for img in images:
-        if img[-3:] == 'png':
-            if img[:20] == 'resultadosMontecarlo':
-                img_path = img
-            else: 
-                img_path = './resultadosMontecarlo/' + img
+    if param == "mc":  # Monte Carlo
+        for img in images:
+            if img[-3:] == 'png':
+                if img[:20] == 'resultadosMontecarlo':
+                    img_path = img
+                else: 
+                    img_path = './resultadosMontecarlo/' + img
 
-            pdf.add_image_page(img_path)
+                pdf.add_image_page(img_path)
+
+    if param == "pt":  # Pert
+        pdf.add_image_page(images)
+
     pdf.output(output_pdf)
 
