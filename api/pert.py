@@ -5,7 +5,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
-#from scipy.stats import norm
+from scipy.stats import norm
+#from services.probabilidade import calcular_probabilidade as calcular_probabilidade
 
 # atividades_pert = {
 #         "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5},
@@ -247,4 +248,4 @@ def calcular_pert(atividades_pert):
 
     imagem.append("tabela_arestas.png")
 
-    return imagem
+    return imagem, G, critical_path, atividades_pert

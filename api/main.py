@@ -8,6 +8,7 @@ import io
 import random
 import numpy as np
 import graphviz
+from graphviz import Digraph
 from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ from pert import calcular_pert
 import networkx as nx
 import logging
 from services.generate_pdf import generate as gerar_pdf
+from services.probabilidade import calcular_probabilidade
 
 
 logging.basicConfig(level=logging.INFO)
@@ -502,15 +504,25 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
                     atividades_dict = json.loads(atividades)
                 except json.JSONDecodeError:
                     raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+                
+    
+
 
 
     # Chama a função de cálculo PERT
-    imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+    imagem, G, critical_path, atividades_pert = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
 
     gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosPert/tabela_arestas.pdf", "pt")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)
+
+@app.post("/calculateProb")
+async def calculateProb(t_programado: str=Form(None), G:Digraph, critical_path:str, atividades_pert:str):
+    imagem, G, critical_path, atividades_pert = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+    calcular_probabilidade(t_programado, G, critical_path, atividades_pert)
+
+@app.get("/resultCalculator")
 
 @app.get("/resultPERT")
 async def result_pert(request: Request):
