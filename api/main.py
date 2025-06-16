@@ -262,7 +262,7 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
 
     # Realizar a simulação de Monte Carlo
     resultados = simular_montecarlo(atividades_dict, riscos_dict, num_iteracoes)  # Passa o num_iteracoes para a função
-    gerar_pdf(resultados, "./resultadosMontecarlo/relatorio.pdf")
+    gerar_pdf(resultados, "./resultadosMontecarlo/relatorio.pdf", "mc")
     lista_imagens = resultados[:-1]  # Todas as imagens
     xls_path = resultados[-1]  # O caminho do arquivo Excel
 
@@ -281,7 +281,7 @@ async def result_montecarlo(request: Request):
 
 @app.get("/baixar-xls")
 async def baixar_xls():
-    file_path = "Modelo_Riscos.xlsx"
+    file_path = "./resultadosMontecarlo/Modelo_Riscos.xlsx"
     return FileResponse(file_path, filename="Modelo_Riscos.xlsx")
 
 @app.get("/listar-imagens")
@@ -458,9 +458,11 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl') # converter em dataframe
+            atividades = sheets.get("Atividades")
+
             csv_buffer = io.StringIO()
-            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            atividades.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
             csv_buffer.seek(0)
             df = pd.read_csv(csv_buffer)
 
@@ -504,6 +506,8 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
 
     # Chama a função de cálculo PERT
     imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+
+    gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosPert/tabela_arestas.pdf", "pt")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)
@@ -580,9 +584,11 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
         try:
             content = await xlsx_file.read()
             excel_file = io.BytesIO(content)
-            excel_df = pd.read_excel(excel_file, engine='openpyxl') # converter em dataframe
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl') # converter em dataframe
+            atividades = sheets.get("Atividades")
+            
             csv_buffer = io.StringIO()
-            excel_df.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
+            atividades.to_csv(csv_buffer, index=False)  # converter para csv, evitando formatações ocultas
             csv_buffer.seek(0)
             df = pd.read_csv(csv_buffer)
 
@@ -678,8 +684,8 @@ async def download_cpm_png():
 
 @app.get("/download_xls_cpm", name="download_xls_cpm")
 async def download_xls_cpm():
-    file_path = "caminho/para/o/seu/arquivo_cpm.xlsx" 
-    return FileResponse(file_path, filename="resultado_cpm.xlsx")
+    file_path = "resultadosCPM/relatorio_cpm.xlsx" 
+    return FileResponse(file_path, filename="relatorio_cpm.xlsx")
 
 
 

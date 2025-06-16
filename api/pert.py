@@ -1,5 +1,11 @@
+import csv
 import networkx as nx
 from graphviz import Digraph
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
+#from scipy.stats import norm
 
 # atividades_pert = {
 #         "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5},
@@ -41,7 +47,26 @@ def calcular_pert(atividades_pert):
     atividades = {}
     for atividade, dados in atividades_pert.items():
         if atividade != "fim":
-            t_calculado = (dados["t_otimista"] + dados["t_pessimista"] + dados["t_provavel"] * 4) / 6
+            t_o = dados["t_otimista"]
+            t_p = dados["t_pessimista"]
+            t_m = dados["t_provavel"]
+
+            # Verificação de consistência dos dados
+            if t_p == t_o or not (t_o <= t_m <= t_p):
+                # Usa uma média simples como fallback
+                t_calculado = (t_o + 4 * t_m + t_p) / 6
+            else:
+                # Calculando os parâmetros alpha e beta da distribuição beta
+                alpha = 1 + 4 * (t_m - t_o) / (t_p - t_o)
+                beta_param = 1 + 4 * (t_p - t_m) / (t_p - t_o)
+
+                # Segurança extra para evitar valores inválidos
+                if alpha <= 0 or beta_param <= 0:
+                    t_calculado = (t_o + 4 * t_m + t_p) / 6
+                else:
+                    beta_random = np.random.beta(alpha, beta_param)
+                    t_calculado = beta_random * (t_p - t_o) + t_o
+
             atividades[atividade] = {
                 "precedentes": dados["precedentes"],
                 "duracao": t_calculado
@@ -75,16 +100,10 @@ def calcular_pert(atividades_pert):
 
     lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
 
-    #print('valor es')
-    #print(es)
-    #print('valor ef')
-    #print(ef)
-    #print('valor ls')
-    #print(ls)
-    #print('valor lf')
-    #print(lf)
+    # Cálculo das folgas 
+    folga = {node: ls[node] - es[node] for node in G.nodes()}
 
-    # Desenhar o grafo com Graphviz
+    # GRAFO
     dot = Digraph()
     dot.attr(rankdir='LR')  # Definindo o layout horizontal da esquerda para a direita
     for node in G.nodes():
@@ -93,12 +112,15 @@ def calcular_pert(atividades_pert):
         ef_node = round(ef[node], 2)
         ls_node = round(ls[node], 2)
         lf_node = round(lf[node], 2)
+        folga_node = round(folga[node], 2)
 
         # Ajustar valores negativos próximos de zero
         if ls_node == -0.0 or ls_node < 0.0:
             ls_node = 0.0
+        if folga_node == -0.0 or folga_node < 0.0:
+            folga_node = 0.0
 
-        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}")
+        dot.node(node, shape='box', label=f"{node}\nDuration: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}\nSlack: {folga_node}")
 
     for edge in G.edges():
         if is_edge_in_critical_path(edge[0], edge[1]):
@@ -109,6 +131,120 @@ def calcular_pert(atividades_pert):
     dot.render('resultadosPert/atividades_pert', format='png', cleanup=True)
 
     imagem = ["atividades_pert.png"]
-    return imagem
 
-# calcular_pert(atividades_pert)
+    # DIAGRAMA ATIVIDADE NA SETA
+    def is_critical(atividade, critical_path):
+        return 'y' if atividade in critical_path else 'n'
+
+    with open('./temp/pertDataset.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ActivityId", "Predecessors", "Crucial"])
+
+        for atividade, dados in atividades.items():
+            if atividade == 'inicio':
+                continue  # ignorar atividade início
+
+            pred = [
+                p for p in dados['precedentes'] if p != 'inicio'  # apagar atividade início dos predecessores
+            ]
+            pred_str = " ".join(pred)
+            critico = is_critical(atividade, critical_path)
+            if atividade == 'fim':
+                writer.writerow([int(len(atividades) - 1), pred_str, critico])
+            else:
+                writer.writerow([atividade, pred_str, critico])
+
+    encontrar_caminhos_seta('./temp/pertDataset.csv', './resultadosPert/diagrama_na_seta')
+
+    # GANTT
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    y_labels = []
+    y_pos = []
+    cores = []
+    start_times = []
+    durations = []
+
+    for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
+        if node == 'fim':
+            continue  # Ignorar nó artificial 'fim'
+
+        y_labels.append(node)
+        y_pos.append(i)
+        start_times.append(es[node])
+        durations.append(G.nodes[node]['duracao'])
+        if node in critical_path:
+            cores.append('red')
+        else:
+            cores.append('skyblue')
+
+    ax.barh(y_pos, durations, left=start_times, color=cores, edgecolor='black')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y_labels)
+    ax.set_xlabel("Tempo")
+    ax.set_title("Gráfico de Gantt - PERT")
+
+    # Inverter eixo Y para desenhar de cima para baixo
+    ax.invert_yaxis()
+
+    # Adiciona rótulos nas barras
+    for i in range(len(y_pos)):
+        inicio = start_times[i]
+        fim = start_times[i] + durations[i]
+        ax.text(inicio + durations[i] / 2, y_pos[i],
+                f"{inicio:.2f} → {fim:.2f}",
+                va='center', ha='center', color='black', fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig('resultadosPERT/gantt_pert.png')
+    plt.close()
+
+    imagem.append("gantt_pert.png")
+
+    # TABELA DE ARESTAS
+    headers = ["Atividade", "Precedentes", "T. Otimista", "T. Pessimista", "T. Provável", "T. Esperado", "DP", "Variância"]
+    rows = []
+
+    for atividade, dados in atividades_pert.items():
+        if atividade in ["inicio", "fim"]:  # ignora
+            continue
+
+        t_o = dados["t_otimista"]
+        t_p = dados["t_pessimista"]
+        t_m = dados["t_provavel"]
+
+        t_esperado = (t_o + 4 * t_m + t_p) / 6
+        dp = (t_p - t_o) / 6
+        variancia = dp ** 2
+
+        precedentes_filtrados = [p for p in dados["precedentes"] if p != "inicio"]  # filtra atividade inicial dos precedentes
+        precedentes = ", ".join(precedentes_filtrados) if precedentes_filtrados else "-"
+
+        rows.append([
+            atividade,
+            precedentes,
+            round(t_o, 2),
+            round(t_p, 2),
+            round(t_m, 2),
+            round(t_esperado, 2),
+            round(dp, 2),
+            round(variancia, 2)
+        ])
+
+    # Criar png
+    fig, ax = plt.subplots(figsize=(12, max(2, len(rows) * 0.5)))
+    ax.axis('off')  # esconde os eixos
+
+    table = ax.table(cellText=rows, colLabels=headers, loc='center', cellLoc='center')
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.5)
+
+    plt.tight_layout()
+    plt.savefig("resultadosPert/tabela_arestas.png")
+    plt.close()
+
+    imagem.append("tabela_arestas.png")
+
+    return imagem

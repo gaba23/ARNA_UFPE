@@ -139,7 +139,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             else:
                 # Calcular a duração com base no tipo de distribuição
                 tipo = atividade["tipo"]
-                if tipo == "beta_pert":     # errado
+                if tipo == "beta_pert":     
                     t_o = atividade["t_minimo"]
                     t_p = atividade["t_maximo"]
                     t_m = atividade["t_medio"]
@@ -327,19 +327,19 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         else:
             return 'n'
     
-    with open('diagramDataset.csv', mode='w', newline='') as file:
+    with open('./temp/diagramDataset.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["ActivityId", "Predecessors", "Crucial"])  # colunas
         
         for atv, pred in precedentes_atividades.items():  # escrever linhas
-            pred_str = " ".join(pred)  # Convert list to space-separated string
+            pred_str = " ".join(pred)  # lista separada por espaço
             critico = is_critical(atv, frequencia_atividades_criticas) 
             if atv == 'fim':
                 writer.writerow([int(len(precedentes_atividades)), pred_str, critico])
             else:
                 writer.writerow([atv, pred_str, critico])
 
-    encontrar_caminhos_seta('./diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
+    encontrar_caminhos_seta('./temp/diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
 
 
     ####    GRÁFICOS    ####
@@ -405,7 +405,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     df_custos_projeto = pd.DataFrame(custos_projeto, columns=["Custos por Iteração"])
 
     # Criando a planilha
-    planilha_path = 'Modelo_Riscos.xlsx'
+    planilha_path = './resultadosMontecarlo/Modelo_Riscos.xlsx'
     with pd.ExcelWriter(planilha_path, engine="openpyxl") as writer:
         # Unir "Tempos de Atividades", "Tempos de Caminhos" e "Caminhos Críticos" em uma única página com duas colunas em branco separando
         df_atividades.to_excel(writer, sheet_name='Atividades', startrow=0, startcol=0, index_label="Iteração")
@@ -683,7 +683,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         plt.savefig('resultadosMontecarlo/grafico_tornado_riscos.png')
 
     # Carrega a planilha que contém os dados
-    file_path = 'Modelo_Riscos.xlsx'
+    file_path = './resultadosMontecarlo/Modelo_Riscos.xlsx'
 
     # Lê apenas as duas primeiras colunas: 'Atividade' e 'Contagem Crítica'
     df = pd.read_excel(file_path, sheet_name='Atividades Críticas', usecols=[0, 1])

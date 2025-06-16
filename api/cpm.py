@@ -1,5 +1,10 @@
-import networkx as nx
+import csv
 from graphviz import Digraph
+import matplotlib.pyplot as plt
+import networkx as nx
+import pandas as pd
+from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
+
 
 # Definindo as atividades do projeto com durações fixas
 # atividades_cpm = {
@@ -69,21 +74,27 @@ def calcular_cpm(atividades_cpm):
 
     lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
 
+    # Cálculo das folgas 
+    folga = {node: ls[node] - es[node] for node in G.nodes()}
+
     # Desenhar o grafo com Graphviz
     dot = Digraph()
     dot.attr(rankdir='LR')  # Definindo o layout horizontal da esquerda para a direita
     for node in G.nodes():
-        duracao = round(G.nodes[node]['duracao'], 4)
-        es_node = round(es[node], 4)
-        ef_node = round(ef[node], 4)
-        ls_node = round(ls[node], 4)
-        lf_node = round(lf[node], 4)
+        duracao = round(G.nodes[node]['duracao'], 2)
+        es_node = round(es[node], 2)
+        ef_node = round(ef[node], 2)
+        ls_node = round(ls[node], 2)
+        lf_node = round(lf[node], 2)
+        folga_node = round(folga[node], 2)
 
         # Ajustar valores negativos próximos de zero
         if ls_node == -0.0 or ls_node < 0.0:
             ls_node = 0.0
+        if folga_node == -0.0 or folga_node < 0.0:
+            folga_node = 0.0
 
-        dot.node(node, shape='box', label=f"{node}\nDuração: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}")
+        dot.node(node, shape='box', label=f"{node}\nDuration: {duracao}\nES: {es_node}/ EF:{ef_node}\nLS: {ls_node} /LF: {lf_node}\nSlack: {folga_node}")
 
     for edge in G.edges():
         if is_edge_in_critical_path(edge[0], edge[1]):
@@ -94,6 +105,104 @@ def calcular_cpm(atividades_cpm):
     dot.render('resultadosCpm/atividades_cpm', format='png', cleanup=True)
 
     imagem = ["atividades_cpm.png"]
-    return imagem
 
-# calcular_cpm(atividades_cpm)
+    # Criar gráfico de Gantt
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    y_labels = []
+    y_pos = []
+    cores = []
+    start_times = []
+    durations = []
+
+    for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
+        if node == 'fim':
+            continue  # Ignorar nó artificial 'fim'
+
+        y_labels.append(node)
+        y_pos.append(i)
+        start_times.append(es[node])
+        durations.append(G.nodes[node]['duracao'])
+        if node in critical_path:
+            cores.append('red')
+        else:
+            cores.append('skyblue')
+
+    ax.barh(y_pos, durations, left=start_times, color=cores, edgecolor='black')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(y_labels)
+    ax.set_xlabel("Tempo")
+    ax.set_title("Gráfico de Gantt - CPM")
+
+    # Inverter eixo Y para desenhar de cima para baixo
+    ax.invert_yaxis()
+
+    # Adiciona rótulos nas barras
+    for i in range(len(y_pos)):
+        ax.text(start_times[i] + durations[i] / 2, y_pos[i], f"{start_times[i]} → {start_times[i] + durations[i]}", 
+                va='center', ha='center', color='black', fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig('resultadosCpm/gantt_cpm.png')
+    plt.close()
+
+    imagem.append("gantt_cpm.png")
+
+    # DIAGRAMA ATIVIDADE NA SETA
+    def is_critical(atividade, critical_path):
+        return 'y' if atividade in critical_path else 'n'
+
+    with open('./temp/cpmDataset.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ActivityId", "Predecessors", "Crucial"])
+
+        for atividade, dados in atividades.items():
+            if atividade == 'inicio':
+                continue  # ignorar atividade início
+
+            pred = [
+                p for p in dados['precedentes'] if p != 'inicio'  # apagar atividade início dos predecessores
+            ]
+            pred_str = " ".join(pred)
+            critico = is_critical(atividade, critical_path)
+            if atividade == 'fim':
+                writer.writerow([int(len(atividades) - 1), pred_str, critico])
+            else:
+                writer.writerow([atividade, pred_str, critico])
+
+    encontrar_caminhos_seta('./temp/cpmDataset.csv', './resultadosCpm/diagrama_na_seta')
+
+    # EXCEL
+    atv_ignore = ['inicio', 'fim']  # ignorar atividades placeholders
+
+    resumo_data = []
+    for node in G.nodes():
+        if node in atv_ignore:
+            continue
+
+        resumo_data.append({
+            "Atividade": node,
+            "Duração": G.nodes[node]['duracao'],
+            "ES": es[node],
+            "EF": ef[node],
+            "LS": ls[node],
+            "LF": lf[node],
+            "Folga": folga[node],
+            "Caminho Crítico": "Sim" if node in critical_path else "Não"
+        })
+
+    df_resumo = pd.DataFrame(resumo_data)
+    df_caminho = pd.DataFrame({"Caminho Crítico": [a for a in critical_path if a != 'fim']})
+    df_folgas = df_resumo[df_resumo["Folga"] > 0][["Atividade", "Folga"]]
+
+    # Formatar dataframes
+    df_caminho = pd.DataFrame({"Caminho Crítico": [a for a in critical_path if a not in atv_ignore]})
+    df_folgas = df_resumo[df_resumo["Folga"] > 0][["Atividade", "Folga"]]
+
+    # Escrever arquivo
+    with pd.ExcelWriter("./resultadosCpm/relatorio_cpm.xlsx", engine='openpyxl') as writer:
+        df_resumo.to_excel(writer, sheet_name="Resumo das Atividades", index=False)
+        df_caminho.to_excel(writer, sheet_name="Caminho Crítico", index=False)
+        df_folgas.to_excel(writer, sheet_name="Folgas", index=False)
+    
+    return imagem

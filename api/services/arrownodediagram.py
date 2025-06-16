@@ -20,38 +20,27 @@ class EventActivityGraphGenerator:
         self.critical_activities = critical_activities
         self.event_mapping = {}  # mapeia atividades (IDs) aos nós
 
-    def reduction(self, graph, multiple_pred):  # remove atividades dummies geradas pelas dependências
-        # redundant_nodes = set()
-        # redirect_edges = {}
 
-        # # Identifica nós redundantes
-        # for dep in self.activity_dependencies:
-        #     start_event, end_event = self.event_mapping[dep.activity.id]
-        #     if dep.activity.id in multiple_pred:
-        #         redundant_nodes.add(end_event)
-        #         if end_event not in redirect_edges:
-        #             redirect_edges[end_event] = start_event
-
-        # for node in redundant_nodes:
-        #     graph.node(node, style="invisible")  # oculta nó redundante
-
+    def reduction(self, graph):  # remove atividades extras geradas pelas dependências
         return graph
 
 
-    def generate_graph(self, last_activity):
+    def generate_graph(self, last_activity):  # executor
+        dict_duplicada, multiple_pred = self.map_graph(last_activity)
+        return self.create_graph(dict_duplicada, multiple_pred, last_activity)
+
+
+    def create_graph(self, dict_duplicada, multiple_pred, last_activity):  # cria grafo
+
+        def value_in_dict(dict, target):  # retorna booleano para existência da atividade nos valores do dicionário  --> {'a': [1, 2]}
+            return any(target in lista for lista in dict.values())
+        
+        # Cria Grafo
         graph = Digraph()
-        graph.attr(rankdir='LR')  # , splines='false')
+        graph.attr(rankdir='LR')
 
         # Nós (Eventos)
-        start_event_counter = 0
-        end_event_counter = 0
-        multiple_pred = []
-
-        for dep in self.activity_dependencies:  # mapeia predecessores secundários (dependências)
-            if len(dep.predecessors) > 1: 
-                for p in dep.predecessors[1::]:
-                    if p not in multiple_pred:
-                        multiple_pred.append(p)
+        start_event_counter, end_event_counter = 0, 0
 
         for dep in self.activity_dependencies:
             activity = dep.activity
@@ -85,29 +74,77 @@ class EventActivityGraphGenerator:
             if activity.id != last_activity:  # sem aresta pra atividade fim (dummy)
                 edge_label = f"{activity.id}"
                 edge_color = "red" if activity.id in self.critical_activities else "black"  # caminho crítico em vermelho
-                
-                if activity.id in multiple_pred:  # redesigna end_event para tarefas que apontam para dummies
+
+                if activity.id in multiple_pred:  
                     corrected_end_event = f'E{int(end_event[1:]) - 1}'
 
-                    dummy_event = f"E{end_event_counter}"
-                    graph.node(dummy_event, shape="circle", label="")  # adiciona um nó intermediário
+                    if value_in_dict(dict_duplicada, activity.id):  # atividade precisa de um dummy
+                        dummy_event = f"E{end_event_counter}"  # redesigna end_event para tarefas que apontam para dummies
+                        graph.node(dummy_event, shape="circle", label="")  # adiciona um nó intermediário
 
-                    graph.edge(start_event, dummy_event, label=edge_label, color=edge_color)  # aresta da atividade secundária
-                    graph.edge(dummy_event, corrected_end_event, style="dashed", arrowhead="normal")  # aresta dummy
+                        graph.edge(start_event, dummy_event, label=edge_label, color=edge_color)  # aresta da atividade secundária
+                        graph.edge(dummy_event, corrected_end_event, style="dashed", arrowhead="normal")  # aresta dummy
+                    else:  # atividade não precisa de um dummy
+                        graph.edge(start_event, corrected_end_event, label=edge_label, color=edge_color)
 
                 else:
                     graph.edge(start_event, end_event, label=edge_label, color=edge_color)  # aresta regular
 
-        # Representação de dependências
-        # for dep in self.activity_dependencies:
-        #     activity = dep.activity
-        #     start_event, end_event = self.event_mapping[activity.id]
-        #     for pred_id in dep.predecessors:
-        #         pred_end_event = self.event_mapping[pred_id][1]
-        #         if pred_end_event != start_event:  # impede a autoreferência das setas
-        #             graph.edge(pred_end_event, start_event, style="dotted")
+        return graph
 
-        return graph, multiple_pred
+
+    def map_graph(self, last_activity):  # mapeia elementos do grafo
+        # Nós (Eventos)
+        start_event_counter, end_event_counter, multiple_pred = 0, 0, []
+
+        for dep in self.activity_dependencies:  # mapeia predecessores secundários (dependências)
+            if len(dep.predecessors) > 1: 
+                for p in dep.predecessors[1::]:
+                    if p not in multiple_pred:
+                        multiple_pred.append(p)
+
+        node_map = {}  # mapeia atividades e nós ignorando o dummy
+
+        for dep in self.activity_dependencies:
+            activity = dep.activity
+
+            # Nós de entrada
+            if dep.predecessors: # se houverem predecessores
+                first_pred = dep.predecessors[0]  # predecessor primário
+                if first_pred in self.event_mapping:  # se o primeiro predecessor já foi mapeado
+                    predecessor_end_event = self.event_mapping[first_pred][1]
+                    start_event = f"{predecessor_end_event}"  # evento final do primeiro predecessor é o evento inicial da atividade
+        
+                else:  # primeiro evento não mapeado
+                    start_event = f"E{start_event_counter}"
+                    start_event_counter += 1
+
+            else:  # primeiro(s) nó(s)
+                start_event = f"E0"
+                start_event_counter += 1
+
+            # Nós de saída
+            end_event = f"E{end_event_counter + 1}"
+            self.event_mapping[activity.id] = (start_event, end_event)
+            end_event_counter += 1
+
+            # Setas (Atividades)
+            if activity.id != last_activity:  # sem aresta pra atividade fim (dummy)
+                if activity.id in multiple_pred:  # redesigna end_event para tarefas que apontam para dummies
+                    corrected_end_event = f'E{int(end_event[1:]) - 1}'
+
+                    node_map[activity.id] = [start_event, corrected_end_event]
+                else:
+                    node_map[activity.id] = [start_event, end_event]
+
+        aresta_duplicada = defaultdict(list)
+
+        for atv, no in node_map.items():
+            aresta_duplicada[tuple(no)].append(atv)
+
+        dict_duplicada = {valor: chave for valor, chave in aresta_duplicada.items() if len(chave) > 1}  # chave = aresta(nó inicial-final); valor = atividades com essa aresta
+        
+        return dict_duplicada, multiple_pred
 
 class Activity:
     def __init__(self, activity_id):  # , duration=None):
@@ -175,11 +212,9 @@ def create_arrow_diagram(input_file, output_file):
 
     # Gerar grafo
     generator = EventActivityGraphGenerator(activities, critical_activities)
-    full_graph, dummy_nodes = generator.generate_graph(len(activities))
-    print('dummy nodes')
+    full_graph = generator.generate_graph(len(activities))
 
-    print(dummy_nodes)
-    graph = generator.reduction(full_graph, dummy_nodes)
+    graph = generator.reduction(full_graph)
 
     # Desenhar imagem 
     writer = ArrowGraphWriter(output_file)
