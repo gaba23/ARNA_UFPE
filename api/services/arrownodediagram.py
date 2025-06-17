@@ -80,12 +80,14 @@ class EventActivityGraphGenerator:
 
                     if value_in_dict(dict_duplicada, activity.id):  # atividade precisa de um dummy
                         dummy_event = f"E{end_event_counter}"  # redesigna end_event para tarefas que apontam para dummies
-                        graph.node(dummy_event, shape="circle", label="")  # adiciona um nó intermediário
+                        dummy_label = f"{end_event_counter}'"
+                        graph.node(dummy_event, shape="circle", label=dummy_event)  # adiciona um nó intermediário
 
                         graph.edge(start_event, dummy_event, label=edge_label, color=edge_color)  # aresta da atividade secundária
-                        graph.edge(dummy_event, corrected_end_event, style="dashed", arrowhead="normal")  # aresta dummy
+                        graph.edge(dummy_event, corrected_end_event, label=dummy_label, style="dashed", arrowhead="normal")  # aresta dummy
+
                     else:  # atividade não precisa de um dummy
-                        graph.edge(start_event, corrected_end_event, label=edge_label, color=edge_color)
+                        graph.edge(start_event, corrected_end_event, label=edge_label, color=edge_color)  
 
                 else:
                     graph.edge(start_event, end_event, label=edge_label, color=edge_color)  # aresta regular
@@ -143,7 +145,7 @@ class EventActivityGraphGenerator:
             aresta_duplicada[tuple(no)].append(atv)
 
         dict_duplicada = {valor: chave for valor, chave in aresta_duplicada.items() if len(chave) > 1}  # chave = aresta(nó inicial-final); valor = atividades com essa aresta
-        
+
         return dict_duplicada, multiple_pred
 
 class Activity:
@@ -160,25 +162,6 @@ class ActivitiesReader:
     def __init__(self, filepath):
         self.filepath = filepath
 
-    # def read(self):
-    #     activities = []
-    #     critical_activities = set()
-
-    #     with open(self.filepath, newline='') as csvfile:
-    #         reader = csv.DictReader(csvfile)
-    #         for row in reader:
-    #             activity_id = int(row['ActivityId'])
-    #             duration = int(row['ActivityDuration']) if row['ActivityDuration'] else None
-    #             predecessors = list(map(int, row['Predecessors'].split())) if row['Predecessors'] else []
-    #             is_critical = row['Crucial'].strip().lower() == 'y'
-
-    #             activity = Activity(activity_id, duration)
-    #             activities.append(ActivityDependency(activity, predecessors))
-
-    #             if is_critical:
-    #                 critical_activities.add(activity_id)
-    #     return activities, critical_activities
-
     def read(self):
         activities = []
         critical_activities = set()
@@ -189,6 +172,7 @@ class ActivitiesReader:
                 activity_id = int(row['ActivityId'])
                 # duration = int(row['ActivityDuration']) if row['ActivityDuration'] else None
                 predecessors = list(map(int, row['Predecessors'].split())) if row['Predecessors'] else []
+                predecessors.sort()  # ordena em ascendência para evitar identifcação incorreta de predecessores múltiplos primários e secundários
                 is_critical = row['Crucial'].strip().lower() == 'y'
 
                 activity = Activity(activity_id) #, duration)
