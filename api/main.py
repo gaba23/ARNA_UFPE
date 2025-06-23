@@ -523,8 +523,15 @@ async def result_pert(request: Request):
 def parse_pert_csv(df):
     atividades = {}
     for index, row in df.iterrows():
-        # Verifica se a atividade é 'fim'
-        if row['Atividade'] == "fim":
+        # Verifica se a atividade é 'inicio' ou 'fim'
+        if row['Atividade'] == "inicio":
+            atividades[row['Atividade']] = {
+                "precedentes": [],
+                "t_otimista": 0,  # Define a duração como 0 para a atividade 'inicio'
+                "t_pessimista": 0,
+                "t_provavel": 0
+            }
+        elif row['Atividade'] == "fim":
             atividades[row['Atividade']] = {
                 "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
                 "duracao": 0  # Define a duração como 0 para a atividade 'fim'
@@ -671,10 +678,16 @@ async def result_cpm(request: Request):
 def parse_cpm_csv(df):
     atividades = {}
     for index, row in df.iterrows():
-        atividades[row['Atividade']] = {
-            "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
-            "duracao": int(row['Duracao']) if pd.notna(row['Duracao']) else None,
-        }
+        if row['Atividade'] == "inicio" or row['Atividade'] == "fim":
+            atividades[row['Atividade']] = {
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "duracao": 0
+            }
+        else:
+            atividades[row['Atividade']] = {
+                "precedentes": [p.strip() for p in row['Precedentes'].split(',')] if isinstance(row['Precedentes'], str) and row['Precedentes'] else [],
+                "duracao": int(row['Duracao']) if pd.notna(row['Duracao']) else None,
+            }
     return atividades
 
 @app.get("/download_png_cpm")
