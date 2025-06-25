@@ -172,6 +172,8 @@ def calcular_cpm(atividades_cpm):
 
     encontrar_caminhos_seta('./temp/cpmDataset.csv', './resultadosCpm/diagrama_na_seta')
 
+    imagem.append("diagrama_na_seta.png")
+
     # EXCEL
     atv_ignore = ['inicio', 'fim']  # ignorar atividades placeholders
 

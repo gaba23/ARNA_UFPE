@@ -2,12 +2,12 @@ from fpdf import FPDF
 from PIL import Image
 
 class PDF(FPDF):
-    def __init__(self):
+    def __init__(self):  # Construtor
         super().__init__()
         self.image_count = 0  # garante que todas as imagens apareçam no grid
         
 
-    def add_image_first_page(self, image_paths):
+    def first_page_layout(self, image_paths):  # Página inicial (PDF múltiplas páginas)
         self.add_page()
 
         margin = 10
@@ -35,7 +35,30 @@ class PDF(FPDF):
 
         self.add_logos()
 
-    def add_image_page(self, image_path):
+    def add_image_single_page(self, image_path):  # Adicionar única imagem/página
+        self.add_page()
+        img = Image.open(image_path)
+        width, height = img.size
+        
+        # Pixel --> mm
+        mm_width = width * 0.264583
+        mm_height = height * 0.264583
+
+        # Escala papel A4        
+        max_width, max_height = 190, 270
+        aspect = min(max_width / mm_width, max_height / mm_height)
+        new_width = mm_width * aspect
+        new_height = mm_height * aspect
+
+        # Centralizar        
+        x_offset = (210 - new_width) / 2
+        y_offset = (297 - new_height) / 2
+
+        self.image(image_path, x_offset, y_offset, new_width, new_height)
+
+        self.add_logos()
+
+    def add_image_page(self, image_path):  # Adicionar imagem à demais páginas (PDF múltiplas páginas)
         if self.image_count % 6 == 0:  # adiciona página se ela não existir e houver imagem não adicionada
             self.add_page()
 
@@ -77,27 +100,54 @@ class PDF(FPDF):
         self.image(logo_path_ufpe, x=20, y=10, w=10)
 
 
-def generate(images, output_pdf, param):
+def montecarlo_pdf(pdf, images, output_pdf):
+    first_page_img = ['./resultadosMontecarlo/diagrama_atividades.png', './resultadosMontecarlo/grafico_gantt.png']
+    pdf.first_page_layout(first_page_img)  # primeira página (layout especial)
+
+    for img in images:
+        if img[-3:] == 'png':  # seleciona somente as imagens da pasta resultados
+            if img[:20] == 'resultadosMontecarlo':
+                img_path = img
+            else: 
+                img_path = './resultadosMontecarlo/' + img
+
+            if img_path in first_page_img:
+                continue  # primeira página já foi criada
+            else:
+                pdf.add_image_page(img_path)  # inserir imagem na página
+
+    pdf.output(output_pdf)
+
+def pert_pdf(pdf, image, output_pdf):
+    pdf.add_image_single_page(image)
+    pdf.output(output_pdf)
+
+def cpm_pdf(pdf, images, output_pdf):
+    first_page_img = ['./resultadosCpm/atividades_cpm.png', './resultadosCpm/gantt_cpm.png']
+    pdf.first_page_layout(first_page_img)  # primeira página (layout especial)
+
+    for img in images:
+        if img[:20] == 'resultadosCpm':
+            img_path = img
+        else: 
+            img_path = './resultadosCpm/' + img
+
+        if img_path in first_page_img:
+            continue  # primeira página já foi criada
+        else:
+            pdf.add_image_single_page(img_path)  # inserir imagem na página
+
+    pdf.output(output_pdf)
+
+def generate(images, output_path, param):
     pdf = PDF()
 
     if param == "mc":  # Monte Carlo
-        first_page_img = ['./resultadosMontecarlo/diagrama_atividades.png', './resultadosMontecarlo/grafico_gantt.png']
-        pdf.add_image_first_page(first_page_img)  # primeira página (layout especial)
+        montecarlo_pdf(pdf, images, output_path)
 
-        for img in images:
-            if img[-3:] == 'png':  # seleciona somente as imagens da pasta resultados
-                if img[:20] == 'resultadosMontecarlo':
-                    img_path = img
-                else: 
-                    img_path = './resultadosMontecarlo/' + img
-
-                if img_path in first_page_img:
-                    continue  # primeira página já foi criada
-                else:
-                    pdf.add_image_page(img_path)
-
-    if param == "pt":  # Pert
-        pdf.add_image_page(images)
-
-    pdf.output(output_pdf)
+    elif param == "pt":  # Pert
+        pert_pdf(pdf, images, output_path)
+    
+    else:  # CPM
+        cpm_pdf(pdf, images, output_path)
 

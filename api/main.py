@@ -507,7 +507,7 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
     # Chama a função de cálculo PERT
     imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
 
-    gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosPert/tabela_arestas.pdf", "pt")  # pdf apenas da tabela de arestas
+    gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosCpm/relatorio.pdf", "pert")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)
@@ -634,7 +634,9 @@ async def analyzeCPM(atividades: str = Form(None), tabela: str = Form(None), csv
 
 
     # Chama a função de cálculo CPM
-    imagem = calcular_cpm(atividades_dict)
+    resultados = calcular_cpm(atividades_dict)
+
+    gerar_pdf(resultados, "./resultadosCpm/relatorio.pdf", "cpm")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/result', status_code=303)
