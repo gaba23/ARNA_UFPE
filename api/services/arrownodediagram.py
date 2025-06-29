@@ -20,15 +20,31 @@ class EventActivityGraphGenerator:
         self.critical_activities = critical_activities
         self.event_mapping = {}  # mapeia atividades (IDs) aos nós
 
-
     def reduction(self, graph):  # remove atividades extras geradas pelas dependências
-        return graph
+        all_nodes = set()  # todos os nós
+        used_nodes = set()  # nós com arestas conectadas
+        for edge in graph.body:
+            if '->' not in edge and '[' in edge:  # mapeia todos os nós
+                node_name = edge.split()[0]
+                all_nodes.add(node_name)
+            
+            if '->' in edge:  # identifica somente nós com aresta
+                parts = edge.split('->')
+                src = parts[0].strip()
+                dst = parts[1].split()[0].strip()
+                used_nodes.update([src, dst])
 
+        unused_nodes = all_nodes - used_nodes  # nós sem arestas conectadas
 
+        reduced_graph = graph
+        for node in unused_nodes:
+            reduced_graph.node(node, style="invisible")  # oculta nós flutuantes da representação
+
+        return reduced_graph
+    
     def generate_graph(self, last_activity):  # executor
         dict_duplicada, multiple_pred = self.map_graph(last_activity)
         return self.create_graph(dict_duplicada, multiple_pred, last_activity)
-
 
     def create_graph(self, dict_duplicada, multiple_pred, last_activity):  # cria grafo
 
@@ -93,7 +109,6 @@ class EventActivityGraphGenerator:
                     graph.edge(start_event, end_event, label=edge_label, color=edge_color)  # aresta regular
 
         return graph
-
 
     def map_graph(self, last_activity):  # mapeia elementos do grafo
         # Nós (Eventos)

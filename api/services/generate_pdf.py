@@ -148,6 +148,6 @@ def generate(images, output_path, param):
     elif param == "pt":  # Pert
         pert_pdf(pdf, images, output_path)
     
-    else:  # CPM
+    elif param == "cpm":  # CPM
         cpm_pdf(pdf, images, output_path)
 
