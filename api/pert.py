@@ -3,10 +3,10 @@ import networkx as nx
 from graphviz import Digraph
 import math
 import matplotlib.pyplot as plt
+#import matplotlib.patches as mpatches
 import numpy as np
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
-from scipy.stats import norm
-#from services.probabilidade import calcular_probabilidade as calcular_probabilidade
+#from scipy.stats import norm
 
 # atividades_pert = {
 #         "A": {"precedentes": [], "t_otimista": 2, "t_pessimista": 8, "t_provavel": 5},
@@ -101,6 +101,23 @@ def calcular_pert(atividades_pert):
 
     lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
 
+    #Média e desvio padrão para a probabilidade
+    #Média
+    tempo_total = lf['fim']
+    
+    # Desvio padrão do projeto
+    desvios_criticos = []
+    for atividade in critical_path:
+        if atividade == 'fim':
+            continue
+        dados = atividades_pert[atividade]
+        sigma = (dados["t_pessimista"] - dados["t_otimista"]) / 6
+        desvios_criticos.append(sigma)
+
+    # Desvio padrão total do caminho crítico
+    desvio_padrao_projeto = np.sqrt(np.sum(np.square(desvios_criticos)))
+
+
     # Cálculo das folgas 
     folga = {node: ls[node] - es[node] for node in G.nodes()}
 
@@ -165,6 +182,7 @@ def calcular_pert(atividades_pert):
     cores = []
     start_times = []
     durations = []
+    node_positions = {}
 
     for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
         if node == 'fim':
@@ -174,6 +192,7 @@ def calcular_pert(atividades_pert):
         y_pos.append(i)
         start_times.append(es[node])
         durations.append(G.nodes[node]['duracao'])
+        node_positions[node] = (es[node], i)
         if node in critical_path:
             cores.append('red')
         else:
@@ -188,13 +207,20 @@ def calcular_pert(atividades_pert):
     # Inverter eixo Y para desenhar de cima para baixo
     ax.invert_yaxis()
 
-    # Adiciona rótulos nas barras
-    for i in range(len(y_pos)):
-        inicio = start_times[i]
-        fim = start_times[i] + durations[i]
-        ax.text(inicio + durations[i] / 2, y_pos[i],
-                f"{inicio:.2f} → {fim:.2f}",
-                va='center', ha='center', color='black', fontsize=8)
+    # Adiciona setas entre as atividades baseadas nas dependências do grafo
+    for predecessor, successor in G.edges():
+        if predecessor in node_positions and successor in node_positions:
+            x_start, y_start = node_positions[predecessor]
+            x_end, y_end = node_positions[successor]
+            x_start += G.nodes[predecessor]['duracao']  # final da barra do predecessor
+
+            ax.annotate(
+                '', 
+                xy=(x_end, y_end), 
+                xytext=(x_start, y_start),
+                arrowprops=dict(arrowstyle='->', color='black', lw=2.5),
+                annotation_clip=False
+            )
 
     plt.tight_layout()
     plt.savefig('resultadosPERT/gantt_pert.png')
@@ -248,4 +274,7 @@ def calcular_pert(atividades_pert):
 
     imagem.append("tabela_arestas.png")
 
-    return imagem, G, critical_path, atividades_pert
+    critical_path = critical_path[1:-1]
+    print(critical_path)
+
+    return imagem, critical_path, tempo_total, desvio_padrao_projeto
