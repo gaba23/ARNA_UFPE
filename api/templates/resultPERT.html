@@ -86,7 +86,7 @@
 <div class="modal" id="reportModal">
     <div class="modal-content">
         <span class="close" onclick="closeReportModal()">&times;</span>
-        <p>Caminho Crítico: {{ caminho_critico }}</p>
+        <p>Caminho Crítico: {{ critical_path | join(" → ") }}</p>
         <p>Tempo Total: {{ tempo_total }}</p>
         <h2>Tabela de Arestas</h2>
 
