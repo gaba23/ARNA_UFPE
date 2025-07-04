@@ -101,8 +101,12 @@ class PDF(FPDF):
 
 
 def montecarlo_pdf(pdf, images, output_pdf):
-    first_page_img = ['./resultadosMontecarlo/diagrama_atividades.png', './resultadosMontecarlo/grafico_gantt.png']
-    pdf.first_page_layout(first_page_img)  # primeira página (layout especial)
+    first_page_img = [
+        './resultadosMontecarlo/diagrama_atividades.png', './resultadosMontecarlo/grafico_gantt.png',
+        './resultadosMontecarlo/diagrama_na_seta.png', './resultadosMontecarlo/grafico_distribuicao_acumulada_com_estatisticas.png'
+        ]
+    pdf.first_page_layout(first_page_img[0:2])  # primeira página (layout especial)
+    pdf.first_page_layout(first_page_img[2::])  # segunda página (layout especial)
 
     for img in images:
         if img[-3:] == 'png':  # seleciona somente as imagens da pasta resultados
@@ -119,7 +123,10 @@ def montecarlo_pdf(pdf, images, output_pdf):
     pdf.output(output_pdf)
 
 def pert_pdf(pdf, image, output_pdf):
+    pert_other_images = ['./resultadosPert/atividades_pert.png','./resultadosPert/gantt_pert.png']
     pdf.add_image_single_page(image)
+    pdf.first_page_layout(pert_other_images)
+    pdf.add_image_single_page('./resultadosPert/diagrama_na_seta.png')
     pdf.output(output_pdf)
 
 def cpm_pdf(pdf, images, output_pdf):

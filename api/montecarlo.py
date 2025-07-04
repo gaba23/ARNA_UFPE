@@ -350,7 +350,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 duracoes_atividade = [duracao[i] for duracao in resultados_atividades]
                 plt.figure(figsize=(5,3))
                 plt.hist(duracoes_atividade, bins=30, alpha=0.75)
-                plt.title(f'Distribuição de Duração - {atividade}', fontsize=10)
+                plt.title(f'Distribuição da Atividade - {atividade}', fontsize=10)
                 plt.xlabel('Duração', fontsize=8)
                 plt.ylabel('Frequência', fontsize=8)
                 plt.xticks(fontsize=7) 
@@ -1005,19 +1005,22 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagem_diagrama = ["diagrama_atividades.png"]
     imagens_atividades = glob.glob("resultadosMontecarlo/distribuicao_atividade_*.png")
     imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
+    imagens_cruci = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
+    imagens_cruci_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
+    imagem_acumulada = ["grafico_distribuicao_acumulada_com_estatisticas.png"]
     imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
-  #  imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
+    imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
     if riscos:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagens_cruci + imagens_cruci_sp + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
 
     else:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos  + imagens_cruci + imagens_cruci_sp + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path]  
 
