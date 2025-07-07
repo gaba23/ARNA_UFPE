@@ -177,29 +177,36 @@ def calcular_pert(atividades_pert):
     # GANTT
     fig, ax = plt.subplots(figsize=(10, 6))
 
+    # Parâmetros visuais
+    altura_barra = 0.4  
+    offset_seta = 0.2
+
     y_labels = []
-    y_pos = []
+    y_ticks = []
     cores = []
-    start_times = []
-    durations = []
     node_positions = {}
 
     for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
-        if node == 'fim':
-            continue  # Ignorar nó artificial 'fim'
+        if node in ['início', 'fim']:
+            continue  # Ignorar nós artificial 'fim'
+
+        inicio = es[node]
+        duracao = G.nodes[node]['duracao']
+        cor = 'red' if node in critical_path else 'skyblue'
+
+        # Desenha a barra manualmente com altura personalizada
+        ax.broken_barh(
+            [(inicio, duracao)],
+            (i - altura_barra / 2, altura_barra),
+            facecolors=cor,
+            edgecolors='black'
+        )
 
         y_labels.append(node)
-        y_pos.append(i)
-        start_times.append(es[node])
-        durations.append(G.nodes[node]['duracao'])
-        node_positions[node] = (es[node], i)
-        if node in critical_path:
-            cores.append('red')
-        else:
-            cores.append('skyblue')
+        y_ticks.append(i)
+        node_positions[node] = (inicio, i)
 
-    ax.barh(y_pos, durations, left=start_times, color=cores, edgecolor='black')
-    ax.set_yticks(y_pos)
+    ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_labels)
     ax.set_xlabel("Tempo")
     ax.set_title("Gráfico de Gantt - PERT")
@@ -209,16 +216,26 @@ def calcular_pert(atividades_pert):
 
     # Adiciona setas entre as atividades baseadas nas dependências do grafo
     for predecessor, successor in G.edges():
+        if predecessor == 'início':
+            continue
         if predecessor in node_positions and successor in node_positions:
             x_start, y_start = node_positions[predecessor]
             x_end, y_end = node_positions[successor]
-            x_start += G.nodes[predecessor]['duracao']  # final da barra do predecessor
+            x_start += G.nodes[predecessor]['duracao'] + offset_seta
+            x_end -= offset_seta
 
             ax.annotate(
-                '', 
-                xy=(x_end, y_end), 
+                '',
+                xy=(x_end, y_end),
                 xytext=(x_start, y_start),
-                arrowprops=dict(arrowstyle='->', color='black', lw=2.5),
+                arrowprops=dict(
+                    color='black',
+                    arrowstyle='->',
+                    mutation_scale=10,
+                    lw=1.25,
+                    linestyle='dotted',
+                    connectionstyle='angle', 
+                ),
                 annotation_clip=False
             )
 
@@ -275,6 +292,6 @@ def calcular_pert(atividades_pert):
     imagem.append("tabela_arestas.png")
 
     critical_path = critical_path[1:-1]
-    print(critical_path)
+    #print(critical_path)
 
     return imagem, critical_path, tempo_total, desvio_padrao_projeto
