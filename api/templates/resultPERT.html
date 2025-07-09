@@ -89,7 +89,7 @@
 <div class="modal" id="reportModal">
     <div class="modal-content">
         <span class="close" onclick="closeReportModal()">&times;</span>
-        <p>Caminho Crítico: {{ caminho_critico }}</p>
+        <p>Caminho Crítico: {{ critical_path | join(" → ") }}</p>
         <p>Tempo Total: {{ tempo_total }}</p>
         <h2>Tabela de Arestas</h2>
 
@@ -149,11 +149,56 @@
     
             <label for="saida">Insira o tempo programado:</label>
             <input type="text" name="t_programado" id="t_programado" placeholder="Tempo programado">
-            <button class="probabilidade-button" type="submit">Calcular</button>
+            <button class="probabilidade-button" type="button" onclick="calcularProbabilidade()">Calcular</button>
             <p id="resultado"></p>
         </form>
     </div>
 </div>
+
+<script>
+    
+    const Tempo_total = {{ tempo_total }};
+    const Desvio_padrao_projeto = {{ desvio_padrao_projeto }};
+
+    function calcularProbabilidade() {
+        const t_programado = parseFloat(document.getElementById("t_programado").value);
+
+        
+        if (isNaN(t_programado)) {
+            document.getElementById("resultado").innerText = "Por favor, insira um número válido.";
+            return;
+        }
+
+        const z = (t_programado - Tempo_total) / Desvio_padrao_projeto;
+        const probabilidade = cdfNormal(z);
+
+        document.getElementById("resultado").innerText = 
+            `Probabilidade de término em até ${t_programado} unidades de tempo: ${(probabilidade * 100).toFixed(2)}%`;
+    }
+
+    function cdfNormal(z) {
+        return 0.5 * (1 + erf(z / Math.sqrt(2)));
+    }
+
+    function erf(x) {
+        // Aproximação de Abramowitz e Stegun, Handbook of Mathematical Functions
+        const sign = (x >= 0) ? 1 : -1;
+        x = Math.abs(x);
+
+        const a1 =  0.254829592,
+              a2 = -0.284496736,
+              a3 =  1.421413741,
+              a4 = -1.453152027,
+              a5 =  1.061405429,
+              p  =  0.3275911;
+
+        const t = 1.0 / (1.0 + p * x);
+        const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+        return sign * y;
+    }
+</script>
+
 <footer>
     <div class="footer-content">
         <div class="footer-logo">

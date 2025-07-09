@@ -3,6 +3,7 @@ import networkx as nx
 from graphviz import Digraph
 import math
 import matplotlib.pyplot as plt
+#import matplotlib.patches as mpatches
 import numpy as np
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
 #from scipy.stats import norm
@@ -100,6 +101,23 @@ def calcular_pert(atividades_pert):
 
     lf = {node: ls[node] + G.nodes[node]['duracao'] for node in G.nodes()}
 
+    #Média e desvio padrão para a probabilidade
+    #Média
+    tempo_total = lf['fim']
+    
+    # Desvio padrão do projeto
+    desvios_criticos = []
+    for atividade in critical_path:
+        if atividade == 'fim':
+            continue
+        dados = atividades_pert[atividade]
+        sigma = (dados["t_pessimista"] - dados["t_otimista"]) / 6
+        desvios_criticos.append(sigma)
+
+    # Desvio padrão total do caminho crítico
+    desvio_padrao_projeto = np.sqrt(np.sum(np.square(desvios_criticos)))
+
+
     # Cálculo das folgas 
     folga = {node: ls[node] - es[node] for node in G.nodes()}
 
@@ -159,27 +177,36 @@ def calcular_pert(atividades_pert):
     # GANTT
     fig, ax = plt.subplots(figsize=(10, 6))
 
+    # Parâmetros visuais
+    altura_barra = 0.4  
+    offset_seta = 0.2
+
     y_labels = []
-    y_pos = []
+    y_ticks = []
     cores = []
-    start_times = []
-    durations = []
+    node_positions = {}
 
     for i, node in enumerate(sorted(G.nodes(), key=lambda n: es[n])):
-        if node == 'fim':
-            continue  # Ignorar nó artificial 'fim'
+        if node in ['início', 'fim']:
+            continue  # Ignorar nós artificial 'fim'
+
+        inicio = es[node]
+        duracao = G.nodes[node]['duracao']
+        cor = 'red' if node in critical_path else 'skyblue'
+
+        # Desenha a barra manualmente com altura personalizada
+        ax.broken_barh(
+            [(inicio, duracao)],
+            (i - altura_barra / 2, altura_barra),
+            facecolors=cor,
+            edgecolors='black'
+        )
 
         y_labels.append(node)
-        y_pos.append(i)
-        start_times.append(es[node])
-        durations.append(G.nodes[node]['duracao'])
-        if node in critical_path:
-            cores.append('red')
-        else:
-            cores.append('skyblue')
+        y_ticks.append(i)
+        node_positions[node] = (inicio, i)
 
-    ax.barh(y_pos, durations, left=start_times, color=cores, edgecolor='black')
-    ax.set_yticks(y_pos)
+    ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_labels)
     ax.set_xlabel("Tempo")
     ax.set_title("Gráfico de Gantt - PERT")
@@ -187,13 +214,30 @@ def calcular_pert(atividades_pert):
     # Inverter eixo Y para desenhar de cima para baixo
     ax.invert_yaxis()
 
-    # Adiciona rótulos nas barras
-    for i in range(len(y_pos)):
-        inicio = start_times[i]
-        fim = start_times[i] + durations[i]
-        ax.text(inicio + durations[i] / 2, y_pos[i],
-                f"{inicio:.2f} → {fim:.2f}",
-                va='center', ha='center', color='black', fontsize=8)
+    # Adiciona setas entre as atividades baseadas nas dependências do grafo
+    for predecessor, successor in G.edges():
+        if predecessor == 'início':
+            continue
+        if predecessor in node_positions and successor in node_positions:
+            x_start, y_start = node_positions[predecessor]
+            x_end, y_end = node_positions[successor]
+            x_start += G.nodes[predecessor]['duracao'] + offset_seta
+            x_end -= offset_seta
+
+            ax.annotate(
+                '',
+                xy=(x_end, y_end),
+                xytext=(x_start, y_start),
+                arrowprops=dict(
+                    color='black',
+                    arrowstyle='->',
+                    mutation_scale=10,
+                    lw=1.25,
+                    linestyle='dotted',
+                    connectionstyle='angle', 
+                ),
+                annotation_clip=False
+            )
 
     plt.tight_layout()
     plt.savefig('resultadosPERT/gantt_pert.png')
@@ -247,4 +291,7 @@ def calcular_pert(atividades_pert):
 
     imagem.append("tabela_arestas.png")
 
-    return imagem
+    critical_path = critical_path[1:-1]
+    #print(critical_path)
+
+    return imagem, critical_path, tempo_total, desvio_padrao_projeto

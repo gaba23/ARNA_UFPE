@@ -8,6 +8,7 @@ import io
 import random
 import numpy as np
 import graphviz
+from graphviz import Digraph
 from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,8 @@ from pert import calcular_pert
 import networkx as nx
 import logging
 from services.generate_pdf import generate as gerar_pdf
+from services.probabilidade import calcular_probabilidade
+import ast
 
 
 logging.basicConfig(level=logging.INFO)
@@ -502,22 +505,43 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
                     atividades_dict = json.loads(atividades)
                 except json.JSONDecodeError:
                     raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+                
+    
+
 
 
     # Chama a função de cálculo PERT
-    imagem = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+    imagem, critical_path, tempo_total, desvio_padrao_projeto = calcular_pert(atividades_dict)# Imagem do gráfico PERT gerada pela função
+
+    with open('temp/result_pert.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([tempo_total, str(critical_path), desvio_padrao_projeto])
 
     gerar_pdf("./resultadosPert/tabela_arestas.png", "./resultadosPert/relatorio.pdf", "pt")  # pdf apenas da tabela de arestas
 
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)
 
+#@app.post("/calculateProb")
+#async def calculateProb(t_programado: str=Form(None), G:Digraph, critical_path:str, atividades_pert:str):
+    #imagem, G, critical_path, atividades_pert = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
+    #calcular_probabilidade(t_programado, G, critical_path, atividades_pert)
+
+@app.get("/resultCalculator")
+
 @app.get("/resultPERT")
 async def result_pert(request: Request):
     # Coleta a imagem gerada
     imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
+    with open('temp/result_pert.csv', 'r') as file:
+        reader = csv.reader(file)
+        row = next(reader) 
 
-    return templates.TemplateResponse("resultPert.html", {"request": request, "imagem": imagem_pert})
+        tempo_total = round(float(row[0]), 2)
+        critical_path = ast.literal_eval(row[1])
+        desvio_padrao_projeto = round(float(row[2]), 2)
+
+    return templates.TemplateResponse("resultPert.html", {"request": request, "imagem": imagem_pert, "critical_path": critical_path, "tempo_total": tempo_total, "desvio_padrao_projeto": desvio_padrao_projeto})
 
 # Função para parse de CSV
 def parse_pert_csv(df):
@@ -701,6 +725,13 @@ async def download_cpm_png():
 async def download_xls_cpm():
     file_path = "resultadosCPM/relatorio_cpm.xlsx" 
     return FileResponse(file_path, filename="relatorio_cpm.xlsx")
+
+@app.get("/modelo4")
+async def result_pert(request: Request):
+    # Coleta a imagem gerada
+    imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
+
+    return templates.TemplateResponse("modelo4.html", {"request": request, "imagem": imagem_pert})
 
 
 
