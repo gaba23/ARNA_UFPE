@@ -154,7 +154,7 @@ def calcular_pert(atividades_pert):
             else:
                 writer.writerow([atividade, pred_str, critico])
 
-    encontrar_caminhos_seta('./temp/pertDataset.csv', './resultadosPert/diagrama_na_seta')
+ #   encontrar_caminhos_seta('./temp/pertDataset.csv', './resultadosPert/diagrama_na_seta')
 
     # GANTT
     fig, ax = plt.subplots(figsize=(10, 6))

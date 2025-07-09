@@ -156,6 +156,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     t_min = atividade["t_minimo"]
                     t_mode = atividade["t_medio"]
                     t_max = atividade["t_maximo"]
+                    print(f'{t_min}, {t_mode}, {t_max}')
                     duracao_atividade = np.random.triangular(t_min, t_mode, t_max)
                 elif tipo == "uniforme":
                     t_min = atividade["t_minimo"]
@@ -339,7 +340,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             else:
                 writer.writerow([atv, pred_str, critico])
 
-    encontrar_caminhos_seta('./temp/diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
+  #  encontrar_caminhos_seta('./temp/diagramDataset.csv', './resultadosMontecarlo/diagrama_na_seta')
 
 
     ####    GRÁFICOS    ####
@@ -1015,7 +1016,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
     imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
-    imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
+   # imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
     if riscos:
