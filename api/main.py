@@ -23,6 +23,7 @@ import logging
 from services.generate_pdf import generate as gerar_pdf
 from services.probabilidade import calcular_probabilidade
 import ast
+from modelo4 import calcular_modelo4
 
 
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +80,10 @@ async def home_pert(request: Request):
 @app.get("/monteCarlo")
 async def home_montecarlo(request: Request):
     return templates.TemplateResponse("monteCarlo.html", {"request": request})
+
+@app.get("/homeModelo4")
+async def home_modelo4(request: Request):
+    return templates.TemplateResponse("homeModelo4.html", {"request": request})
 
 @app.get("/help")
 async def help(request: Request):
@@ -711,12 +716,84 @@ async def download_xls_cpm():
     file_path = "resultadosCPM/relatorio_cpm.xlsx" 
     return FileResponse(file_path, filename="relatorio_cpm.xlsx")
 
-@app.get("/modelo4")
-async def result_pert(request: Request):
+@app.get("/resultModelo4")
+async def result_modelo4(request: Request):
     # Coleta a imagem gerada
-    imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
+    imagem_modelo4 = "resultadosModelo4/atividades_modelo4.png"  # Caminho da imagem gerada
 
-    return templates.TemplateResponse("modelo4.html", {"request": request, "imagem": imagem_pert})
+    return templates.TemplateResponse("modelo4.html", {"request": request, "imagem": imagem_modelo4})
 
+@app.post("/analyzeMODELO4")
+async def analyzeMODELO4(
+    atividades: str = Form(None),
+    tabela: str = Form(None),
+    csv_file: UploadFile = File(None),
+    xlsx_file: UploadFile = File(None)
+):
+    atividades_dict = {}
 
+    # Processando arquivos CSV
+    if csv_file and csv_file.filename:
+        content = await csv_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
 
+        try:
+            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            atividades_dict = parse_modelo4_csv(df)
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+
+    # Processando arquivos XLSX
+    elif xlsx_file and xlsx_file.filename:
+        try:
+            content = await xlsx_file.read()
+            excel_file = io.BytesIO(content)
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl')
+            atividades = sheets.get("Atividades")
+
+            csv_buffer = io.StringIO()
+            atividades.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer)
+
+            if df.empty:
+                raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            atividades_dict = parse_modelo4_csv(df)
+
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+
+    # Processando entradas de texto
+    else:
+        if tabela:
+            try:
+                df = pd.DataFrame(json.loads(tabela))
+
+                df = df[~(df == '').all(axis=1)]
+                df['Precedentes'] = df['Precedentes'].replace('', np.nan)
+                df['Duracoes'] = pd.to_numeric(df['Duracoes'], errors='coerce')
+                df['Probabilidades'] = pd.to_numeric(df['Probabilidades'], errors='coerce')
+
+                df.reset_index(drop=True, inplace=True)
+
+                atividades_dict = parse_modelo4_csv(df)
+
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Erro ao processar tabela: {str(e)}")
+
+        else:
+            if atividades:
+                try:
+                    atividades_dict = json.loads(atividades)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
+    # Chama a função de cálculo do MODELO4
+    imagem = calcular_modelo4(atividades_dict)
+
+    return RedirectResponse(url='/resultMODELO4', status_code=303)
