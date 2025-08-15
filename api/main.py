@@ -381,13 +381,21 @@ def parse_mc_csv(df_atv, df_riscos):
 
     # Risco
     if not df_riscos.empty:  # riscos são inputs opcionais
+
         for index, row in df_riscos.iterrows():
+            atv_afetadas = row['Atividades Afetadas']
+
+            if isinstance(atv_afetadas, str):   # mais de uma atividade afetada
+                atv_afe_list = [a.strip() for a in atv_afetadas.split(',')] if atv_afetadas else []
+            else:  # uma atividade afetada
+                atv_afe_list = [str(atv_afetadas)]
+
             if row['Tipo de Distribuicao da Consequencia'] == "triangular":
                 riscos[row['ID']] = {
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atividades_afetadas": atv_afe_list,
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_medio": row.get('Atraso Mais Provavel', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
@@ -401,7 +409,7 @@ def parse_mc_csv(df_atv, df_riscos):
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atividades_afetadas": atv_afe_list,
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
@@ -414,7 +422,7 @@ def parse_mc_csv(df_atv, df_riscos):
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atividades_afetadas": atv_afe_list,
                 "atraso_minimo": row.get('Atraso Minimo', None),
                 "atraso_maximo": row.get('Atraso Maximo', None),
                 "prob_otimista": row.get('Probabilidade do Atraso Minimo', None),
@@ -428,13 +436,15 @@ def parse_mc_csv(df_atv, df_riscos):
                 "probabilidade": row['Probabilidade do Risco Ocorrer'],
                 "tipo_dist": row['Tipo de Distribuicao da Consequencia'],
                 "tipo": row['Tipo de Risco'],
-                "atividades_afetadas": [a.strip() for a in row['Atividades Afetadas'].split(',')] if isinstance(row['Atividades Afetadas'], str) else [],
+                "atividades_afetadas": atv_afe_list,
                 "media": row.get('Media', None),
                 "d_p": row.get('Desvio Padrao', None),
                 "custo_fix": row.get('Custo Fixo Adicional', 0),
                 "custo_var": row.get('Custo Variavel Adicional', 0),
 
             }
+
+
 
     return atividades, riscos
 
@@ -731,7 +741,79 @@ async def result_pert(request: Request):
     # Coleta a imagem gerada
     imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
 
-    return templates.TemplateResponse("modelo4.html", {"request": request, "imagem": imagem_pert})
+    return templates.TemplateResponse("modelo4.html", {"request": request, "imagem": imagem_modelo4})
 
+@app.post("/analyzeMODELO4")
+async def analyzeMODELO4(
+    atividades: str = Form(None),
+    tabela: str = Form(None),
+    csv_file: UploadFile = File(None),
+    xlsx_file: UploadFile = File(None)
+):
+    atividades_dict = {}
 
+    # Processando arquivos CSV
+    if csv_file and csv_file.filename:
+        content = await csv_file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Arquivo CSV vazio")
 
+        try:
+            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+            atividades_dict = parse_modelo4_csv(df)
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Arquivo CSV sem dados ou mal formatado")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar o CSV: {str(e)}")
+
+    # Processando arquivos XLSX
+    elif xlsx_file and xlsx_file.filename:
+        try:
+            content = await xlsx_file.read()
+            excel_file = io.BytesIO(content)
+            sheets = pd.read_excel(excel_file, sheet_name=None, engine='openpyxl')
+            atividades = sheets.get("Atividades")
+
+            csv_buffer = io.StringIO()
+            atividades.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer)
+
+            if df.empty:
+                raise HTTPException(status_code=400, detail="Arquivo XLSX vazio ou mal formatado")
+            atividades_dict = parse_modelo4_csv(df)
+
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar a tabela: {str(e)}")
+
+    # Processando entradas de texto
+    else:
+        if tabela:
+            try:
+                df = pd.DataFrame(json.loads(tabela))
+
+                df = df[~(df == '').all(axis=1)]
+                df['Precedentes'] = df['Precedentes'].replace('', np.nan)
+                df['Duracoes'] = pd.to_numeric(df['Duracoes'], errors='coerce')
+                df['Probabilidades'] = pd.to_numeric(df['Probabilidades'], errors='coerce')
+
+                df.reset_index(drop=True, inplace=True)
+
+                atividades_dict = parse_modelo4_csv(df)
+
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Tabela sem dados ou com dados faltantes")
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Erro ao processar tabela: {str(e)}")
+
+        else:
+            if atividades:
+                try:
+                    atividades_dict = json.loads(atividades)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Erro ao decodificar atividades")
+
+    # Chama a função de cálculo do MODELO4
+    #imagem = calcular_modelo4(atividades_dict)
+
+    return RedirectResponse(url='/resultMODELO4', status_code=303)

@@ -240,7 +240,7 @@ def calcular_pert(atividades_pert):
             )
 
     plt.tight_layout()
-    plt.savefig('resultadosPERT/gantt_pert.png')
+    plt.savefig('resultadosPert/gantt_pert.png')
     plt.close()
 
     imagem.append("gantt_pert.png")
