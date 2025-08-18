@@ -336,6 +336,15 @@ def parse_mc_csv(df_atv, df_riscos):
                     "custo_un": row.get('Custo por Unidade de Tempo', 0),
                     }
 
+            elif row['Tipo de Distribuicao'] == "deterministica":
+                atividades[row['ID']] = {
+                    "precedentes": precedentes_list,
+                    "tipo": row['Tipo de Distribuicao'],
+                    "t_medio": row.get('Tempo Mais Provavel', None),
+                    "custo_fix": row.get('Custo Fixo', 0),
+                    "custo_un": row.get('Custo por Unidade de Tempo', 0),
+                }            
+            
             elif row['Tipo de Distribuicao'] == "triangular":
                 atividades[row['ID']] = {
                     "precedentes": precedentes_list,

@@ -22,18 +22,18 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     precedentes_atividades = {atividade: detalhes["precedentes"] for atividade, detalhes in atividades_pert.items()}
     riscos_ocorridos = {risco: [] for risco in riscos}
 
-    custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
-    custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
+    # custo_fixo = {atividade: detalhes["custo_fix"] for atividade, detalhes in atividades_pert.items()}
+    # custo_variavel = {atividade: detalhes["custo_un"] for atividade, detalhes in atividades_pert.items()}
  
-    end_atv_key = str(len(atividades_pert))
-    end_atv_fix_value = custo_fixo.get("fim")
-    end_atv_var_value = custo_variavel.get("fim")
+    # end_atv_key = str(len(atividades_pert))
+    # end_atv_fix_value = custo_fixo.get("fim")
+    # end_atv_var_value = custo_variavel.get("fim")
 
-    custo_fixo.pop('fim')
-    custo_variavel.pop('fim')
+    # custo_fixo.pop('fim')
+    # custo_variavel.pop('fim')
 
-    custo_fixo.update({end_atv_key: end_atv_fix_value})
-    custo_variavel.update({end_atv_key: end_atv_var_value})
+    # custo_fixo.update({end_atv_key: end_atv_fix_value})
+    # custo_variavel.update({end_atv_key: end_atv_var_value})
 
     # Adicionando um número ao nó e progredindo
     mapa_atividades = {atividade: i + 2 for i, atividade in enumerate(atividades_pert.keys())}
@@ -112,18 +112,24 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     duracao += duracao_atividade  
 
         # Custo
+        print('----------------------------------------------------')
+        print(f'caminho: {caminho}')
         for i in range(len(caminho) - 1):
             no_inicial = caminho[i]
             no_final = caminho[i + 1]
             for atividade in atividades_convertidas:
                 if atividade["no_inicial"] == no_inicial and atividade["no_final"] == no_final:
-
-                    custo_fix = atividade["custo_fix"]
-                    custo_var = atividade["custo_un"] * duracoes_atividades[atividade["no_final"] - 2]
+                    # Normalizar valores (Nan --> 0.0 float)
+                    custo_fix = np.nan_to_num(atividade.get("custo_fix", 0.0), nan=0.0)
+                    custo_var = np.nan_to_num(atividade.get("custo_un", 0.0), nan=0.0) * \
+                                np.nan_to_num(duracoes_atividades[atividade["no_final"] - 2], nan=0.0)
+                    
                     custo = custo_fix + custo_var
-
+                    # print(f'custo: {custo} {type(custo)}= custo_fix: {custo_fix} {type(custo_fix)}, custo_var: {custo_var} {type(custo_var)}')
                     custo_total += custo
+                    # print(f'custo total: {custo_total} {type(custo_total)}')
 
+        # print(custo_total)
         #print(f'Duração final do camminho{caminho}: {duracao}')
         return duracao, custo_total
     
@@ -151,12 +157,12 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     # Gerando uma variável aleatória beta e escalando para o intervalo [t_o, t_p]
                     beta_random = np.random.beta(alpha, beta)
                     duracao_atividade = beta_random * (t_p - t_o) + t_o
-
+                elif tipo == "deterministica":
+                    duracao_atividade = atividade["t_medio"]
                 elif tipo == "triangular":
                     t_min = atividade["t_minimo"]
                     t_mode = atividade["t_medio"]
                     t_max = atividade["t_maximo"]
-                    print(f'{t_min}, {t_mode}, {t_max}')
                     duracao_atividade = np.random.triangular(t_min, t_mode, t_max)
                 elif tipo == "uniforme":
                     t_min = atividade["t_minimo"]
@@ -187,6 +193,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     # Calcula o atraso 
                     if detalhes["tipo_dist"] == "triangular":
                         atraso = np.random.triangular(detalhes["atraso_minimo"], detalhes["atraso_medio"], detalhes["atraso_maximo"])
+                    elif detalhes["tipo_dist"] == "deterministica":
+                        atraso = detalhes["atraso_medio"]
                     elif detalhes["tipo_dist"] == "uniforme":   
                         atraso = np.random.uniform(detalhes["atraso_minimo"], detalhes["atraso_maximo"])
                     elif detalhes["tipo_dist"] == "bernoulli":
@@ -739,7 +747,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         # Adicionar títulos e labels
         plt.xlabel('Atividade', fontsize=8)
         plt.ylabel('Frequência Crítica', fontsize=8)
-        plt.title('Frequência de Atividades Críticas - Simulação de Monte Carlo', fontsize=10)
+        plt.title('Criticidade das Atividades', fontsize=10)
         plt.xticks(rotation=0, fontsize=7)  # Rotacionar os rótulos do eixo X para melhor legibilidade
         plt.yticks(fontsize=7)
         plt.grid(axis='y', linestyle='--', alpha=0.7)
@@ -787,39 +795,39 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                 plt.close()
 
                 # Spearman
-                R_spearman = f"Correlação (Spearman): {crucialidade_atividades_sp.get(atividade, 0):.4f}"
-                plt.figure(figsize=(5, 3))
-                plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
+                # R_spearman = f"Correlação (Spearman): {crucialidade_atividades_sp.get(atividade, 0):.4f}"
+                # plt.figure(figsize=(5, 3))
+                # plt.scatter(duracoes_projeto, duracoes_atividade, alpha=0.75, s=25)
 
-                # Adicionando uma linha de tendência fina
-                rank_x = stats.rankdata(duracoes_projeto)
-                rank_y = stats.rankdata(duracoes_atividade)
+                # # Adicionando uma linha de tendência fina
+                # rank_x = stats.rankdata(duracoes_projeto)
+                # rank_y = stats.rankdata(duracoes_atividade)
 
-                # Ajuste linear nos ranks
-                coef = np.polyfit(rank_x, rank_y, 1)
-                poly1d_fn = np.poly1d(coef)
+                # # Ajuste linear nos ranks
+                # coef = np.polyfit(rank_x, rank_y, 1)
+                # poly1d_fn = np.poly1d(coef)
 
-                sorted_idx = np.argsort(rank_x)
+                # sorted_idx = np.argsort(rank_x)
 
-                plt.plot(duracoes_projeto[sorted_idx], poly1d_fn(rank_x[sorted_idx]), 'r-', linewidth=0.5)  # Linha fina em vermelho
+                # plt.plot(duracoes_projeto[sorted_idx], poly1d_fn(rank_x[sorted_idx]), 'r-', linewidth=0.5)  # Linha fina em vermelho
 
-                plt.title(f'Crucialidade (Spearman) - {atividade}', fontsize=10)
-                plt.xlabel('Duração Crítica do Projeto', fontsize=8)
-                plt.ylabel('Duração da Atividade', fontsize=8)
-                plt.xticks(fontsize=7)
-                plt.yticks(fontsize=7)
-                plt.grid(True)
-                ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
-                ax_inset.text(0.5, 0.25, R_spearman, fontsize=7, va='center', ha='center', 
-                              bbox=dict(facecolor='white', alpha=0.8))
-                ax_inset.axis('off')
+                # plt.title(f'Crucialidade (Spearman) - {atividade}', fontsize=10)
+                # plt.xlabel('Duração Crítica do Projeto', fontsize=8)
+                # plt.ylabel('Duração da Atividade', fontsize=8)
+                # plt.xticks(fontsize=7)
+                # plt.yticks(fontsize=7)
+                # plt.grid(True)
+                # ax_inset = inset_axes(plt.gca(), width="30%", height="30%", loc='lower right') 
+                # ax_inset.text(0.5, 0.25, R_spearman, fontsize=7, va='center', ha='center', 
+                #               bbox=dict(facecolor='white', alpha=0.8))
+                # ax_inset.axis('off')
 
-                plt.tight_layout()
-                try:
-                    plt.savefig(f'resultadosMontecarlo/sp_cruci_atividade_{atividade}.png')
-                except Exception as e:
-                    print(f"Erro ao salvar imagem Spearman da atividade {atividade}: {e}")
-                plt.close()
+                # plt.tight_layout()
+                # try:
+                #     plt.savefig(f'resultadosMontecarlo/sp_cruci_atividade_{atividade}.png')
+                # except Exception as e:
+                #     print(f"Erro ao salvar imagem Spearman da atividade {atividade}: {e}")
+                # plt.close()
 
     # Supondo que os dados estão na coluna "Duração do Projeto"
     duracoes_projeto_series = df_duracoes_projeto["Duração do Projeto"]
@@ -1007,21 +1015,22 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     imagens_atividades = glob.glob("resultadosMontecarlo/distribuicao_atividade_*.png")
     imagens_caminhos = glob.glob("resultadosMontecarlo/distribuicao_caminho_*.png")
     imagens_cruci = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
-    imagens_cruci_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
+#    imagens_cruci_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
     imagem_projeto = ["distribuicao_duracao_projeto.png"]
     imagem_gantt = ["grafico_gantt.png"]
     imagem_tornado_riscos = ["grafico_tornado_riscos.png"]
     imagem_acumulada = ["grafico_distribuicao_acumulada_com_estatisticas.png"]
     imagem_acumulada_riscos = ["grafico_distribuicao_acumulada_risco.png"]
     imagem_acumulada_colunas_riscos = ["grafico_distribuicao_acumulada_projeto_e_riscos.png"]
+    imagem_criticidade = ["grafico_criticidade_atividades.png"]
     imagens_atv_crucialidade = glob.glob("resultadosMontecarlo/cruci_atividade_*.png")
-    imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
+  #  imagens_atv_crucialidade_sp = glob.glob("resultadosMontecarlo/sp_cruci_atividade_*.png")
    # imagem_seta = ["./resultadosMontecarlo/diagrama_na_seta.png"]
     
     # Retorne todas as imagens geradas
     if riscos:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagens_cruci + imagens_cruci_sp + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path] # + imagem_seta 
+        return imagem_diagrama + imagens_atividades + imagens_caminhos + imagem_criticidade + imagens_cruci + imagem_projeto + imagem_gantt + imagem_tornado_riscos + imagem_acumulada_riscos + imagem_acumulada_colunas_riscos + imagens_atv_crucialidade + [planilha_path] # + imagem_seta 
 
     else:
-        return imagem_diagrama + imagens_atividades + imagens_caminhos  + imagens_cruci + imagens_cruci_sp + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + imagens_atv_crucialidade_sp + [planilha_path]  
+        return imagem_diagrama + imagens_atividades + imagens_caminhos  + imagem_criticidade + imagens_cruci + imagem_projeto + imagem_gantt + imagens_atv_crucialidade + [planilha_path]  
 
