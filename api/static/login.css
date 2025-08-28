@@ -58,6 +58,14 @@ h1 {
     font-weight: 700;
 }
 
+.form-box {
+  display: none;
+}
+
+.form-box.active {
+  display: block;
+}
+
 .input-box {
     box-sizing: border-box;
     width: 324px;
@@ -86,7 +94,7 @@ h1 {
     border: none;
 }
 
-.login-button {
+.login-button, .register-button {
     width: 100%;
     padding: 10px;
     font-size: 16px;
@@ -99,7 +107,7 @@ h1 {
     height: 58px;
 }
 
-.login-button:hover {
+.login-button:hover, .register-button:hover {
   background-color: #000000;
 }
 
@@ -109,12 +117,12 @@ h1 {
     font-weight: bold;
 }
 
-.register-link {
+.register-link, .login-link {
     margin-top: 20px;
     font-size: 14px;
 }
 
-.register-link a {
+.register-link a, .login-link a {
     color: blue;
     text-decoration: none;
 }
