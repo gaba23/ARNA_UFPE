@@ -58,7 +58,7 @@ def landing(request: Request):
 
 @app.get("/login")
 async def login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login.php", {"request": request})
 
 @app.post("/login")
 async def login_post(request: Request, email: str = Form(...), senha: str = Form(...)):
@@ -66,7 +66,7 @@ async def login_post(request: Request, email: str = Form(...), senha: str = Form
         return RedirectResponse(url="/home", status_code=303)
     else:
         erro = "Credenciais inválidas"
-        return templates.TemplateResponse("login.html", {"request": request, "erro": erro})
+        return templates.TemplateResponse("login.php", {"request": request, "erro": erro})
 
 @app.get("/home")
 async def home(request: Request):
