@@ -1,9 +1,31 @@
+<?php
+session_start();
+
+$errors = [
+    'login' => $_SESSION['login_error'] ?? '',
+    'register' => $_SESSION['register_error'] ?? ''
+];
+$activeForm = $_SESSION['active_form'] ?? 'login';
+
+session_unset();
+
+function showError($error) {
+    return !empty($error) ? "<p class='error-message'>$error</p>" : '';
+}
+
+function isActiveForm($formName, $activeForm) {
+    return $formName === $activeForm ? 'active' : '';
+}
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <title>Login</title>
     <link rel="stylesheet" type="text/css" href="../static/login.css">
-    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.png') }}">
+    <link rel="icon" type="image/png" href="../static/favicon.png">
 </head>
 <body>
 <header>
@@ -11,19 +33,21 @@
         ARNA
     </div>
     <div class="profile">
-        <img src="{{ url_for('static', path='/avatar.png') }}" alt="Avatar">
+        <img src="../static/avatar.png" alt="Avatar">
     </div>
 </header>
 <div class="content">
     <div class="container">
         
-        <div class="form-box active" id="login-form">
+        <div class="form-box <?= isActiveForm('login', $activeForm); ?>" id="login-form">
             <h1>Login</h1>
 
-            <form action="/login" method="POST">
-                {% if erro %}
+            <!-- <form action="/login" method="POST"> -->
+            <form action="login_register.php" method="POST">
+                <!-- {% if erro %}
                 <div class="errormessage">{{ erro }}</div>
-                {% endif %}
+                {% endif %} -->
+                <?= showError($errors['login']); ?>
 
                 <div class="input-box">
                     <input type="text" name="email" placeholder="Email">
@@ -41,13 +65,15 @@
 
 
 
-        <div class="form-box" id="register-form">
+        <div class="form-box" <?= isActiveForm('register', $activeForm); ?> id="register-form">
             <h1>Registre-se</h1>
 
-            <form action="/login#" method="POST">
-                {% if erro %}
+            <!-- <form action="/login#" method="POST"> -->
+            <form action="login_register.php" method="POST">
+                <!-- {% if erro %}
                 <div class="errormessage">{{ erro }}</div>
-                {% endif %}
+                {% endif %} -->
+                <?= showError($errors['register']); ?>
 
                 <div class="input-box">
                     <input type="text" name="username" placeholder="Nome">

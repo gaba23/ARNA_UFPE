@@ -127,7 +127,7 @@ h1 {
     text-decoration: none;
 }
 
-.siga {
+/* .siga {
   width: 300px;
   height: 30px;
 
@@ -141,7 +141,7 @@ h1 {
   line-height: 19px;
   /* identical to box height */
 
-  letter-spacing: 1.2px;
+  /* letter-spacing: 1.2px;
   text-transform: capitalize;
 
   color: #000000;
@@ -149,7 +149,7 @@ h1 {
 
 .siga:hover {
   background: #cfcfcf;
-}
+} */
 
 .icon {
   display: inline-block;
@@ -161,7 +161,17 @@ h1 {
   width: 30px;
   height: 30px;
 }
-
+/* 
 .errormessage {
   color: #B34603;
+} */
+
+.error-message {
+  padding: 12px;
+  background: #f8d7da;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #a42834;
+  text-align: center;
+  margin-bottom: 20px;
 }
