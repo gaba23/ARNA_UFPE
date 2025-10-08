@@ -21,10 +21,6 @@
             <h1>Login</h1>
 
             <form action="/login" method="POST">
-                <!-- {% if erro %}
-                <div class="errormessage">{{ erro }}</div>
-                {% endif %} -->
-
                 <div class="input-box">
                     <input type="text" name="email" placeholder="Email">
                 </div>
@@ -45,21 +41,21 @@
             <h1>Registre-se</h1>
 
             <form action="/register" method="POST">
-                <!-- {% if erro %}
-                <div class="errormessage">{{ erro }}</div>
-                {% endif %} -->
-
                 <div class="input-box">
-                    <input type="text" name="username" placeholder="Nome">
+                    <input type="text" id="username" name="username" placeholder="Nome">
                 </div>                
                 <div class="input-box">
-                    <input type="text" name="usersurname" placeholder="Sobrenome">
+                    <input type="text" id="usersurname" name="usersurname" placeholder="Sobrenome">
                 </div>                
                 <div class="input-box">
-                    <input type="text" name="email" placeholder="Email">
+                    <input type="text" id="emailr" name="email" placeholder="Email">
                 </div>
                 <div class="input-box">
-                    <input type="password" name="senha" placeholder="Senha">
+                    <input type="password" id="senha" name="senha" placeholder="Senha">
+                </div>
+                <div class="input-box">
+                    <input type="password" id="confirmesenha" name="confirmesenha" placeholder="Confirme sua senha">
+                    <span id="mensagemsenha" style="color: red; font-size: 0.9em;"></span>  <!--senhas iguais live-->
                 </div>
                 <button class="register-button" type="submit">Criar conta</button>
             </form>
@@ -77,6 +73,53 @@
         document.querySelectorAll(".form-box").forEach(form => form.classList.remove("active"));
         document.getElementById(formId).classList.add("active");
     }
+
+    const activeForm = "{{ active_form if active_form else 'login' }}";  // mantém na tela de registro durante acionamento do popup
+    if (activeForm) {  
+        showForm(activeForm + "-form");
+    }
+
+    const registerError = "{{ register_error if register_error else '' }}";  // popup para email já registrado
+    if (registerError) {
+        alert(registerError);
+    }
+
+    const senhaInput = document.getElementById("senha");  // live checagem de senha
+    const confirmInput = document.getElementById("confirmesenha");
+    const message = document.getElementById("mensagemsenha");
+    confirmInput.addEventListener("input", () => {
+        if (confirmInput.value !== senhaInput.value) {
+            message.textContent = "As senhas não coincidem.";
+        } else {
+            message.textContent = "";
+        }
+    });
+
+
+    const nameInput = document.getElementById("username")
+    const surnameInput = document.getElementById("usersurname")
+    const emailInput = document.getElementById("emailr")
+    const form = document.querySelector("form[action='/register']");  // impede usuário de enviar form sem requisitos mínimos
+    form.addEventListener("submit", (e) => {
+        if (nameInput.value.trim() === "" || surnameInput.value.trim() === "") {  // sem nome e/ou sobrenome
+            e.preventDefault();
+            alert("Preencha seu nome e sobrenome!");
+        }
+        if (emailInput.value.trim() === "") {  // sem email
+            e.preventDefault();
+            alert("Preencha seu email!");
+        }
+        if (!emailInput.value.includes("@")) {  // email sem @
+            e.preventDefault();
+            alert("Digite um email válido.");
+            return;
+        }
+        if (senhaInput.value !== confirmInput.value || senhaInput.value == "" || confirmInput.value == "") {  // senhas diferentes ou vazias
+            e.preventDefault();
+            alert("As senhas não coincidem!");
+        }
+    });
+
 </script>
  
 </body>

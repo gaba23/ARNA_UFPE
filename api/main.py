@@ -150,7 +150,7 @@ def register_post(request: Request, username: str = Form(...), usersurname: str 
     try:
         create_user(db, name=full_name, email=email, password_plain=senha, role="user")
     except IntegrityError:  # email já existe
-        return templates.TemplateResponse("login.html", {"request": request, "login_error": "", "regster_error": "Email já cadastrado.", "active_form": "register"})
+        return templates.TemplateResponse("login.html", {"request": request, "login_error": "", "register_error": "Email já cadastrado.", "active_form": "register"})
     return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)  # redireciona para o login após o cadastro
 
 @app.get("/home")
