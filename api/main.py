@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException
+from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, status
 from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse, JSONResponse
-from starlette.templating import Jinja2Templates
+from starlette.templating import Jinja2Templates  # or from fastapi?
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 import json
 import csv
@@ -14,6 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import glob
+from dotenv import load_dotenv
 from montecarlo import simular_montecarlo
 from cpm import calcular_cpm
 import os
@@ -22,12 +24,18 @@ import networkx as nx
 import logging
 from services.generate_pdf import generate as gerar_pdf
 from services.probabilidade import calcular_probabilidade
+from sqlalchemy import create_engine, Column, Integer, String, UniqueConstraint
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, declarative_base
+from passlib.hash import bcrypt
 import ast
 
-
+# Configure server logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
 
 # Obtém o caminho absoluto da pasta onde o executável ou script está rodando
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,8 +44,55 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(base_dir, 'templates')
 templates = Jinja2Templates(directory=templates_dir)
 
+# Base de Dados e métodos auxiliares
+DATABASE_URL = os.getenv("DATABASE_URL")  ## add credentials (.env)
+## engine://user:password@rds-endpoint:port/database
+# SECRET_KEY = os.getenv("SESSION_SECRET_KEY") ## env
+SECRET_KEY = "ksidffshdgbifishhis"
+
+engine = create_engine(DATABASE_URL, echo=False, future=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
+
+class User(Base):  # linha (usuário)
+    __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
+    role = Column(String(16), nullable=False, default="user")  # não é possível se registrar como admin
+
+def create_tables():
+    Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try: 
+        yield db
+    finally:
+        db.close()
+
+def get_user_by_email(db, email: str):
+    return db. query(User).filter(User.email == email).first()
+
+def create_user(db, name: str, email: str, password_plain: str, role: str = "user"):  # registro apenas para user roles
+    hashed = bcrypt.hash (password_plain)  # salva senha encriptada
+    user = User(name=name, email=email, password=hashed, role=role)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def require_auth(request: Request):  # redireciona usuários não autenticados
+    if not request.session.get("user_email"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    return None
+
+##########
 # Criação da aplicação FastAPI
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie="session")
 
 # Montando diretórios estáticos com caminhos absolutos
 static_dir = os.path.join(base_dir, 'static')
@@ -52,33 +107,87 @@ app.mount("/resultadosPert", StaticFiles(directory=resultados_pert_dir), name="r
 resultados_cpm_dir = os.path.join(base_dir, 'resultadosCpm')
 app.mount("/resultadosCpm", StaticFiles(directory=resultados_cpm_dir), name="resultadosCpm")
 
+# Startup tabelas banco de dados
+@app.on_event("startup")  ## deprecated
+def on_startup():
+    create_tables()
+
+## ROTAS
 @app.get("/")
-def landing(request: Request):
+def landing(request: Request):  # pública
     return templates.TemplateResponse("landing.html", {"request": request})
 
 @app.get("/login")
-async def login(request: Request):
-    return templates.TemplateResponse("login.php", {"request": request})
+async def login_get(request: Request):
+    if request.session.get("user_email"):  # redireciona usuários autenticados para a tela de home
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse("login.html", {"request": request})
 
 @app.post("/login")
 async def login_post(request: Request, email: str = Form(...), senha: str = Form(...)):
-    if email == "admin" and senha == "123456":
-        return RedirectResponse(url="/home", status_code=303)
-    else:
-        erro = "Credenciais inválidas"
-        return templates.TemplateResponse("login.php", {"request": request, "erro": erro})
+    # if email == "admin" and senha == "123456":
+    #     return RedirectResponse(url="/home", status_code=303)
+    # else:
+    #     erro = "Credenciais inválidas"
+    #     return templates.TemplateResponse("login.html", {"request": request, "erro": erro})
+    db = next(get_db())
+    user = get_user_by_email(db, email)
+    if user and bcrypt.verify(senha, user.password): 
+        request.session.clear()
+        request.session["user_email"] = user.email
+        request.session["user_name"] = user.name
+        request.session["user_role"] = user.role
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)  # login de sucesso
+    return templates.TemplateResponse("login.html", {"request": request, "login_error": "Credenciais inválidas.", "register_error": "", "active_form": "login"})  # login falhou                                
+
+@app.post("/register")
+def register_post(request: Request, username: str = Form(...), usersurname: str = Form(""), email: str = Form(...), senha: str = Form(...)):
+    db = next(get_db())
+    full_name = (username + " " + usersurname).strip()
+    if full_name == "":
+        full_name = email.split("@")[0]
+
+    try:
+        create_user(db, name=full_name, email=email, password_plain=senha, role="user")
+    except IntegrityError:  # email já existe
+        return templates.TemplateResponse("login.html", {"request": request, "login_error": "", "regster_error": "Email já cadastrado.", "active_form": "register"})
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)  # redireciona para o login após o cadastro
 
 @app.get("/home")
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    if not request.session.get("user_email"):  # validação de existência do usuário
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uCp", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+
+    return templates.TemplateResponse("home.html", {"request": request, "name": request.session.get("user_name")})  # usuário validado e autenticado
 
 @app.get("/homePERT")
 async def home_pert(request: Request):
-    return templates.TemplateResponse("homePERT.html", {"request": request})
+    if not request.session.get("user_email"):  # validação de existência do usuário
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uPt", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+    
+    return templates.TemplateResponse("homePERT.html", {"request": request})  # usuário validado e autenticado
 
 @app.get("/monteCarlo")
 async def home_montecarlo(request: Request):
-    return templates.TemplateResponse("monteCarlo.html", {"request": request})
+    if not request.session.get("user_email"):  # validação de existência do usuário
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uMc", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+    
+    return templates.TemplateResponse("monteCarlo.html", {"request": request})  # usuário validado e autenticado
 
 @app.get("/help")
 async def help(request: Request):
@@ -90,6 +199,7 @@ async def contact(request: Request):
 
 @app.get("/logout")
 async def logout(request: Request):
+    request.session.clear()
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/analyzeMonteCarlo")
@@ -274,6 +384,14 @@ async def analyzeMonteCarlo(request: Request, tabela_atividade: str = Form(None)
 
 @app.get("/resultMontecarlo")
 async def result_montecarlo(request: Request):
+    if not request.session.get("user_email"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uMc", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+    
     # Coletar nomes das imagens geradas
     imagens = glob.glob("resultadosMontecarlo/*.png")
 
@@ -541,15 +659,16 @@ async def analyzePERT(atividades: str = Form(None), tabela: str = Form(None), cs
     # Redirecionar para a página de resultados
     return RedirectResponse(url='/resultPERT', status_code=303)
 
-#@app.post("/calculateProb")
-#async def calculateProb(t_programado: str=Form(None), G:Digraph, critical_path:str, atividades_pert:str):
-    #imagem, G, critical_path, atividades_pert = calcular_pert(atividades_dict)  # Imagem do gráfico PERT gerada pela função
-    #calcular_probabilidade(t_programado, G, critical_path, atividades_pert)
-
-@app.get("/resultCalculator")
-
 @app.get("/resultPERT")
 async def result_pert(request: Request):
+    if not request.session.get("user_email"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uPt", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+    
     # Coleta a imagem gerada
     imagem_pert = "resultadosPert/atividades_pert.png"  # Caminho da imagem gerada
     with open('temp/result_pert.csv', 'r') as file:
@@ -716,6 +835,13 @@ async def analyze(atividades: str = Form(None), csv_file: UploadFile = File(None
 
 @app.get("/result")
 async def result_cpm(request: Request):
+    if not request.session.get("user_email"):
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    user_role = request.session.get("user_role") 
+    if user_role not in ["uCp", "universal"]:  # validação de permissão do usuário
+        ## criar página de Oops, Acesso Negado, solicite ao email tal
+        return RedirectResponse(url="/home", status_code=status.HTTP_303_SEE_OTHER)
+
     imagem_cpm = "resultadosCpm/atividades_cpm.png"
     return templates.TemplateResponse("result.html", {"request": request, "imagem": imagem_cpm})
 

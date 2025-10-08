@@ -1,3 +1,4 @@
 api/venv
 api/__pycache__
 api/services/__pycache__
+api/.env
