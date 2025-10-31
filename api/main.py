@@ -77,7 +77,7 @@ def get_user_by_email(db, email: str):
     return db. query(User).filter(User.email == email).first()
 
 def create_user(db, name: str, email: str, password_plain: str, role: str = "user"):  # registro apenas para user roles
-    hashed = bcrypt.hash (password_plain)  # salva senha encriptada
+    hashed = bcrypt.hash(password_plain)  # salva senha encriptada
     user = User(name=name, email=email, password=hashed, role=role)
     db.add(user)
     db.commit()
@@ -125,11 +125,6 @@ async def login_get(request: Request):
 
 @app.post("/login")
 async def login_post(request: Request, email: str = Form(...), senha: str = Form(...)):
-    # if email == "admin" and senha == "123456":
-    #     return RedirectResponse(url="/home", status_code=303)
-    # else:
-    #     erro = "Credenciais inválidas"
-    #     return templates.TemplateResponse("login.html", {"request": request, "erro": erro})
     db = next(get_db())
     user = get_user_by_email(db, email)
     if user and bcrypt.verify(senha, user.password): 
