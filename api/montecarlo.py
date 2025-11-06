@@ -112,8 +112,8 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
                     duracao += duracao_atividade  
 
         # Custo
-        print('----------------------------------------------------')
-        print(f'caminho: {caminho}')
+        # print('----------------------------------------------------')
+        # print(f'caminho: {caminho}')
         for i in range(len(caminho) - 1):
             no_inicial = caminho[i]
             no_final = caminho[i + 1]
@@ -137,7 +137,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     def calcular_duracoes_fixas(atividades_convertidas): 
         atividades_lista = [0] * len(atividades_pert) 
         riscos_dict = {risco: int for risco in riscos}  # atraso total por risco
-
+        print('botswana')
         # Atividades
         for atividade in atividades_convertidas: 
             if "duracao" in atividade:
@@ -185,10 +185,12 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             ocorreu = random.random() < detalhes["probabilidade"]
             riscos_ocorridos[risco].append(ocorreu)  
 
-            if ocorreu:
+            if ocorreu: 
+                print('ocorreu')
                 atraso_total = 0  # tempo de atraso da atividade
                 for atividade in detalhes["atividades_afetadas"]:  
                     index_atividade = mapa_atividades[atividade] - 2
+                    print(f'atv: {atividade}')
 
                     # Calcula o atraso 
                     if detalhes["tipo_dist"] == "triangular":
@@ -204,16 +206,23 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                     # Substitui a duracao da atividade pelo valor com risco incluso
                     if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
+                        print(f'b4: {atividades_lista[index_atividade]}; atraso: {atraso}')
                         atividades_lista[index_atividade] += atraso
+                        print(f'after: {atividades_lista[index_atividade]}')
                     else:  # Tipo do risco é percentual
+                        print(f'b4: {atividades_lista[index_atividade]}; atraso: {atraso}')
                         atividades_lista[index_atividade] *= (1 + atraso)
                         atraso = atividades_lista[index_atividade] * atraso
+                        print(f'after: {atividades_lista[index_atividade]}')
 
                     atraso_total += atraso
                 riscos_dict[risco] = atraso_total
             else:
                 riscos_dict[risco] = 0  
             
+        print('total')
+        print(riscos_dict)
+        print(atividades_lista)
         return atividades_lista, riscos_dict
 
     # Solicitar o número de interações para a simulação de Monte Carlo
@@ -239,7 +248,6 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
         duracoes_caminhos = []
         caminho_critico = None 
         duracao_maxima = 0
-        duracao_risco_critica = {risco: 0 for risco in riscos}
         custo_maximo = 0
         # print('-------------------------------------------------------------------------')
         # print(f'iteração: ' + str(iteracao))
