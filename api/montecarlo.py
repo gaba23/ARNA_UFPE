@@ -15,6 +15,7 @@ from scipy.stats import spearmanr
 from scipy.interpolate import make_interp_spline, BSpline
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from services.arrownodediagram import create_arrow_diagram as encontrar_caminhos_seta
+from graphlib import TopologicalSorter
 
 
 def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
@@ -137,7 +138,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     def calcular_duracoes_fixas(atividades_convertidas): 
         atividades_lista = [0] * len(atividades_pert) 
         riscos_dict = {risco: int for risco in riscos}  # atraso total por risco
-        print('botswana')
+
         # Atividades
         for atividade in atividades_convertidas: 
             if "duracao" in atividade:
@@ -186,11 +187,9 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
             riscos_ocorridos[risco].append(ocorreu)  
 
             if ocorreu: 
-                print('ocorreu')
                 atraso_total = 0  # tempo de atraso da atividade
                 for atividade in detalhes["atividades_afetadas"]:  
                     index_atividade = mapa_atividades[atividade] - 2
-                    print(f'atv: {atividade}')
 
                     # Calcula o atraso 
                     if detalhes["tipo_dist"] == "triangular":
@@ -206,23 +205,16 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
                     # Substitui a duracao da atividade pelo valor com risco incluso
                     if detalhes["tipo"] == "absoluto":  # Tipo do risco é absoluto
-                        print(f'b4: {atividades_lista[index_atividade]}; atraso: {atraso}')
                         atividades_lista[index_atividade] += atraso
-                        print(f'after: {atividades_lista[index_atividade]}')
                     else:  # Tipo do risco é percentual
-                        print(f'b4: {atividades_lista[index_atividade]}; atraso: {atraso}')
                         atividades_lista[index_atividade] *= (1 + atraso)
                         atraso = atividades_lista[index_atividade] * atraso
-                        print(f'after: {atividades_lista[index_atividade]}')
 
                     atraso_total += atraso
                 riscos_dict[risco] = atraso_total
             else:
                 riscos_dict[risco] = 0  
-            
-        print('total')
-        print(riscos_dict)
-        print(atividades_lista)
+
         return atividades_lista, riscos_dict
 
     # Solicitar o número de interações para a simulação de Monte Carlo
@@ -530,10 +522,17 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
 
     # Função para determinar os tempos de início e término
     def calcular_tempos_atividades(medias, precedentes_atividades):
+        ts = TopologicalSorter(precedentes_atividades)  # ordenação topológica para evitar erros na quando uma atividade A é precedida por uma atividade maior que A
+        ordem = list(ts.static_order())
+
         tempos_inicio = {}
         tempos_termino = {}
+
+        for atividade in ordem:
         
-        for atividade, precedentes in precedentes_atividades.items():
+        # for atividade, precedentes in precedentes_atividades.items():
+            precedentes = precedentes_atividades[atividade]
+
             if not precedentes:
                 tempos_inicio[atividade] = 0
             else:
@@ -637,7 +636,7 @@ def simular_montecarlo(atividades_pert, riscos, num_iteracoes):
     medias = calcular_medias_atividades(resultados_atividades)
 
     # Cálculo dos tempos de início e término
-    tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
+    # tempos_inicio, tempos_termino = calcular_tempos_atividades(medias, precedentes_atividades)
 
     def plotar_grafico_tornado_riscos():
         # Calcular impacto percentual
